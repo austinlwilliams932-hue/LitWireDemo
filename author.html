@@ -7,42 +7,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  
-  <script>
-    // These global variables are provided by the canvas environment.
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-  </script>
 
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f3f4f6;
-    }
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     .container { max-width: 800px; margin: 0 auto; }
-    .form-card {
-      background-color: #fff;
-      padding: 2.5rem;
-      border-radius: 1.5rem;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-    }
-    .form-input, .form-select, .form-textarea {
-      width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem;
-      border: 1px solid #d1d5db; transition: all 0.2s ease;
-    }
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-      border-color: #2e598b; outline: none;
-      box-shadow: 0 0 0 3px rgba(46, 89, 139, 0.2);
-    }
+    .form-card { background-color: #fff; padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+    .form-input, .form-select, .form-textarea { width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db; transition: all 0.2s ease; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #2e598b; outline: none; box-shadow: 0 0 0 3px rgba(46, 89, 139, 0.2); }
     .is-error { border-color: #ef4444; }
-    .btn-continue {
-      background-color: #2e598b; color: #fff; padding: 0.75rem 2.5rem;
-      border-radius: 0.5rem; font-weight: 600; transition: all 0.3s ease;
-    }
+    .btn-continue { background-color: #2e598b; color: #fff; padding: 0.75rem 2.5rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.3s ease; }
     .btn-continue:hover { background-color: #234368; }
-    .loading-spinner { border-top-color: #f3f4f6; animation: spinner 1s linear infinite; }
-    @keyframes spinner { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
@@ -64,25 +38,22 @@
     </div>
 
     <div class="form-card">
-      <!-- 🔒 Fail-safe: prevent reload no matter what -->
-      <form id="author-form" class="space-y-6" novalidate 
-            onsubmit="event.preventDefault(); return false;">
-        
+      <form id="author-form" class="space-y-6" novalidate>
         <!-- Book Title -->
         <div>
-          <label for="book-title" class="block text-sm font-medium text-gray-700 mb-2">Book Title</label>
+          <label for="book-title" class="block text-sm font-medium text-gray-700 mb-2">Book Title *</label>
           <input type="text" id="book-title" name="bookTitle" placeholder="Enter the title" class="form-input">
         </div>
 
         <!-- Book Description -->
         <div>
-          <label for="book-description" class="block text-sm font-medium text-gray-700 mb-2">Book Description</label>
+          <label for="book-description" class="block text-sm font-medium text-gray-700 mb-2">Book Description *</label>
           <textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea"></textarea>
         </div>
 
         <!-- Subgenre -->
         <div>
-          <label for="subgenre" class="block text-sm font-medium text-gray-700 mb-2">Subgenre</label>
+          <label for="subgenre" class="block text-sm font-medium text-gray-700 mb-2">Subgenre *</label>
           <select id="subgenre" name="subgenre" class="form-select">
             <option value="">Select subgenre</option>
             <option value="fantasy">Fantasy</option>
@@ -96,7 +67,7 @@
         <!-- Target Audience -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div id="target-audience-field">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience *</label>
             <div class="space-y-2">
               <div><input type="checkbox" name="targetAudience" value="Adults"> Adults</div>
               <div><input type="checkbox" name="targetAudience" value="Young Adults"> Young Adults</div>
@@ -107,7 +78,7 @@
 
           <!-- Promotion Channels -->
           <div id="promotion-channels-field">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Promotion Channels</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Promotion Channels *</label>
             <div class="space-y-2">
               <div><input type="checkbox" name="promotionChannels" value="Instagram"> Instagram</div>
               <div><input type="checkbox" name="promotionChannels" value="BookTok"> BookTok</div>
@@ -121,14 +92,14 @@
         <!-- Dates + Budget -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Dates</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Dates *</label>
             <div class="grid grid-cols-2 gap-4">
               <input type="date" id="start-date" name="startDate" class="form-input">
               <input type="date" id="end-date" name="endDate" class="form-input">
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Budget ($)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Budget ($) *</label>
             <input type="number" id="budget" name="budget" placeholder="Enter budget" class="form-input">
           </div>
         </div>
@@ -141,68 +112,56 @@
 
         <div class="text-center">
           <button type="submit" id="continue-btn" class="btn-continue">
-            <span id="btn-text">Continue</span>
-            <span id="btn-spinner" class="hidden"><i class="fas fa-spinner fa-spin"></i> Generating...</span>
+            Continue
           </button>
           <p id="error-message" class="text-red-500 text-sm mt-2 hidden"></p>
         </div>
       </form>
     </div>
   </main>
-  
-  <script type="module">
-    console.log("🚀 Script loaded");
 
-    import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  <script>
+    const form = document.getElementById('author-form');
+    const errorMessage = document.getElementById('error-message');
 
-    // Firebase setup
-    try {
-      setLogLevel('debug');
-      const app = initializeApp(firebaseConfig, appId);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-      console.log("✅ Firebase initialized");
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-      let userId = null;
-      const form = document.getElementById('author-form');
-      const continueBtn = document.getElementById('continue-btn');
-      const btnText = document.getElementById('btn-text');
-      const btnSpinner = document.getElementById('btn-spinner');
-      const errorMessage = document.getElementById('error-message');
+      let errors = [];
 
-      console.log("Form element found:", form);
+      const title = document.getElementById('book-title');
+      const description = document.getElementById('book-description');
+      const subgenre = document.getElementById('subgenre');
+      const targetAudience = Array.from(document.querySelectorAll('input[name="targetAudience"]:checked'));
+      const promotionChannels = Array.from(document.querySelectorAll('input[name="promotionChannels"]:checked'));
+      const startDate = document.getElementById('start-date');
+      const endDate = document.getElementById('end-date');
+      const budget = document.getElementById('budget');
 
-      if (!form) {
-        console.error("❌ Form not found in DOM!");
+      // Reset previous error styles
+      [title, description, subgenre, startDate, endDate, budget].forEach(el => el.classList.remove('is-error'));
+
+      // Validate required fields
+      if (!title.value.trim()) { errors.push("Book title is required"); title.classList.add('is-error'); }
+      if (!description.value.trim()) { errors.push("Book description is required"); description.classList.add('is-error'); }
+      if (!subgenre.value) { errors.push("Subgenre is required"); subgenre.classList.add('is-error'); }
+      if (targetAudience.length === 0) errors.push("Select at least one target audience");
+      if (promotionChannels.length === 0) errors.push("Select at least one promotion channel");
+      if (!startDate.value) { errors.push("Start date is required"); startDate.classList.add('is-error'); }
+      if (!endDate.value) { errors.push("End date is required"); endDate.classList.add('is-error'); }
+      if (!budget.value || budget.value <= 0) { errors.push("Budget must be greater than 0"); budget.classList.add('is-error'); }
+
+      if (errors.length > 0) {
+        errorMessage.textContent = errors.join(". ");
+        errorMessage.classList.remove('hidden');
+        return;
       } else {
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          console.log("✅ Form submit intercepted");
-          // TODO: your validation + processForm here
-        });
+        errorMessage.classList.add('hidden');
       }
 
-      // Auth
-      if (initialAuthToken) {
-        signInWithCustomToken(auth, initialAuthToken).catch(err => {
-          console.error("Custom token sign-in failed:", err);
-          signInAnonymously(auth).catch(ae => console.error("Anon sign-in failed:", ae));
-        });
-      } else {
-        signInAnonymously(auth).catch(ae => console.error("Anon sign-in failed:", ae));
-      }
-
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          userId = user.uid;
-          console.log("👤 User authenticated:", userId);
-        }
-      });
-    } catch (err) {
-      console.error("🔥 Script error:", err);
-    }
+      // All validations passed
+      alert("Form submitted successfully!"); // Replace with your processing logic
+    });
   </script>
 </body>
 </html>
