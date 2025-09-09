@@ -32,53 +32,91 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 </div>
 <div id="loading" class="text-center py-10">
 <div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>
-<p class="text-gray-600 mt-4">Generating your personalized plan...</p>
+<p class="text-gray-600 mt-4">Fetching your personalized plan...</p>
 </div>
 <div id="plan-container" class="hidden"></div>
 <div id="error-message" class="content-card text-center text-red-500 hidden"></div>
 </main>
 <script type="module">
-// Example: load plan JSON from localStorage or CF response
-const planContainer = document.getElementById('plan-container');
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+    authDomain: "litwire-97956.firebaseapp.com",
+    projectId: "litwire-97956",
+    storageBucket: "litwire-97956.firebasestorage.app",
+    messagingSenderId: "263009111921",
+    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+    measurementId: "G-ZWVFHF5YQX"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 const loadingEl = document.getElementById('loading');
+const planContainer = document.getElementById('plan-container');
 const errorEl = document.getElementById('error-message');
 
-async function init() {
-    try {
-        const planData = JSON.parse(localStorage.getItem('marketingPlan')) || [];
-        if (!planData.length) throw new Error('No marketing plan found');
+function show(el) { el.classList.remove('hidden'); }
+function hide(el) { el.classList.add('hidden'); }
 
-        loadingEl.classList.add('hidden');
-        planContainer.classList.remove('hidden');
+function renderPlan(planData) {
+    planContainer.innerHTML = '';
+    planData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'content-card';
 
-        planData.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'content-card';
+        const influencerName = item.opportunity_details?.Name || 'Unknown';
+        const reason = item.rationale || 'No rationale provided';
+        const message = item.draft_message || 'No message';
 
-            const influencerName = item.opportunity_details?.Name || 'Unknown';
-            const reason = item.rationale || 'No rationale provided';
-            const message = item.draft_message || 'No message';
+        card.innerHTML = `
+            <h2 class="text-xl font-semibold mb-2">${influencerName}</h2>
+            <p class="mb-2"><strong>Why this influencer:</strong> ${reason}</p>
+            <p class="mb-4"><strong>Draft message:</strong> ${message}</p>
+            <button class="button" onclick='sendMessage("${encodeURIComponent(message)}")'>Send Message</button>
+        `;
 
-            card.innerHTML = `
-                <h2 class="text-xl font-semibold mb-2">${influencerName}</h2>
-                <p class="mb-2"><strong>Why this influencer:</strong> ${reason}</p>
-                <p class="mb-4"><strong>Draft message:</strong> ${message}</p>
-                <button class="button" onclick='sendMessage("${encodeURIComponent(message)}")'>Send Message</button>
-            `;
-
-            planContainer.appendChild(card);
-        });
-    } catch (err) {
-        console.error(err);
-        loadingEl.classList.add('hidden');
-        errorEl.textContent = err.message;
-        errorEl.classList.remove('hidden');
-    }
+        planContainer.appendChild(card);
+    });
+    hide(loadingEl);
+    show(planContainer);
 }
 
 function sendMessage(message) {
     alert('Sending message: ' + decodeURIComponent(message));
-    // Here you can implement actual sending logic via API or email service
+    // Implement actual send logic via API or email service
+}
+
+async function init() {
+    try {
+        await signInAnonymously(auth);
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userId = user.uid;
+                const docRef = doc(db, `users/${userId}/profiles/author`);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const planData = docSnap.data().marketingPlan || [];
+                    if (planData.length) {
+                        renderPlan(planData);
+                    } else {
+                        throw new Error('No marketing plan found in Firestore');
+                    }
+                } else {
+                    throw new Error('No marketing plan document found');
+                }
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        hide(loadingEl);
+        errorEl.textContent = err.message;
+        show(errorEl);
+    }
 }
 
 init();
