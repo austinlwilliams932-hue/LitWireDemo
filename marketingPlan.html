@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     
     <script>
+        // These variables are provided by the environment and should not be changed.
         window.__firebase_config = JSON.stringify({
             apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
             authDomain: "litwire-97956.firebaseapp.com",
@@ -95,7 +96,9 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profiles/author`);
+                    // FIX: The document path was incorrect. It should be `users/${user.uid}/...`
+                    // and not `artifacts/${appId}/users/${user.uid}/...`
+                    const userDocRef = doc(db, `users/${user.uid}/profiles/author`);
                     const userDoc = await getDoc(userDocRef);
 
                     if (userDoc.exists() && userDoc.data().marketingPlan) {
