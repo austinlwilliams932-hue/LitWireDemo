@@ -174,8 +174,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, onSnapshot, collection, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global variables for Firebase
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -188,22 +188,33 @@
         db = getFirestore(app);
         auth = getAuth(app);
         
-        async function authenticateAndInit() {
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                userId = auth.currentUser.uid;
+        // This is the main entry point for the app. It will run every time the auth state changes.
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in.
+                userId = user.uid;
                 document.getElementById('user-id').textContent = userId;
                 console.log("Authenticated with user ID:", userId);
+                
+                // Now that we have a user, we can initialize the app.
                 initApp();
-            } catch (error) {
-                console.error("Firebase Auth Error:", error);
-                document.getElementById('loading').textContent = "Failed to connect. Please try again.";
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+            } else {
+                // User is signed out. Attempt to sign in again.
+                console.log("No user found. Signing in.");
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Firebase Auth Error:", error);
+                    document.getElementById('loading').textContent = "Failed to connect. Please try again.";
+                }
             }
-        }
+        });
         
         // --- Data Models and Dummy Data ---
         const dummyPosts = [
@@ -368,8 +379,6 @@
             
             // Initial view
             renderView('feed-view');
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('content').classList.remove('hidden');
         }
 
         // --- Forms and Data Submission ---
@@ -454,9 +463,6 @@
                 console.error("Error submitting book: ", e);
             }
         });
-
-        // Start the authentication and app initialization process
-        authenticateAndInit();
     </script>
 </body>
 </html>
