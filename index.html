@@ -6,16 +6,17 @@
     <title>LitWire Social Network</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    
     <script>
         window.__firebase_config = JSON.stringify({
-  apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-  authDomain: "litwire-97956.firebaseapp.com",
-  projectId: "litwire-97956",
-  storageBucket: "litwire-97956.firebasestorage.app",
-  messagingSenderId: "263009111921",
-  appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-  measurementId: "G-ZWVFHF5YQX"
+            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+            authDomain: "litwire-97956.firebaseapp.com",
+            projectId: "litwire-97956",
+            storageBucket: "litwire-97956.firebasestorage.app",
+            messagingSenderId: "263009111921",
+            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+            measurementId: "G-ZWVFHF5YQX"
         });
 
         window.__app_id = "litwire-app";
@@ -36,29 +37,57 @@
         .spinner-border {
             border-top-color: #f3f4f6;
         }
+        .btn-author {
+            background-color: #2e598b;
+            color: #fff;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-author:hover {
+            background-color: #234368;
+        }
+        .btn-influencer {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-influencer:hover {
+            background-color: #d1d5db;
+        }
+        .btn-get-started {
+            background-color: #2e598b;
+            color: #fff;
+            padding: 1.25rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-get-started:hover {
+            background-color: #234368;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
     <header class="bg-white shadow-md py-4 sticky top-0 z-50">
         <nav class="container flex justify-between items-center px-4 md:px-8">
             <div class="text-3xl font-bold text-gray-800">
-                <span class="text-purple-600">Lit</span><span class="text-gray-900">Wire</span>
+                <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
             </div>
             <div class="flex items-center space-x-6">
-                <button id="nav-feed" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Feed</button>
-                <button id="nav-authors" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Authors</button>
-                <button id="nav-influencers" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Influencers</button>
-                <button id="nav-profile" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Profile</button>
-                <button id="nav-matches" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Matches</button>
-                <button id="nav-messages" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Messages</button>
-                <button id="nav-logout" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Log Out</button>
+                <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Login</button>
+                <button id="nav-signup" class="bg-gray-800 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-900 transition duration-300">Sign Up</button>
             </div>
         </nav>
     </header>
 
     <main class="flex-grow container mt-12 px-4 md:px-8">
         <div id="loading" class="text-center py-10">
-            <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-purple-600 border-r-transparent" role="status">
+            <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-blue-900 border-r-transparent" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
             <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
@@ -70,72 +99,121 @@
             <div class="bg-white p-4 rounded border text-left text-sm">
                 <p class="font-semibold mb-2">Add this script tag before the closing &lt;/head&gt; tag:</p>
                 <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto"><code>&lt;script&gt;
-    // Replace with your Firebase project config
-    window.__firebase_config = JSON.stringify({
-        apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-        authDomain: "litwire-97956.firebaseapp.com",
-        projectId: "litwire-97956",
-        storageBucket: "litwire-97956.firebasestorage.app",
-        messagingSenderId: "263009111921",
-        appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-        measurementId: "G-ZWVFHF5YQX"
-    });
-    window.__app_id = "litwire-app";
+// Replace with your Firebase project config
+window.__firebase_config = JSON.stringify({
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+});
+window.__app_id = "litwire-app";
 &lt;/script&gt;</code></pre>
             </div>
-            <button id="demo-mode-btn" class="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300">
+            <button id="demo-mode-btn" class="mt-4 px-6 py-3 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition duration-300">
                 Continue in Demo Mode (No Save)
             </button>
         </div>
 
+        <!-- The main landing page view -->
         <section id="onboarding-view" class="view hidden">
-            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600 text-center max-w-2xl mx-auto">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Welcome to LitWire</h2>
-                <p class="text-lg font-semibold mb-6">Create your profile to get started.</p>
-                <div class="flex space-x-4 mb-8">
-                    <button id="author-btn" class="flex-1 px-8 py-3 rounded-xl font-semibold transition duration-300 bg-purple-600 text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">I'm an Author</button>
-                    <button id="influencer-btn" class="flex-1 px-8 py-3 rounded-xl font-semibold transition duration-300 bg-sky-500 text-white hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">I'm an Influencer</button>
+            <div class="text-center py-20">
+                <h1 class="text-5xl font-bold text-gray-900 leading-tight">Where stories meet<br>their champions</h1>
+                <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
+                    A curated matchmaking platform connecting authors with book influencers who actually fit their genre, style, and audience.
+                </p>
+                <div class="flex justify-center space-x-4 mt-8">
+                    <button id="author-btn" class="btn-author">I'm an Author</button>
+                    <button id="influencer-btn" class="btn-influencer">I'm an Influencer</button>
                 </div>
+            </div>
 
-                <div id="author-form-container" class="hidden">
-                    <h3 class="text-2xl font-bold mb-6 text-purple-600">Author Profile Setup</h3>
-                    <form id="author-form" class="space-y-6">
-                        <div>
-                            <label for="author-name" class="block text-sm font-medium text-gray-700">Your Name</label>
-                            <input type="text" id="author-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3">
-                        </div>
-                        <div>
-                            <label for="author-bio" class="block text-sm font-medium text-gray-700">Bio</label>
-                            <textarea id="author-bio" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3"></textarea>
-                        </div>
-                        <button type="submit" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">Save Profile</button>
-                    </form>
+            <!-- Workflow section -->
+            <div class="mt-20 py-12 px-8 bg-white rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-around text-center">
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-list-check text-4xl text-blue-900"></i>
+                    <p class="mt-2 text-lg text-gray-700 font-semibold">Survey</p>
                 </div>
+                <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-user-friends text-4xl text-blue-900"></i>
+                    <p class="mt-2 text-lg text-gray-700 font-semibold">Matches</p>
+                </div>
+                <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-chart-line text-4xl text-blue-900"></i>
+                    <p class="mt-2 text-lg text-gray-700 font-semibold">Dashboard</p>
+                </div>
+            </div>
 
-                <div id="influencer-form-container" class="hidden">
-                    <h3 class="text-2xl font-bold mb-6 text-sky-500">Influencer Profile Setup</h3>
-                    <form id="influencer-form" class="space-y-6">
-                        <div>
-                            <label for="influencer-name" class="block text-sm font-medium text-gray-700">Your Name</label>
-                            <input type="text" id="influencer-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
-                        </div>
-                        <div>
-                            <label for="influencer-platform" class="block text-sm font-medium text-gray-700">Main Platform (e.g., TikTok, Instagram, Blog)</label>
-                            <input type="text" id="influencer-platform" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
-                        </div>
-                        <div>
-                            <label for="influencer-interests" class="block text-sm font-medium text-gray-700">Niche Interests (e.g., historical romance, dark academia)</label>
-                            <input type="text" id="influencer-interests" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
-                        </div>
-                        <button type="submit" class="w-full px-6 py-3 bg-sky-500 text-white rounded-lg shadow-md hover:bg-sky-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Save Profile</button>
-                    </form>
+            <!-- Testimonials section -->
+            <div class="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
+                    <p class="text-gray-700 font-medium text-lg italic">
+                        "I've connected with amazing book lovers who really get my work."
+                    </p>
                 </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
+                    <p class="text-gray-700 font-medium text-lg italic">
+                        "A game-changer for finding new reads in my niche."
+                    </p>
+                </div>
+            </div>
+
+            <!-- Logos section (placeholders) -->
+            <div class="mt-20 flex justify-center space-x-12 items-center">
+                <!-- Replace these with actual SVGs or image tags -->
+                <span class="text-gray-400 text-5xl">🌷</span>
+                <span class="text-gray-400 text-5xl">⚫</span>
+                <span class="text-gray-400 text-5xl">▶️</span>
+                <span class="text-gray-400 text-4xl">TDJ</span>
+                <span class="text-gray-400 text-4xl">wisco</span>
+            </div>
+
+            <!-- Call to Action button -->
+            <div class="mt-20 text-center">
+                <button class="btn-get-started">Start your free campaign plan today →</button>
+            </div>
+
+            <div id="author-form-container" class="hidden">
+                <h3 class="text-2xl font-bold mb-6 text-purple-600">Author Profile Setup</h3>
+                <form id="author-form" class="space-y-6">
+                    <div>
+                        <label for="author-name" class="block text-sm font-medium text-gray-700">Your Name</label>
+                        <input type="text" id="author-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3">
+                    </div>
+                    <div>
+                        <label for="author-bio" class="block text-sm font-medium text-gray-700">Bio</label>
+                        <textarea id="author-bio" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3"></textarea>
+                    </div>
+                    <button type="submit" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">Save Profile</button>
+                </form>
+            </div>
+
+            <div id="influencer-form-container" class="hidden">
+                <h3 class="text-2xl font-bold mb-6 text-sky-500">Influencer Profile Setup</h3>
+                <form id="influencer-form" class="space-y-6">
+                    <div>
+                        <label for="influencer-name" class="block text-sm font-medium text-gray-700">Your Name</label>
+                        <input type="text" id="influencer-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+                    </div>
+                    <div>
+                        <label for="influencer-platform" class="block text-sm font-medium text-gray-700">Main Platform (e.g., TikTok, Instagram, Blog)</label>
+                        <input type="text" id="influencer-platform" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+                    </div>
+                    <div>
+                        <label for="influencer-interests" class="block text-sm font-medium text-gray-700">Niche Interests (e.g., historical romance, dark academia)</label>
+                        <input type="text" id="influencer-interests" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+                    </div>
+                    <button type="submit" class="w-full px-6 py-3 bg-sky-500 text-white rounded-lg shadow-md hover:bg-sky-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Save Profile</button>
+                </form>
             </div>
         </section>
 
         <div id="content" class="space-y-12 hidden">
-            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-purple-600 text-center">
-                <p class="text-sm text-gray-500">Logged in as: <span id="user-id" class="font-mono text-xs text-purple-600"></span></p>
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-blue-900 text-center">
+                <p class="text-sm text-gray-500">Logged in as: <span id="user-id" class="font-mono text-xs text-blue-900"></span></p>
                 <p class="text-sm text-gray-500 mt-1">Account Type: <span id="user-type" class="font-semibold text-gray-700">Not Set</span></p>
                 <div id="demo-indicator" class="mt-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs inline-block hidden">
                     Demo Mode - Changes won't be saved
@@ -150,9 +228,9 @@
 
             <section id="profile-view" class="view hidden">
                 <h2 class="text-3xl font-bold text-gray-800 mb-6">My Profile</h2>
-                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-blue-900">
                     <div id="book-form-container" class="hidden mt-12">
-                        <h3 class="text-2xl font-bold mb-6 text-purple-600">Ingress a New Book</h3>
+                        <h3 class="text-2xl font-bold mb-6 text-blue-900">Ingress a New Book</h3>
                         <form id="book-form" class="space-y-6">
                             <div>
                                 <label for="book-title" class="block text-sm font-medium text-gray-700">Book Title</label>
@@ -182,13 +260,13 @@
                                 <label for="desired-audience-type" class="block text-sm font-medium text-gray-700">Desired Audience (e.g., Teens, Millennials)</label>
                                 <input type="text" id="desired-audience-type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
                             </div>
-                            <button type="submit" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">Submit Book</button>
+                            <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2">Submit Book</button>
                         </form>
 
                         <div id="marketing-results-container" class="mt-12 hidden">
-                            <h3 class="text-2xl font-bold mb-4 text-purple-600">Marketing Recommendations</h3>
+                            <h3 class="text-2xl font-bold mb-4 text-blue-900">Marketing Recommendations</h3>
                             <div id="marketing-loader" class="text-center py-4 hidden">
-                                <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full border-purple-600 border-r-transparent" role="status">
+                                <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full border-blue-900 border-r-transparent" role="status">
                                     <span class="sr-only">Loading...</span>
                                 </div>
                                 <p class="text-gray-600 mt-2">Finding opportunities for your book...</p>
@@ -215,7 +293,7 @@
 
             <section id="matches-view" class="view hidden">
                 <h2 class="text-3xl font-bold text-gray-800 mb-6">Your Matches</h2>
-                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-blue-900">
                     <p class="text-gray-600 text-center text-lg">
                         This is where we'd use our matchmaking algorithm! For the MVP, here's a random selection of potential matches.
                     </p>
@@ -226,7 +304,7 @@
 
             <section id="messages-view" class="view hidden">
                 <h2 class="text-3xl font-bold text-gray-800 mb-6">Messages</h2>
-                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600 flex flex-col md:flex-row h-full">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-blue-900 flex flex-col md:flex-row h-full">
                     <div id="conversations-list" class="w-full md:w-1/4 pr-4 border-b md:border-b-0 md:border-r border-gray-200 overflow-y-auto max-h-[600px] mb-4 md:mb-0">
                     </div>
                     <div id="chat-container" class="w-full md:w-3/4 flex flex-col pl-4">
@@ -235,7 +313,7 @@
                         </div>
                         <form id="message-form" class="mt-4 flex">
                             <input type="text" id="message-input" class="flex-grow rounded-lg border-gray-300 shadow-sm p-3" placeholder="Type a message...">
-                            <button type="submit" class="ml-2 px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300">Send</button>
+                            <button type="submit" class="ml-2 px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Send</button>
                         </form>
                     </div>
                 </div>
@@ -280,6 +358,8 @@
     const userIdEl = document.getElementById('user-id');
     const userTypeEl = document.getElementById('user-type');
     const demoIndicator = document.getElementById('demo-indicator');
+    const authorFormContainer = document.getElementById('author-form-container');
+    const influencerFormContainer = document.getElementById('influencer-form-container');
 
     // Initialize Firebase or fall back to demo mode
     async function initApp() {
@@ -392,15 +472,29 @@
     // Set up onboarding buttons
     function setupOnboarding() {
         document.getElementById('author-btn').addEventListener('click', () => {
-            document.getElementById('author-form-container').classList.remove('hidden');
-            document.getElementById('influencer-form-container').classList.add('hidden');
+            // Hide main landing page content and show form
+            document.querySelector('#onboarding-view > div:first-child').classList.add('hidden');
+            document.querySelector('#onboarding-view > div:nth-child(2)').classList.add('hidden');
+            document.querySelector('#onboarding-view > div:nth-child(3)').classList.add('hidden');
+            document.querySelector('#onboarding-view > div:nth-child(4)').classList.add('hidden');
+            document.querySelector('#onboarding-view > div:nth-child(5)').classList.add('hidden');
+            
+            authorFormContainer.classList.remove('hidden');
+            influencerFormContainer.classList.add('hidden');
         });
 
         document.getElementById('influencer-btn').addEventListener('click', () => {
-            document.getElementById('influencer-form-container').classList.remove('hidden');
-            document.getElementById('author-form-container').classList.add('hidden');
-        });
+             // Hide main landing page content and show form
+            document.querySelector('#onboarding-view > div:first-child').classList.add('hidden');
+            document.querySelector('#onboarding-view > div:nth-child(2)').classList.add('hidden');
+            document.querySelector('#onboarding-view > div:nth-child(3)').classList.add('hidden');
+            document.querySelector('#onboarding-view > div:nth-child(4)').classList.add('hidden');
+            document.querySelector('#onboarding-view > div:nth-child(5)').classList.add('hidden');
 
+            influencerFormContainer.classList.remove('hidden');
+            authorFormContainer.classList.add('hidden');
+        });
+        
         // Author form submission
         document.getElementById('author-form').addEventListener('submit', async (e) => {
             e.preventDefault();
