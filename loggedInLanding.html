@@ -41,6 +41,8 @@
                 <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
             </div>
             <div class="flex items-center space-x-6">
+                <a href="profile.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Profile</a>
+                <a href="matches.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Matches</a>
                 <button id="sign-out-btn" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Sign Out</button>
             </div>
         </nav>
@@ -56,7 +58,24 @@
         </div>
         
         <div id="feed-container" class="space-y-6">
-            <!-- Feed posts will be dynamically added here -->
+            <!-- Faux posts to show off the way that the page would look -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <div class="flex items-center space-x-4 mb-2">
+                    <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
+                    <span class="font-semibold text-gray-800">Reading Rex</span>
+                </div>
+                <p class="text-gray-700">Just finished 'Dune' for the first time. The world-building is incredible! I can't believe I waited so long to read it.</p>
+                <p class="text-xs text-gray-400 mt-2">1 hour ago</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                <div class="flex items-center space-x-4 mb-2">
+                    <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
+                    <span class="font-semibold text-gray-800">Bookish Betty</span>
+                </div>
+                <p class="text-gray-700">Looking for a good historical fiction recommendation. Something set in the roaring twenties would be great!</p>
+                <p class="text-xs text-gray-400 mt-2">3 hours ago</p>
+            </div>
+            <!-- Real-time feed posts will be dynamically added here -->
         </div>
     </main>
 
@@ -68,17 +87,20 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        setLogLevel('debug');
-        
         // Firebase Configuration
         const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(window.__firebase_config);
         const app = initializeApp(firebaseConfig, appId);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
+        // Ensure anonymous sign-in
+        if (!auth.currentUser) {
+          signInAnonymously(auth);
+        }
 
         // DOM Elements
         const signOutBtn = document.getElementById('sign-out-btn');
@@ -89,21 +111,6 @@
         // User Data
         let userId = null;
         let userProfile = null;
-        
-        // Function to render a single post to the feed
-        function renderPost(post) {
-            const postElement = document.createElement('div');
-            postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
-            postElement.innerHTML = `
-                <div class="flex items-center space-x-4 mb-2">
-                    <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
-                    <span class="font-semibold text-gray-800">${post.authorName || 'Anonymous'}</span>
-                </div>
-                <p class="text-gray-700">${post.content}</p>
-                <p class="text-xs text-gray-400 mt-2">${post.createdAt ? new Date(post.createdAt.toDate()).toLocaleString() : 'Just now'}</p>
-            `;
-            feedContainer.appendChild(postElement);
-        }
 
         // Firebase Authentication Listener
         onAuthStateChanged(auth, async (user) => {
@@ -111,28 +118,24 @@
                 userId = user.uid;
                 // Fetch user profile
                 try {
-                    const userDoc = await getDoc(doc(db, "users", userId));
+                    const userDoc = await getDoc(doc(db, `artifacts/${appId}/users/${userId}/profile/data`));
                     if (userDoc.exists()) {
                         userProfile = userDoc.data();
                     } else {
-                        // User is logged in but has no profile, set default name
-                        console.warn("User profile not found. Using 'Anonymous'.");
-                        userProfile = { name: 'Anonymous' };
+                        // User is logged in but has no profile
+                        // We will allow them to post anonymously
+                        userProfile = { name: "Anonymous" };
                     }
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
-                    userProfile = { name: 'Anonymous' };
+                    userProfile = { name: "Anonymous" };
                 }
-                
-                // Add fake posts to show off the way that the page would look.
-                addFakePosts();
                 
                 // Set up real-time feed listener
                 setupFeedListener();
 
             } else {
-                // If the user is not signed in, sign in anonymously.
-                console.log("No user signed in. Signing in anonymously...");
+                // User is not signed in, sign in anonymously
                 await signInAnonymously(auth);
             }
         });
@@ -140,44 +143,9 @@
         // Sign Out
         signOutBtn.addEventListener('click', async () => {
             await signOut(auth);
-            // After signing out, sign in anonymously again to allow access
+            // After signing out, sign back in anonymously to keep the user on the page.
             await signInAnonymously(auth);
         });
-
-        // Function to add fake posts to the page
-        function addFakePosts() {
-            const fakePosts = [
-                {
-                    authorName: 'Bookworm Jane',
-                    content: 'Just finished "The Midnight Library" and it was absolutely stunning. A great read that makes you think about all the possibilities in life.',
-                    createdAt: new Date(Date.now() - 3600000) // 1 hour ago
-                },
-                {
-                    authorName: 'Literary Leo',
-                    content: 'Starting "Dune" for the first time. The world-building is incredible, but it\'s a lot to take in! Wish me luck on this epic journey.',
-                    createdAt: new Date(Date.now() - 7200000) // 2 hours ago
-                },
-                {
-                    authorName: 'History Buff',
-                    content: 'Highly recommend "Sapiens" by Yuval Noah Harari. It provides a fascinating perspective on the history of humanity.',
-                    createdAt: new Date(Date.now() - 10800000) // 3 hours ago
-                },
-            ];
-
-            fakePosts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
-                postElement.innerHTML = `
-                    <div class="flex items-center space-x-4 mb-2">
-                        <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
-                        <span class="font-semibold text-gray-800">${post.authorName || 'Anonymous'}</span>
-                    </div>
-                    <p class="text-gray-700">${post.content}</p>
-                    <p class="text-xs text-gray-400 mt-2">${new Date(post.createdAt).toLocaleString()}</p>
-                `;
-                feedContainer.appendChild(postElement);
-            });
-        }
 
         // Set up Real-time Feed Listener
         function setupFeedListener() {
@@ -185,24 +153,24 @@
             const q = query(feedCollectionRef, orderBy('createdAt', 'desc'));
 
             onSnapshot(q, (snapshot) => {
-                // Clear the real posts to prevent duplicates on update
-                // This assumes fake posts are only added once at the beginning
-                const realPosts = feedContainer.querySelectorAll('.real-post');
-                realPosts.forEach(post => post.remove());
+                // Clear only the dynamically added real-time posts
+                // We'll leave the faux posts at the top
+                const existingPosts = Array.from(feedContainer.children).filter(child => child.dataset.isFake !== 'true');
+                existingPosts.forEach(post => post.remove());
 
                 snapshot.forEach((doc) => {
                     const post = doc.data();
                     const postElement = document.createElement('div');
-                    postElement.className = 'real-post bg-white p-6 rounded-xl shadow-md border border-gray-200';
+                    postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
                     postElement.innerHTML = `
                         <div class="flex items-center space-x-4 mb-2">
                             <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
                             <span class="font-semibold text-gray-800">${post.authorName || 'Anonymous'}</span>
                         </div>
                         <p class="text-gray-700">${post.content}</p>
-                        <p class="text-xs text-gray-400 mt-2">${post.createdAt ? new Date(post.createdAt.toDate()).toLocaleString() : 'Just now'}</p>
+                        <p class="text-xs text-gray-400 mt-2">${new Date(post.createdAt.toDate()).toLocaleString()}</p>
                     `;
-                    feedContainer.prepend(postElement); // Add new posts to the top
+                    feedContainer.appendChild(postElement);
                 });
             });
         }
