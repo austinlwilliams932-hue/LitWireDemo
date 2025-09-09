@@ -249,623 +249,228 @@
         </div>
     </footer>
 
-    <script type="module">
-        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuration variables
-        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'demo-app';
-        let firebaseConfig = null;
-        let demoMode = false;
+    // Configuration variables
+    const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'demo-app';
+    let firebaseConfig = null;
+    let demoMode = false;
 
-        // Parse Firebase config
+    // Parse Firebase config
+    try {
+        if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
+            firebaseConfig = JSON.parse(window.__firebase_config);
+        }
+    } catch (e) {
+        console.error("Failed to parse Firebase configuration:", e);
+    }
+
+    let app, db, auth;
+    let userId = null;
+    let userProfile = null;
+
+    // DOM elements
+    const loadingEl = document.getElementById('loading');
+    const configMissingEl = document.getElementById('config-missing');
+    const onboardingView = document.getElementById('onboarding-view');
+    const contentEl = document.getElementById('content');
+    const userIdEl = document.getElementById('user-id');
+    const userTypeEl = document.getElementById('user-type');
+    const demoIndicator = document.getElementById('demo-indicator');
+
+    // Initialize Firebase or fall back to demo mode
+    async function initApp() {
+        if (!firebaseConfig) {
+            loadingEl.classList.add('hidden');
+            configMissingEl.classList.remove('hidden');
+            document.getElementById('demo-mode-btn').addEventListener('click', startDemoMode);
+            return;
+        }
+
         try {
-            if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
-                firebaseConfig = JSON.parse(window.__firebase_config);
-            }
-        } catch (e) {
-            console.error("Failed to parse Firebase configuration:", e);
-        }
+            // Initialize Firebase
+            app = initializeApp(firebaseConfig, appId);
+            auth = getAuth(app);
+            db = getFirestore(app);
 
-        const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
+            // Check auth state
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    // User is signed in
+                    userId = user.uid;
+                    userIdEl.textContent = userId;
 
-        let app, db, auth;
-        let userId = null;
-        let userProfile = null;
-        let currentRecipientId = null;
-        let currentChatId = null;
-
-        // Demo data for when Firebase is not configured
-        let demoUsers = [];
-        let demoPosts = [];
-        let demoMessages = [];
-
-        const loadingEl = document.getElementById('loading');
-        const configMissingEl = document.getElementById('config-missing');
-        const onboardingView = document.getElementById('onboarding-view');
-        const contentEl = document.getElementById('content');
-        const userIdEl = document.getElementById('user-id');
-        const userTypeEl = document.getElementById('user-type');
-        const profileView = document.getElementById('profile-view');
-        const demoIndicator = document.getElementById('demo-indicator');
-
-        const collections = {
-            users: `users`,
-            posts: `posts`,
-            messages: `messages`,
-        };
-
-        // Demo mode functions
-        function initDemoMode() {
-            demoMode = true;
-            userId = 'demo-user-' + Math.random().toString(36).substr(2, 9);
-            userIdEl.textContent = userId;
-            demoIndicator.classList.remove('hidden');
-
-            // Initialize with some demo data
-            demoPosts = [
-                {
-                    content: "Just finished my latest fantasy novel! Can't wait to share it with readers.",
-                    name: "Sarah Mitchell",
-                    type: "author",
-                    timestamp: Date.now() - 3600000
-                },
-                {
-                    content: "Looking for some great sci-fi book recommendations for my next BookTok video!",
-                    name: "Alex Chen",
-                    type: "influencer",
-                    timestamp: Date.now() - 7200000
-                }
-            ];
-
-            demoUsers = [
-                {
-                    id: 'author-1',
-                    name: 'Sarah Mitchell',
-                    type: 'author',
-                    bio: 'Fantasy author with 3 published novels',
-                    books: [{ title: 'The Moonlight Chronicles', blurb: 'A magical adventure' }]
-                },
-                {
-                    id: 'influencer-1',
-                    name: 'Alex Chen',
-                    type: 'influencer',
-                    platform: 'TikTok',
-                    interests: 'Sci-fi, Fantasy, Young Adult'
-                }
-            ];
-
-            renderPosts(demoPosts);
-            renderAuthors(demoUsers.filter(u => u.type === 'author'));
-            renderInfluencers(demoUsers.filter(u => u.type === 'influencer'));
-        }
-
-        function saveDemoUser(user) {
-            const existingIndex = demoUsers.findIndex(u => u.id === user.id);
-            if (existingIndex >= 0) {
-                demoUsers[existingIndex] = { ...demoUsers[existingIndex], ...user };
-            } else {
-                demoUsers.push(user);
-            }
-            userProfile = user;
-            renderAuthors(demoUsers.filter(u => u.type === 'author'));
-            renderInfluencers(demoUsers.filter(u => u.type === 'influencer'));
-        }
-
-        function addDemoPost(post) {
-            demoPosts.unshift(post);
-            renderPosts(demoPosts);
-        }
-
-        // Utility function to generate a consistent chat ID
-        function getChatId(userA, userB) {
-            return [userA, userB].sort().join('_');
-        }
-
-        function renderView(viewId) {
-            document.querySelectorAll('.view').forEach(view => {
-                view.classList.add('hidden');
-            });
-            document.getElementById(viewId).classList.remove('hidden');
-        }
-
-        function renderPosts(posts) {
-            const container = document.getElementById('posts-container');
-            container.innerHTML = '';
-            posts.sort((a, b) => b.timestamp - a.timestamp);
-            posts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.className = 'bg-white p-6 rounded-2xl shadow-lg border-t-4 border-gray-200';
-                postElement.innerHTML = `
-                    <div class="flex items-center space-x-4 mb-2">
-                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl ${post.type === 'author' ? 'bg-purple-200 text-purple-700' : 'bg-sky-200 text-sky-700'}">${post.name.charAt(0)}</div>
-                        <div>
-                            <p class="font-semibold text-gray-800 text-lg">${post.name}</p>
-                            <p class="text-xs text-gray-500">${new Date(post.timestamp).toLocaleString()}</p>
-                        </div>
-                    </div>
-                    <p class="text-gray-700 mt-4 leading-relaxed">${post.content}</p>
-                `;
-                container.appendChild(postElement);
-            });
-        }
-
-        function renderAuthors(authors) {
-            const container = document.getElementById('authors-container');
-            container.innerHTML = '';
-            authors.forEach(author => {
-                const card = document.createElement('div');
-                card.className = 'bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600';
-                const booksHtml = author.books ? author.books.map(book => `
-                    <div class="p-2 bg-gray-100 rounded-lg text-xs font-semibold text-gray-600">${book.title}</div>
-                `).join('') : '';
-
-                card.innerHTML = `
-                    <div class="flex items-center space-x-4 mb-4">
-                        <div class="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center font-bold text-purple-700 text-2xl">${author.name.charAt(0)}</div>
-                        <h3 class="font-bold text-2xl text-gray-800">${author.name}</h3>
-                    </div>
-                    <p class="text-gray-600 text-sm leading-snug">${author.bio}</p>
-                    <div class="mt-6 flex flex-wrap gap-2">
-                        ${booksHtml}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderInfluencers(influencers) {
-            const container = document.getElementById('influencers-container');
-            container.innerHTML = '';
-            influencers.forEach(influencer => {
-                const card = document.createElement('div');
-                card.className = 'bg-white p-8 rounded-2xl shadow-lg border-t-4 border-sky-500';
-                card.innerHTML = `
-                    <div class="flex items-center space-x-4 mb-4">
-                        <div class="w-16 h-16 bg-sky-200 rounded-full flex items-center justify-center font-bold text-sky-700 text-2xl">${influencer.name.charAt(0)}</div>
-                        <h3 class="font-bold text-2xl text-gray-800">${influencer.name}</h3>
-                    </div>
-                    <p class="text-gray-600 text-sm">Platform: <span class="font-semibold text-gray-800">${influencer.platform}</span></p>
-                    <p class="text-gray-600 text-sm mt-1">Interests: <span class="font-semibold text-gray-800">${influencer.interests}</span></p>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderMatches(matches) {
-            const container = document.getElementById('matches-container');
-            container.innerHTML = '';
-            matches.forEach(match => {
-                const card = document.createElement('div');
-                card.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200';
-                card.innerHTML = `
-                    <h3 class="font-bold text-lg text-gray-800">${match.name}</h3>
-                    <p class="text-gray-600 text-sm mt-1">${match.type === 'author' ? 'Author' : 'Influencer'}</p>
-                    <p class="text-gray-500 text-xs mt-2 truncate">${match.bio || match.interests}</p>
-                    <button class="connect-btn mt-4 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-300" data-user-id="${match.id}">Connect</button>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderConversations(conversations) {
-            const container = document.getElementById('conversations-list');
-            container.innerHTML = '';
-            if (conversations.length === 0) {
-                container.innerHTML = `<p class="text-gray-400 text-center p-4">No active conversations.</p>`;
-            }
-            conversations.forEach(conv => {
-                const convItem = document.createElement('div');
-                convItem.className = 'p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition duration-200';
-                convItem.innerHTML = `<p class="font-semibold">${conv.name}</p>`;
-                convItem.addEventListener('click', () => {
-                    loadChat(conv.id, conv.name);
-                });
-                container.appendChild(convItem);
-            });
-        }
-
-        function loadChat(recipientId, recipientName) {
-            currentRecipientId = recipientId;
-            currentChatId = getChatId(userId, recipientId);
-
-            const chatMessagesEl = document.getElementById('chat-messages');
-            chatMessagesEl.innerHTML = `<p class="text-gray-400 text-center">Loading messages with ${recipientName}...</p>`;
-
-            // In demo mode, we'll just show a simple chat interface
-            if (demoMode) {
-                chatMessagesEl.innerHTML = `
-                    <div class="flex flex-col space-y-4">
-                        <div class="flex justify-start">
-                            <div class="max-w-xs bg-gray-200 rounded-lg p-3">
-                                <p class="text-sm">Hello! How can I help with your book promotion?</p>
-                            </div>
-                        </div>
-                        <div class="flex justify-end">
-                            <div class="max-w-xs bg-purple-600 text-white rounded-lg p-3">
-                                <p class="text-sm">Hi! I have a new fantasy novel I'd like to promote.</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function initFirebase() {
-            if (!firebaseConfig) {
-                loadingEl.classList.add('hidden');
-                configMissingEl.classList.remove('hidden');
-                document.getElementById('demo-mode-btn').addEventListener('click', () => {
-                    configMissingEl.classList.add('hidden');
-                    initDemoMode();
-                    onboardingView.classList.remove('hidden');
-                });
-                return;
-            }
-
-            try {
-                app = initializeApp(firebaseConfig, appId);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Check if user is already authenticated
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        userIdEl.textContent = userId;
-
-                        // Load user profile
-                        const userDoc = await getDoc(doc(db, collections.users, userId));
+                    try {
+                        // Check if user has a profile
+                        const userDoc = await getDoc(doc(db, "users", userId));
                         if (userDoc.exists()) {
                             userProfile = userDoc.data();
                             userTypeEl.textContent = userProfile.type;
-
-                            if (userProfile.type === 'author') {
-                                document.getElementById('book-form-container').classList.remove('hidden');
-                            }
-
-                            loadingEl.classList.add('hidden');
-                            contentEl.classList.remove('hidden');
+                            showMainContent();
                             renderView('feed-view');
                         } else {
                             // No profile yet, show onboarding
-                            loadingEl.classList.add('hidden');
-                            onboardingView.classList.remove('hidden');
+                            showOnboarding();
                         }
-                    } else {
-                        // Sign in anonymously
-                        try {
-                            const userCredential = await signInAnonymously(auth);
-                            userId = userCredential.user.uid;
-                            userIdEl.textContent = userId;
-
-                            // Check if user has a profile
-                            const userDoc = await getDoc(doc(db, collections.users, userId));
-                            if (userDoc.exists()) {
-                                userProfile = userDoc.data();
-                                userTypeEl.textContent = userProfile.type;
-
-                                if (userProfile.type === 'author') {
-                                    document.getElementById('book-form-container').classList.remove('hidden');
-                                }
-
-                                loadingEl.classList.add('hidden');
-                                contentEl.classList.remove('hidden');
-                                renderView('feed-view');
-                            } else {
-                                // No profile yet, show onboarding
-                                loadingEl.classList.add('hidden');
-                                onboardingView.classList.remove('hidden');
-                            }
-                        } catch (error) {
-                            console.error("Error signing in anonymously:", error);
-                            loadingEl.querySelector('p').textContent = "Error connecting. Trying demo mode...";
-
-                            // Fall back to demo mode
-                            setTimeout(() => {
-                                initDemoMode();
-                                onboardingView.classList.remove('hidden');
-                            }, 1000);
-                        }
-                    }
-                });
-
-                // Set up navigation
-                document.getElementById('nav-feed').addEventListener('click', () => renderView('feed-view'));
-                document.getElementById('nav-authors').addEventListener('click', () => renderView('authors-view'));
-                document.getElementById('nav-influencers').addEventListener('click', () => renderView('influencers-view'));
-                document.getElementById('nav-profile').addEventListener('click', () => renderView('profile-view'));
-                document.getElementById('nav-matches').addEventListener('click', () => renderView('matches-view'));
-                document.getElementById('nav-messages').addEventListener('click', () => renderView('messages-view'));
-
-                // Set up logout
-                document.getElementById('nav-logout').addEventListener('click', async () => {
-                    try {
-                        await signOut(auth);
-                        location.reload();
                     } catch (error) {
-                        console.error("Error signing out:", error);
+                        console.error("Error checking user profile:", error);
+                        showOnboarding();
                     }
-                });
-
-                // Set up onboarding buttons
-                document.getElementById('author-btn').addEventListener('click', () => {
-                    document.getElementById('author-form-container').classList.remove('hidden');
-                    document.getElementById('influencer-form-container').classList.add('hidden');
-                });
-
-                document.getElementById('influencer-btn').addEventListener('click', () => {
-                    document.getElementById('influencer-form-container').classList.remove('hidden');
-                    document.getElementById('author-form-container').classList.add('hidden');
-                });
-
-                // Set up form submissions
-                document.getElementById('author-form').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const name = document.getElementById('author-name').value;
-                    const bio = document.getElementById('author-bio').value;
-
-                    const userData = {
-                        id: userId,
-                        name,
-                        bio,
-                        type: 'author',
-                        books: []
-                    };
-
-                    if (demoMode) {
-                        saveDemoUser(userData);
-                        userProfile = userData;
-                        userTypeEl.textContent = 'author';
-                        onboardingView.classList.add('hidden');
-                        contentEl.classList.remove('hidden');
-                        document.getElementById('book-form-container').classList.remove('hidden');
-                        renderView('profile-view');
-                    } else {
-                        try {
-                            await setDoc(doc(db, collections.users, userId), userData);
-                            userProfile = userData;
-                            userTypeEl.textContent = 'author';
-                            onboardingView.classList.add('hidden');
-                            contentEl.classList.remove('hidden');
-                            document.getElementById('book-form-container').classList.remove('hidden');
-                            renderView('profile-view');
-                        } catch (error) {
-                            console.error("Error saving author profile:", error);
-                        }
+                } else {
+                    // User is not signed in, sign in anonymously
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (error) {
+                        console.error("Error signing in anonymously:", error);
+                        startDemoMode();
                     }
-                });
-
-                document.getElementById('influencer-form').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const name = document.getElementById('influencer-name').value;
-                    const platform = document.getElementById('influencer-platform').value;
-                    const interests = document.getElementById('influencer-interests').value;
-
-                    const userData = {
-                        id: userId,
-                        name,
-                        platform,
-                        interests,
-                        type: 'influencer'
-                    };
-
-                    if (demoMode) {
-                        saveDemoUser(userData);
-                        userProfile = userData;
-                        userTypeEl.textContent = 'influencer';
-                        onboardingView.classList.add('hidden');
-                        contentEl.classList.remove('hidden');
-                        renderView('profile-view');
-                    } else {
-                        try {
-                            await setDoc(doc(db, collections.users, userId), userData);
-                            userProfile = userData;
-                            userTypeEl.textContent = 'influencer';
-                            onboardingView.classList.add('hidden');
-                            contentEl.classList.remove('hidden');
-                            renderView('profile-view');
-                        } catch (error) {
-                            console.error("Error saving influencer profile:", error);
-                        }
-                    }
-                });
-
-                document.getElementById('book-form').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const title = document.getElementById('book-title').value;
-                    const blurb = document.getElementById('book-blurb').value;
-                    const cover = document.getElementById('book-cover').value;
-                    const genre = document.getElementById('book-genre').value;
-                    const campaignLength = document.getElementById('campaign-length').value;
-                    const budget = document.getElementById('budget').value;
-                    const audienceType = document.getElementById('desired-audience-type').value;
-
-                    const bookData = {
-                        title,
-                        blurb,
-                        cover,
-                        genre,
-                        campaignLength,
-                        budget,
-                        audienceType,
-                        timestamp: new Date().toISOString()
-                    };
-
-                    if (demoMode) {
-                        if (!userProfile.books) {
-                            userProfile.books = [];
-                        }
-                        userProfile.books.push(bookData);
-                        saveDemoUser(userProfile);
-
-                        // Show marketing recommendations
-                        document.getElementById('marketing-results-container').classList.remove('hidden');
-                        document.getElementById('marketing-loader').classList.remove('hidden');
-
-                        // Simulate loading
-                        setTimeout(() => {
-                            document.getElementById('marketing-loader').classList.add('hidden');
-                            const opportunitiesEl = document.getElementById('marketing-opportunities');
-                            opportunitiesEl.innerHTML = `
-                                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                                    <h4 class="font-bold text-lg text-gray-800 mb-2">BookTok Campaign</h4>
-                                    <p class="text-gray-600 mb-2">We recommend a 30-day BookTok campaign targeting fantasy readers.</p>
-                                    <p class="text-gray-600 mb-2"><strong>Estimated Reach:</strong> 50,000-100,000 viewers</p>
-                                    <p class="text-gray-600 mb-4"><strong>Estimated Cost:</strong> $800-$1,200</p>
-                                    <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300">Find Influencers</button>
-                                </div>
-                                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                                    <h4 class="font-bold text-lg text-gray-800 mb-2">Bookstagram Features</h4>
-                                    <p class="text-gray-600 mb-2">Partner with Bookstagram influencers for dedicated posts and stories.</p>
-                                    <p class="text-gray-600 mb-2"><strong>Estimated Engagement:</strong> 10,000-20,000 likes</p>
-                                    <p class="text-gray-600 mb-4"><strong>Estimated Cost:</strong> $600-$1,000</p>
-                                    <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300">Find Influencers</button>
-                                </div>
-                            `;
-                        }, 1500);
-                    } else {
-                        try {
-                            // Update user profile with new book
-                            if (!userProfile.books) {
-                                userProfile.books = [];
-                            }
-                            userProfile.books.push(bookData);
-                            await setDoc(doc(db, collections.users, userId), userProfile);
-
-                            // Show marketing recommendations
-                            document.getElementById('marketing-results-container').classList.remove('hidden');
-                            document.getElementById('marketing-loader').classList.remove('hidden');
-
-                            // Simulate loading
-                            setTimeout(() => {
-                                document.getElementById('marketing-loader').classList.add('hidden');
-                                const opportunitiesEl = document.getElementById('marketing-opportunities');
-                                opportunitiesEl.innerHTML = `
-                                    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                                        <h4 class="font-bold text-lg text-gray-800 mb-2">BookTok Campaign</h4>
-                                        <p class="text-gray-600 mb-2">We recommend a 30-day BookTok campaign targeting fantasy readers.</p>
-                                        <p class="text-gray-600 mb-2"><strong>Estimated Reach:</strong> 50,000-100,000 viewers</p>
-                                        <p class="text-gray-600 mb-4"><strong>Estimated Cost:</strong> $800-$1,200</p>
-                                        <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300">Find Influencers</button>
-                                    </div>
-                                    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                                        <h4 class="font-bold text-lg text-gray-800 mb-2">Bookstagram Features</h4>
-                                        <p class="text-gray-600 mb-2">Partner with Bookstagram influencers for dedicated posts and stories.</p>
-                                        <p class="text-gray-600 mb-2"><strong>Estimated Engagement:</strong> 10,000-20,000 likes</p>
-                                        <p class="text-gray-600 mb-4"><strong>Estimated Cost:</strong> $600-$1,000</p>
-                                        <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300">Find Influencers</button>
-                                    </div>
-                                `;
-                            }, 1500);
-                        } catch (error) {
-                            console.error("Error adding book:", error);
-                            document.getElementById('marketing-error').textContent = "Error generating recommendations. Please try again.";
-                            document.getElementById('marketing-error').classList.remove('hidden');
-                        }
-                    }
-                });
-
-                // Set up message form
-                document.getElementById('message-form').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const messageInput = document.getElementById('message-input');
-                    const message = messageInput.value.trim();
-
-                    if (!message || !currentRecipientId) return;
-
-                    const chatMessagesEl = document.getElementById('chat-messages');
-
-                    if (demoMode) {
-                        // In demo mode, just add the message to the UI
-                        chatMessagesEl.innerHTML += `
-                            <div class="flex justify-end mb-4">
-                                <div class="max-w-xs bg-purple-600 text-white rounded-lg p-3">
-                                    <p class="text-sm">${message}</p>
-                                </div>
-                            </div>
-                        `;
-                        messageInput.value = '';
-
-                        // Simulate a reply after a short delay
-                        setTimeout(() => {
-                            chatMessagesEl.innerHTML += `
-                                <div class="flex justify-start mb-4">
-                                    <div class="max-w-xs bg-gray-200 rounded-lg p-3">
-                                        <p class="text-sm">Thanks for your message! I'll get back to you soon about potential collaboration.</p>
-                                    </div>
-                                </div>
-                            `;
-                            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-                        }, 1000);
-                    } else {
-                        try {
-                            // In Firebase mode, we would save the message to Firestore
-                            // This is a simplified version - in a real app you'd want to structure this differently
-                            const messagesRef = collection(db, collections.messages);
-                            await addDoc(messagesRef, {
-                                chatId: currentChatId,
-                                senderId: userId,
-                                recipientId: currentRecipientId,
-                                message,
-                                timestamp: new Date().toISOString()
-                            });
-
-                            // Add to UI
-                            chatMessagesEl.innerHTML += `
-                                <div class="flex justify-end mb-4">
-                                    <div class="max-w-xs bg-purple-600 text-white rounded-lg p-3">
-                                        <p class="text-sm">${message}</p>
-                                    </div>
-                                </div>
-                            `;
-                            messageInput.value = '';
-                            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-                        } catch (error) {
-                            console.error("Error sending message:", error);
-                        }
-                    }
-                });
-
-                // Set up connect buttons in matches
-                document.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('connect-btn')) {
-                        const recipientId = e.target.getAttribute('data-user-id');
-                        const recipient = demoUsers.find(u => u.id === recipientId);
-                        if (recipient) {
-                            currentRecipientId = recipientId;
-                            currentChatId = getChatId(userId, recipientId);
-                            renderView('messages-view');
-                            loadChat(recipientId, recipient.name);
-                        }
-                    }
-                });
-
-            } catch (error) {
-                console.error("Error initializing Firebase:", error);
-                loadingEl.querySelector('p').textContent = "Error connecting. Trying demo mode...";
-
-                // Fall back to demo mode
-                setTimeout(() => {
-                    initDemoMode();
-                    onboardingView.classList.remove('hidden');
-                }, 1000);
-            }
-        }
-
-        // Initialize the app
-        if (firebaseConfig) {
-            initFirebase();
-        } else {
-            loadingEl.classList.add('hidden');
-            configMissingEl.classList.remove('hidden');
-            document.getElementById('demo-mode-btn').addEventListener('click', () => {
-                configMissingEl.classList.add('hidden');
-                initDemoMode();
-                onboardingView.classList.remove('hidden');
+                }
             });
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            startDemoMode();
         }
-    </script>
+    }
+
+    function startDemoMode() {
+        demoMode = true;
+        userId = 'demo-user-' + Math.random().toString(36).substr(2, 9);
+        userIdEl.textContent = userId;
+        demoIndicator.classList.remove('hidden');
+
+        // Show onboarding in demo mode
+        loadingEl.classList.add('hidden');
+        onboardingView.classList.remove('hidden');
+    }
+
+    function showOnboarding() {
+        loadingEl.classList.add('hidden');
+        onboardingView.classList.remove('hidden');
+    }
+
+    function showMainContent() {
+        loadingEl.classList.add('hidden');
+        contentEl.classList.remove('hidden');
+
+        // Show book form for authors
+        if (userProfile.type === 'author') {
+            document.getElementById('book-form-container').classList.remove('hidden');
+        }
+    }
+
+    function renderView(viewId) {
+        document.querySelectorAll('.view').forEach(view => {
+            view.classList.add('hidden');
+        });
+        document.getElementById(viewId).classList.remove('hidden');
+    }
+
+    // Set up navigation
+    function setupNavigation() {
+        document.getElementById('nav-feed').addEventListener('click', () => renderView('feed-view'));
+        document.getElementById('nav-authors').addEventListener('click', () => renderView('authors-view'));
+        document.getElementById('nav-influencers').addEventListener('click', () => renderView('influencers-view'));
+        document.getElementById('nav-profile').addEventListener('click', () => renderView('profile-view'));
+        document.getElementById('nav-matches').addEventListener('click', () => renderView('matches-view'));
+        document.getElementById('nav-messages').addEventListener('click', () => renderView('messages-view'));
+
+        document.getElementById('nav-logout').addEventListener('click', async () => {
+            try {
+                if (!demoMode && auth) {
+                    await signOut(auth);
+                }
+                location.reload();
+            } catch (error) {
+                console.error("Error signing out:", error);
+            }
+        });
+    }
+
+    // Set up onboarding buttons
+    function setupOnboarding() {
+        document.getElementById('author-btn').addEventListener('click', () => {
+            document.getElementById('author-form-container').classList.remove('hidden');
+            document.getElementById('influencer-form-container').classList.add('hidden');
+        });
+
+        document.getElementById('influencer-btn').addEventListener('click', () => {
+            document.getElementById('influencer-form-container').classList.remove('hidden');
+            document.getElementById('author-form-container').classList.add('hidden');
+        });
+
+        // Author form submission
+        document.getElementById('author-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('author-name').value;
+            const bio = document.getElementById('author-bio').value;
+
+            const userData = {
+                id: userId,
+                name,
+                bio,
+                type: 'author',
+                books: []
+            };
+
+            if (demoMode) {
+                userProfile = userData;
+                userTypeEl.textContent = 'author';
+                showMainContent();
+                renderView('profile-view');
+            } else {
+                try {
+                    await setDoc(doc(db, "users", userId), userData);
+                    userProfile = userData;
+                    userTypeEl.textContent = 'author';
+                    showMainContent();
+                    renderView('profile-view');
+                } catch (error) {
+                    console.error("Error saving author profile:", error);
+                }
+            }
+        });
+
+        // Influencer form submission
+        document.getElementById('influencer-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('influencer-name').value;
+            const platform = document.getElementById('influencer-platform').value;
+            const interests = document.getElementById('influencer-interests').value;
+
+            const userData = {
+                id: userId,
+                name,
+                platform,
+                interests,
+                type: 'influencer'
+            };
+
+            if (demoMode) {
+                userProfile = userData;
+                userTypeEl.textContent = 'influencer';
+                showMainContent();
+                renderView('profile-view');
+            } else {
+                try {
+                    await setDoc(doc(db, "users", userId), userData);
+                    userProfile = userData;
+                    userTypeEl.textContent = 'influencer';
+                    showMainContent();
+                    renderView('profile-view');
+                } catch (error) {
+                    console.error("Error saving influencer profile:", error);
+                }
+            }
+        });
+    }
+
+    // Initialize the app
+    initApp();
+    setupNavigation();
+    setupOnboarding();
+</script>
 </body>
 </html>
