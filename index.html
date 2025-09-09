@@ -117,15 +117,15 @@ window.__app_id = "litwire-app";
         </div>
 
         <!-- The main landing page view -->
-        <section id="onboarding-view" class="view hidden">
+        <section id="onboarding-view" class="view">
             <div class="text-center py-20">
                 <h1 class="text-5xl font-bold text-gray-900 leading-tight">Where stories meet<br>their champions</h1>
                 <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
                     A curated matchmaking platform connecting authors with book influencers who actually fit their genre, style, and audience.
                 </p>
                 <div class="flex justify-center space-x-4 mt-8">
-                    <button id="author-btn" class="btn-author">I'm an Author</button>
-                    <button id="influencer-btn" class="btn-influencer">I'm an Influencer</button>
+                    <a href="author.html" class="btn-author">I'm an Author</a>
+                    <a href="influencer.html" class="btn-influencer">I'm an Influencer</a>
                 </div>
             </div>
 
@@ -173,151 +173,12 @@ window.__app_id = "litwire-app";
 
             <!-- Call to Action button -->
             <div class="mt-20 text-center">
-                <button class="btn-get-started">Start your free campaign plan today →</button>
-            </div>
-
-            <div id="author-form-container" class="hidden">
-                <h3 class="text-2xl font-bold mb-6 text-purple-600">Author Profile Setup</h3>
-                <form id="author-form" class="space-y-6">
-                    <div>
-                        <label for="author-name" class="block text-sm font-medium text-gray-700">Your Name</label>
-                        <input type="text" id="author-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3">
-                    </div>
-                    <div>
-                        <label for="author-bio" class="block text-sm font-medium text-gray-700">Bio</label>
-                        <textarea id="author-bio" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3"></textarea>
-                    </div>
-                    <button type="submit" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">Save Profile</button>
-                </form>
-            </div>
-
-            <div id="influencer-form-container" class="hidden">
-                <h3 class="text-2xl font-bold mb-6 text-sky-500">Influencer Profile Setup</h3>
-                <form id="influencer-form" class="space-y-6">
-                    <div>
-                        <label for="influencer-name" class="block text-sm font-medium text-gray-700">Your Name</label>
-                        <input type="text" id="influencer-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
-                    </div>
-                    <div>
-                        <label for="influencer-platform" class="block text-sm font-medium text-gray-700">Main Platform (e.g., TikTok, Instagram, Blog)</label>
-                        <input type="text" id="influencer-platform" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
-                    </div>
-                    <div>
-                        <label for="influencer-interests" class="block text-sm font-medium text-gray-700">Niche Interests (e.g., historical romance, dark academia)</label>
-                        <input type="text" id="influencer-interests" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
-                    </div>
-                    <button type="submit" class="w-full px-6 py-3 bg-sky-500 text-white rounded-lg shadow-md hover:bg-sky-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Save Profile</button>
-                </form>
+                <a href="author.html" class="btn-get-started">Start your free campaign plan today →</a>
             </div>
         </section>
 
         <div id="content" class="space-y-12 hidden">
-            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-blue-900 text-center">
-                <p class="text-sm text-gray-500">Logged in as: <span id="user-id" class="font-mono text-xs text-blue-900"></span></p>
-                <p class="text-sm text-gray-500 mt-1">Account Type: <span id="user-type" class="font-semibold text-gray-700">Not Set</span></p>
-                <div id="demo-indicator" class="mt-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs inline-block hidden">
-                    Demo Mode - Changes won't be saved
-                </div>
-            </div>
-
-            <section id="feed-view" class="view">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Social Feed</h2>
-                <div id="posts-container" class="space-y-8">
-                </div>
-            </section>
-
-            <section id="profile-view" class="view hidden">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">My Profile</h2>
-                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-blue-900">
-                    <div id="book-form-container" class="hidden mt-12">
-                        <h3 class="text-2xl font-bold mb-6 text-blue-900">Ingress a New Book</h3>
-                        <form id="book-form" class="space-y-6">
-                            <div>
-                                <label for="book-title" class="block text-sm font-medium text-gray-700">Book Title</label>
-                                <input type="text" id="book-title" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
-                            </div>
-                            <div>
-                                <label for="book-blurb" class="block text-sm font-medium text-gray-700">Blurb</label>
-                                <textarea id="book-blurb" rows="4" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3"></textarea>
-                            </div>
-                            <div>
-                                <label for="book-cover" class="block text-sm font-medium text-gray-700">Cover Image URL</label>
-                                <input type="text" id="book-cover" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
-                            </div>
-                            <div>
-                                <label for="book-genre" class="block text-sm font-medium text-gray-700">Genre</label>
-                                <input type="text" id="book-genre" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
-                            </div>
-                            <div>
-                                <label for="campaign-length" class="block text-sm font-medium text-gray-700">Campaign Length (e.g., 1 month)</label>
-                                <input type="text" id="campaign-length" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
-                            </div>
-                            <div>
-                                <label for="budget" class="block text-sm font-medium text-gray-700">Budget (e.g., $1000)</label>
-                                <input type="text" id="budget" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
-                            </div>
-                            <div>
-                                <label for="desired-audience-type" class="block text-sm font-medium text-gray-700">Desired Audience (e.g., Teens, Millennials)</label>
-                                <input type="text" id="desired-audience-type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
-                            </div>
-                            <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2">Submit Book</button>
-                        </form>
-
-                        <div id="marketing-results-container" class="mt-12 hidden">
-                            <h3 class="text-2xl font-bold mb-4 text-blue-900">Marketing Recommendations</h3>
-                            <div id="marketing-loader" class="text-center py-4 hidden">
-                                <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full border-blue-900 border-r-transparent" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                                <p class="text-gray-600 mt-2">Finding opportunities for your book...</p>
-                            </div>
-                            <div id="marketing-opportunities" class="space-y-6">
-                            </div>
-                            <div id="marketing-error" class="text-red-500 text-center py-4 hidden"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="authors-view" class="view hidden">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Authors</h2>
-                <div id="authors-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                </div>
-            </section>
-
-            <section id="influencers-view" class="view hidden">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Influencers</h2>
-                <div id="influencers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                </div>
-            </section>
-
-            <section id="matches-view" class="view hidden">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Your Matches</h2>
-                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-blue-900">
-                    <p class="text-gray-600 text-center text-lg">
-                        This is where we'd use our matchmaking algorithm! For the MVP, here's a random selection of potential matches.
-                    </p>
-                    <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-                    </div>
-                </div>
-            </section>
-
-            <section id="messages-view" class="view hidden">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Messages</h2>
-                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-blue-900 flex flex-col md:flex-row h-full">
-                    <div id="conversations-list" class="w-full md:w-1/4 pr-4 border-b md:border-b-0 md:border-r border-gray-200 overflow-y-auto max-h-[600px] mb-4 md:mb-0">
-                    </div>
-                    <div id="chat-container" class="w-full md:w-3/4 flex flex-col pl-4">
-                        <div id="chat-messages" class="flex-grow overflow-y-auto max-h-[500px] p-4 bg-gray-50 rounded-lg">
-                            <p class="text-gray-400 text-center">Select a conversation to start chatting.</p>
-                        </div>
-                        <form id="message-form" class="mt-4 flex">
-                            <input type="text" id="message-input" class="flex-grow rounded-lg border-gray-300 shadow-sm p-3" placeholder="Type a message...">
-                            <button type="submit" class="ml-2 px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Send</button>
-                        </form>
-                    </div>
-                </div>
-            </section>
+            <!-- This section is now hidden on this page, as it will be loaded after a profile is created -->
         </div>
     </main>
 
@@ -330,7 +191,7 @@ window.__app_id = "litwire-app";
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Configuration variables
     const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'demo-app';
@@ -347,19 +208,12 @@ window.__app_id = "litwire-app";
     }
 
     let app, db, auth;
-    let userId = null;
-    let userProfile = null;
 
     // DOM elements
     const loadingEl = document.getElementById('loading');
     const configMissingEl = document.getElementById('config-missing');
     const onboardingView = document.getElementById('onboarding-view');
     const contentEl = document.getElementById('content');
-    const userIdEl = document.getElementById('user-id');
-    const userTypeEl = document.getElementById('user-type');
-    const demoIndicator = document.getElementById('demo-indicator');
-    const authorFormContainer = document.getElementById('author-form-container');
-    const influencerFormContainer = document.getElementById('influencer-form-container');
 
     // Initialize Firebase or fall back to demo mode
     async function initApp() {
@@ -375,22 +229,17 @@ window.__app_id = "litwire-app";
             app = initializeApp(firebaseConfig, appId);
             auth = getAuth(app);
             db = getFirestore(app);
-
+            
             // Check auth state
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     // User is signed in
-                    userId = user.uid;
-                    userIdEl.textContent = userId;
-
                     try {
                         // Check if user has a profile
-                        const userDoc = await getDoc(doc(db, "users", userId));
+                        const userDoc = await getDoc(doc(db, "users", user.uid));
                         if (userDoc.exists()) {
-                            userProfile = userDoc.data();
-                            userTypeEl.textContent = userProfile.type;
-                            showMainContent();
-                            renderView('feed-view');
+                            // User has a profile, redirect to the main app page
+                            window.location.href = 'main.html';
                         } else {
                             // No profile yet, show onboarding
                             showOnboarding();
@@ -417,11 +266,7 @@ window.__app_id = "litwire-app";
 
     function startDemoMode() {
         demoMode = true;
-        userId = 'demo-user-' + Math.random().toString(36).substr(2, 9);
-        userIdEl.textContent = userId;
-        demoIndicator.classList.remove('hidden');
-
-        // Show onboarding in demo mode
+        // In demo mode, show onboarding and don't try to auto-redirect
         loadingEl.classList.add('hidden');
         onboardingView.classList.remove('hidden');
     }
@@ -431,140 +276,8 @@ window.__app_id = "litwire-app";
         onboardingView.classList.remove('hidden');
     }
 
-    function showMainContent() {
-        loadingEl.classList.add('hidden');
-        contentEl.classList.remove('hidden');
-
-        // Show book form for authors
-        if (userProfile.type === 'author') {
-            document.getElementById('book-form-container').classList.remove('hidden');
-        }
-    }
-
-    function renderView(viewId) {
-        document.querySelectorAll('.view').forEach(view => {
-            view.classList.add('hidden');
-        });
-        document.getElementById(viewId).classList.remove('hidden');
-    }
-
-    // Set up navigation
-    function setupNavigation() {
-        document.getElementById('nav-feed').addEventListener('click', () => renderView('feed-view'));
-        document.getElementById('nav-authors').addEventListener('click', () => renderView('authors-view'));
-        document.getElementById('nav-influencers').addEventListener('click', () => renderView('influencers-view'));
-        document.getElementById('nav-profile').addEventListener('click', () => renderView('profile-view'));
-        document.getElementById('nav-matches').addEventListener('click', () => renderView('matches-view'));
-        document.getElementById('nav-messages').addEventListener('click', () => renderView('messages-view'));
-
-        document.getElementById('nav-logout').addEventListener('click', async () => {
-            try {
-                if (!demoMode && auth) {
-                    await signOut(auth);
-                }
-                location.reload();
-            } catch (error) {
-                console.error("Error signing out:", error);
-            }
-        });
-    }
-
-    // Set up onboarding buttons
-    function setupOnboarding() {
-        document.getElementById('author-btn').addEventListener('click', () => {
-            // Hide main landing page content and show form
-            document.querySelector('#onboarding-view > div:first-child').classList.add('hidden');
-            document.querySelector('#onboarding-view > div:nth-child(2)').classList.add('hidden');
-            document.querySelector('#onboarding-view > div:nth-child(3)').classList.add('hidden');
-            document.querySelector('#onboarding-view > div:nth-child(4)').classList.add('hidden');
-            document.querySelector('#onboarding-view > div:nth-child(5)').classList.add('hidden');
-            
-            authorFormContainer.classList.remove('hidden');
-            influencerFormContainer.classList.add('hidden');
-        });
-
-        document.getElementById('influencer-btn').addEventListener('click', () => {
-             // Hide main landing page content and show form
-            document.querySelector('#onboarding-view > div:first-child').classList.add('hidden');
-            document.querySelector('#onboarding-view > div:nth-child(2)').classList.add('hidden');
-            document.querySelector('#onboarding-view > div:nth-child(3)').classList.add('hidden');
-            document.querySelector('#onboarding-view > div:nth-child(4)').classList.add('hidden');
-            document.querySelector('#onboarding-view > div:nth-child(5)').classList.add('hidden');
-
-            influencerFormContainer.classList.remove('hidden');
-            authorFormContainer.classList.add('hidden');
-        });
-        
-        // Author form submission
-        document.getElementById('author-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('author-name').value;
-            const bio = document.getElementById('author-bio').value;
-
-            const userData = {
-                id: userId,
-                name,
-                bio,
-                type: 'author',
-                books: []
-            };
-
-            if (demoMode) {
-                userProfile = userData;
-                userTypeEl.textContent = 'author';
-                showMainContent();
-                renderView('profile-view');
-            } else {
-                try {
-                    await setDoc(doc(db, "users", userId), userData);
-                    userProfile = userData;
-                    userTypeEl.textContent = 'author';
-                    showMainContent();
-                    renderView('profile-view');
-                } catch (error) {
-                    console.error("Error saving author profile:", error);
-                }
-            }
-        });
-
-        // Influencer form submission
-        document.getElementById('influencer-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('influencer-name').value;
-            const platform = document.getElementById('influencer-platform').value;
-            const interests = document.getElementById('influencer-interests').value;
-
-            const userData = {
-                id: userId,
-                name,
-                platform,
-                interests,
-                type: 'influencer'
-            };
-
-            if (demoMode) {
-                userProfile = userData;
-                userTypeEl.textContent = 'influencer';
-                showMainContent();
-                renderView('profile-view');
-            } else {
-                try {
-                    await setDoc(doc(db, "users", userId), userData);
-                    userProfile = userData;
-                    userTypeEl.textContent = 'influencer';
-                    showMainContent();
-                    renderView('profile-view');
-                } catch (error) {
-                    console.error("Error saving influencer profile:", error);
-                }
-            }
-        });
-    }
-
     // Initialize the app
     initApp();
-    setupNavigation();
-    setupOnboarding();
 </script>
 </body>
 </html>
