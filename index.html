@@ -9,6 +9,21 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" crossorigin="anonymous"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" crossorigin="anonymous"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" crossorigin="anonymous"></script>
+    
+    <!-- Firebase Configuration -->
+    <script>
+        window.__firebase_config = JSON.stringify({
+            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+            authDomain: "litwire-97956.firebaseapp.com",
+            projectId: "litwire-97956",
+            storageBucket: "litwire-97956.firebasestorage.app",
+            messagingSenderId: "263009111921",
+            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+            measurementId: "G-ZWVFHF5YQX"
+        });
+        window.__app_id = "litwire-app";
+    </script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -53,6 +68,30 @@
                 <span class="sr-only">Loading...</span>
             </div>
             <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
+        </div>
+
+        <!-- Firebase Config Missing Alert -->
+        <div id="config-missing" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center hidden">
+            <h2 class="text-2xl font-bold text-red-800 mb-4">Firebase Configuration Missing</h2>
+            <p class="text-red-600 mb-4">To use LitWire, you need to add your Firebase project configuration.</p>
+            <div class="bg-white p-4 rounded border text-left text-sm">
+                <p class="font-semibold mb-2">Add this script tag before the closing &lt;/head&gt; tag:</p>
+                <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto"><code>&lt;script&gt;
+// Replace with your Firebase project config
+window.__firebase_config = JSON.stringify({
+  apiKey: "your-api-key",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef123456"
+});
+window.__app_id = "your-app-name";
+&lt;/script&gt;</code></pre>
+            </div>
+            <button id="demo-mode-btn" class="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300">
+                Continue in Demo Mode (No Save)
+            </button>
         </div>
 
         <!-- Onboarding View (Login/Sign-up) -->
@@ -109,6 +148,9 @@
             <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-purple-600 text-center">
                 <p class="text-sm text-gray-500">Logged in as: <span id="user-id" class="font-mono text-xs text-purple-600"></span></p>
                 <p class="text-sm text-gray-500 mt-1">Account Type: <span id="user-type" class="font-semibold text-gray-700">Not Set</span></p>
+                <div id="demo-indicator" class="mt-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs inline-block hidden">
+                    Demo Mode - Changes won't be saved
+                </div>
             </div>
 
             <!-- Feed View -->
@@ -239,16 +281,21 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // Configuration variables
+        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'demo-app';
         let firebaseConfig = null;
+        let demoMode = false;
+        
+        // Parse Firebase config
         try {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                firebaseConfig = JSON.parse(__firebase_config);
+            if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
+                firebaseConfig = JSON.parse(window.__firebase_config);
             }
         } catch (e) {
             console.error("Failed to parse Firebase configuration:", e);
         }
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
 
         let app, db, auth;
         let userId = null;
@@ -256,18 +303,88 @@
         let currentRecipientId = null;
         let currentChatId = null;
 
+        // Demo data for when Firebase is not configured
+        let demoUsers = [];
+        let demoPosts = [];
+        let demoMessages = [];
+
         const loadingEl = document.getElementById('loading');
+        const configMissingEl = document.getElementById('config-missing');
         const onboardingView = document.getElementById('onboarding-view');
         const contentEl = document.getElementById('content');
         const userIdEl = document.getElementById('user-id');
         const userTypeEl = document.getElementById('user-type');
         const profileView = document.getElementById('profile-view');
+        const demoIndicator = document.getElementById('demo-indicator');
         
         const collections = {
-            users: `artifacts/${appId}/public/data/users`,
-            posts: `artifacts/${appId}/public/data/posts`,
-            messages: `artifacts/${appId}/public/data/messages`,
+            users: `users`,
+            posts: `posts`,
+            messages: `messages`,
         };
+
+        // Demo mode functions
+        function initDemoMode() {
+            demoMode = true;
+            userId = 'demo-user-' + Math.random().toString(36).substr(2, 9);
+            userIdEl.textContent = userId;
+            demoIndicator.classList.remove('hidden');
+            
+            // Initialize with some demo data
+            demoPosts = [
+                {
+                    content: "Just finished my latest fantasy novel! Can't wait to share it with readers.",
+                    name: "Sarah Mitchell",
+                    type: "author",
+                    timestamp: Date.now() - 3600000
+                },
+                {
+                    content: "Looking for some great sci-fi book recommendations for my next BookTok video!",
+                    name: "Alex Chen",
+                    type: "influencer", 
+                    timestamp: Date.now() - 7200000
+                }
+            ];
+
+            demoUsers = [
+                {
+                    id: 'author-1',
+                    name: 'Sarah Mitchell',
+                    type: 'author',
+                    bio: 'Fantasy author with 3 published novels',
+                    books: [{ title: 'The Moonlight Chronicles', blurb: 'A magical adventure' }]
+                },
+                {
+                    id: 'influencer-1', 
+                    name: 'Alex Chen',
+                    type: 'influencer',
+                    platform: 'TikTok',
+                    interests: 'Sci-fi, Fantasy, Young Adult'
+                }
+            ];
+
+            renderPosts(demoPosts);
+            renderAuthors(demoUsers.filter(u => u.type === 'author'));
+            renderInfluencers(demoUsers.filter(u => u.type === 'influencer'));
+        }
+
+        // Demo mode data operations
+        function saveDemoUser(user) {
+            const existingIndex = demoUsers.findIndex(u => u.id === user.id);
+            if (existingIndex >= 0) {
+                demoUsers[existingIndex] = { ...demoUsers[existingIndex], ...user };
+            } else {
+                demoUsers.push(user);
+            }
+            userProfile = user;
+            renderAuthors(demoUsers.filter(u => u.type === 'author'));
+            renderInfluencers(demoUsers.filter(u => u.type === 'influencer'));
+        }
+
+        function addDemoPost(post) {
+            demoPosts.unshift(post);
+            renderPosts(demoPosts);
+        }
 
         // Utility function to generate a consistent chat ID
         function getChatId(userA, userB) {
@@ -371,333 +488,3 @@
                 convItem.className = 'p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition duration-200';
                 convItem.innerHTML = `<p class="font-semibold">${conv.name}</p>`;
                 convItem.addEventListener('click', () => {
-                    currentRecipientId = conv.id;
-                    currentChatId = getChatId(userId, currentRecipientId);
-                    const chatMessagesContainer = document.getElementById('chat-messages');
-                    chatMessagesContainer.innerHTML = `<p class="text-gray-400 text-center">Loading messages...</p>`;
-                    listenForMessages(currentChatId);
-                });
-                container.appendChild(convItem);
-            });
-        }
-
-        function renderMessages(messages) {
-            const container = document.getElementById('chat-messages');
-            container.innerHTML = '';
-            if (messages.length === 0) {
-                container.innerHTML = `<p class="text-gray-400 text-center">No messages yet. Send a message to start the conversation!</p>`;
-            }
-            messages.sort((a, b) => a.timestamp - b.timestamp);
-            messages.forEach(msg => {
-                const messageEl = document.createElement('div');
-                messageEl.className = `p-3 my-2 rounded-xl max-w-[80%] ${msg.senderId === userId ? 'bg-purple-600 text-white self-end rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}`;
-                messageEl.textContent = msg.content;
-                container.appendChild(messageEl);
-            });
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function renderMarketingOpportunities(opportunities) {
-            const container = document.getElementById('marketing-opportunities');
-            container.innerHTML = '';
-            if (opportunities.length === 0) {
-                container.innerHTML = '<p class="text-gray-500">No opportunities found. Please try different details.</p>';
-                return;
-            }
-
-            opportunities.forEach(opp => {
-                const oppEl = document.createElement('div');
-                oppEl.className = 'bg-gray-50 p-6 rounded-xl shadow-inner';
-                oppEl.innerHTML = `
-                    <h4 class="font-bold text-lg text-gray-800 mb-2">${opp.opportunity_details['Opportunity Name']}</h4>
-                    <p class="text-sm text-gray-600 mb-4">${opp.opportunity_details['Type']} - ${opp.opportunity_details['Platform ']}</p>
-                    <div class="space-y-4">
-                        <div>
-                            <p class="font-semibold text-gray-700">Rationale</p>
-                            <p class="text-gray-600 text-sm mt-1">${opp.rationale}</p>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-gray-700">Submission Guidelines</p>
-                            <div class="text-gray-600 text-sm mt-1">${opp['contact information']}</div>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-gray-700">Draft Message</p>
-                            <pre class="bg-white p-3 rounded-lg border border-gray-200 text-sm overflow-x-auto whitespace-pre-wrap">${opp.draft_message}</pre>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(oppEl);
-            });
-        }
-
-        document.getElementById('nav-feed').addEventListener('click', () => renderView('feed-view'));
-        document.getElementById('nav-profile').addEventListener('click', () => {
-             // We only need to show the book form for authors on their profile page
-            if (userProfile && userProfile.type === 'author') {
-                document.getElementById('book-form-container').classList.remove('hidden');
-            } else {
-                document.getElementById('book-form-container').classList.add('hidden');
-            }
-            renderView('profile-view');
-        });
-        document.getElementById('nav-authors').addEventListener('click', () => renderView('authors-view'));
-        document.getElementById('nav-influencers').addEventListener('click', () => renderView('influencers-view'));
-        document.getElementById('nav-matches').addEventListener('click', async () => {
-            const users = await getDocs(collection(db, collections.users));
-            const allUsers = users.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-            let matches = [];
-            if (userProfile) {
-                if (userProfile.type === 'author') {
-                    matches = allUsers.filter(u => u.type === 'influencer');
-                } else if (userProfile.type === 'influencer') {
-                    matches = allUsers.filter(u => u.type === 'author');
-                }
-            }
-            renderMatches(matches);
-            renderView('matches-view');
-        });
-        document.getElementById('nav-messages').addEventListener('click', async () => {
-            const allUsers = (await getDocs(collection(db, collections.users))).docs.map(d => ({ id: d.id, ...d.data() }));
-            const myId = userId;
-            
-            const conversationPartners = allUsers.filter(u => u.id !== myId);
-            renderConversations(conversationPartners);
-            renderView('messages-view');
-        });
-
-        document.getElementById('nav-logout').addEventListener('click', async () => {
-            await signOut(auth);
-            userProfile = null;
-            renderView('onboarding-view');
-            document.getElementById('content').classList.add('hidden');
-        });
-
-        document.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('connect-btn')) {
-                currentRecipientId = e.target.dataset.userId;
-                currentChatId = getChatId(userId, currentRecipientId);
-                document.getElementById('nav-messages').click();
-                
-                const chatMessagesContainer = document.getElementById('chat-messages');
-                chatMessagesContainer.innerHTML = `<p class="text-gray-400 text-center">Loading messages...</p>`;
-                listenForMessages(currentChatId);
-            }
-        });
-
-        document.getElementById('author-btn').addEventListener('click', async () => {
-            document.getElementById('author-form-container').classList.remove('hidden');
-            document.getElementById('influencer-form-container').classList.add('hidden');
-        });
-
-        document.getElementById('influencer-btn').addEventListener('click', async () => {
-            document.getElementById('influencer-form-container').classList.remove('hidden');
-            document.getElementById('author-form-container').classList.add('hidden');
-        });
-
-        document.getElementById('author-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('author-name').value;
-            const bio = document.getElementById('author-bio').value;
-            userProfile = { id: userId, type: 'author', name, bio, books: [] };
-            await setDoc(doc(db, collections.users, userId), userProfile, { merge: true });
-            userTypeEl.textContent = 'Author';
-            document.getElementById('content').classList.remove('hidden');
-            renderView('feed-view');
-        });
-
-        document.getElementById('influencer-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('influencer-name').value;
-            const platform = document.getElementById('influencer-platform').value;
-            const interests = document.getElementById('influencer-interests').value;
-            userProfile = { id: userId, type: 'influencer', name, platform, interests };
-            await setDoc(doc(db, collections.users, userId), userProfile, { merge: true });
-            userTypeEl.textContent = 'Influencer';
-            document.getElementById('content').classList.remove('hidden');
-            renderView('feed-view');
-        });
-
-        document.getElementById('book-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const title = document.getElementById('book-title').value;
-            const blurb = document.getElementById('book-blurb').value;
-            const cover = document.getElementById('book-cover').value;
-            const genre = document.getElementById('book-genre').value;
-            const campaignLength = document.getElementById('campaign-length').value;
-            const budget = document.getElementById('budget').value;
-            const desiredAudienceType = document.getElementById('desired-audience-type').value;
-
-            // Save book data and create a post
-            const newPost = {
-                content: `My new book '${title}' is out now! Check it out!`,
-                name: userProfile.name,
-                type: 'author',
-                timestamp: Date.now(),
-            };
-            await addDoc(collection(db, collections.posts), newPost);
-
-            const userDocRef = doc(db, collections.users, userId);
-            const userDoc = await getDoc(userDocRef);
-            const currentBooks = userDoc.data()?.books || [];
-            currentBooks.push({ title, blurb, cover });
-            await updateDoc(userDocRef, { books: currentBooks });
-
-            // Call the marketing opportunities function
-            await fetchMarketingOpportunities(title, blurb, genre, campaignLength, budget, desiredAudienceType);
-
-            e.target.reset();
-            console.log("Book and post submitted successfully!");
-        });
-
-        document.getElementById('message-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('message-input');
-            const content = input.value;
-            if (content.trim() && currentChatId) {
-                const message = {
-                    chatId: currentChatId,
-                    senderId: userId,
-                    recipientId: currentRecipientId,
-                    content,
-                    timestamp: Date.now()
-                };
-                await addDoc(collection(db, collections.messages), message);
-                input.value = '';
-            }
-        });
-
-        async function fetchMarketingOpportunities(bookTitle, bookDescription, bookGenre, campaignLength, budget, desiredAudienceType) {
-            const resultsContainer = document.getElementById('marketing-results-container');
-            const loader = document.getElementById('marketing-loader');
-            const opportunitiesDiv = document.getElementById('marketing-opportunities');
-            const errorDiv = document.getElementById('marketing-error');
-
-            resultsContainer.classList.remove('hidden');
-            loader.classList.remove('hidden');
-            opportunitiesDiv.innerHTML = '';
-            errorDiv.classList.add('hidden');
-
-            const cloudFunctionUrl = 'https://bookie-737284668725.us-central1.run.app'; 
-
-            try {
-                const response = await fetch(cloudFunctionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        book_title: bookTitle,
-                        book_description: bookDescription,
-                        book_genre: bookGenre,
-                        campaign_length: campaignLength,
-                        budget: budget,
-                        desired_audience_type: desiredAudienceType
-                    }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                const result = await response.json();
-
-                if (result.recommended_opportunities) {
-                    renderMarketingOpportunities(result.recommended_opportunities);
-                } else {
-                    throw new Error('Unexpected response format from Cloud Function.');
-                }
-            } catch (error) {
-                console.error("Failed to fetch marketing opportunities:", error);
-                errorDiv.textContent = `Error: Could not retrieve recommendations. Please check the Cloud Function and try again.`;
-                errorDiv.classList.remove('hidden');
-            } finally {
-                loader.classList.add('hidden');
-            }
-        }
-
-        function listenForMessages(chatId) {
-            const messagesQuery = query(
-                collection(db, collections.messages),
-                where('chatId', '==', chatId)
-            );
-            
-            onSnapshot(messagesQuery, (snapshot) => {
-                const messages = snapshot.docs.map(doc => doc.data());
-                renderMessages(messages);
-            });
-        }
-        
-        async function initFirebaseAndAuth() {
-            try {
-                if (!firebaseConfig) {
-                    document.getElementById('loading-message').textContent = 'Error: Missing Firebase configuration. Please refresh the page.';
-                    console.error("Firebase configuration is missing.");
-                    return;
-                }
-
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                setLogLevel('debug'); // Added for more detailed logging
-
-                onAuthStateChanged(auth, async (user) => {
-                    loadingEl.classList.add('hidden');
-                    if (user) {
-                        userId = user.uid;
-                        userIdEl.textContent = userId;
-
-                        const userDocRef = doc(db, collections.users, userId);
-                        const userDoc = await getDoc(userDocRef);
-
-                        if (userDoc.exists()) {
-                            userProfile = userDoc.data();
-                            userTypeEl.textContent = userProfile.type.charAt(0).toUpperCase() + userProfile.type.slice(1);
-                            
-                            // Set up initial listeners after auth is ready
-                            onSnapshot(collection(db, collections.posts), (snapshot) => {
-                                const posts = snapshot.docs.map(doc => doc.data());
-                                renderPosts(posts);
-                            });
-                            onSnapshot(collection(db, collections.users), (snapshot) => {
-                                const allUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                                const authors = allUsers.filter(u => u.type === 'author');
-                                const influencers = allUsers.filter(u => u.type === 'influencer');
-                                renderAuthors(authors);
-                                renderInfluencers(influencers);
-                            });
-                            
-                            onboardingView.classList.add('hidden');
-                            contentEl.classList.remove('hidden');
-                            renderView('feed-view');
-
-                        } else {
-                            onboardingView.classList.remove('hidden');
-                            contentEl.classList.add('hidden');
-                        }
-                    } else {
-                        onboardingView.classList.remove('hidden');
-                        contentEl.classList.add('hidden');
-                    }
-                });
-
-                // Initial auth state check
-                if (initialAuthToken) {
-                    try {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                    } catch (error) {
-                        await signInAnonymously(auth);
-                    }
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch(error) {
-                console.error("Failed to initialize Firebase:", error);
-                document.getElementById('loading-message').textContent = "Failed to initialize the app. Please check the console for details.";
-            }
-        }
-
-        window.onload = initFirebaseAndAuth;
-    </script>
-</body>
-</html>
