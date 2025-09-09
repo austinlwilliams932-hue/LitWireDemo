@@ -6,98 +6,82 @@
 <title>LitWire - Your Marketing Plan</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 <style>
 body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-.container { max-width: 800px; margin: 0 auto; }
-.content-card { background-color: #fff; padding: 2rem; border-radius: 1rem; margin-bottom: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); white-space: pre-wrap; }
-.spinner { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
+.container { max-width: 900px; margin: 0 auto; }
+.content-card { background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+.button { background-color: #2e598b; color: #fff; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; }
+.button:hover { background-color: #234368; }
+.spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .hidden { display: none; }
 </style>
 </head>
-<body class="flex flex-col items-center min-h-screen">
-
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
 <header class="w-full bg-white shadow-md py-4">
-<div class="container text-3xl font-bold text-gray-800">
-<span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
-</div>
+<nav class="container flex justify-between items-center px-4 md:px-8">
+<div class="text-3xl font-bold text-gray-800"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></div>
+<a href="loggedInLanding.html" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300"><i class="fas fa-home mr-2"></i>Home</a>
+</nav>
 </header>
-
-<main class="flex-grow container mt-8 px-4">
-<h1 class="text-4xl font-bold text-gray-900 mb-4 text-center">Your Marketing Plan</h1>
-
-<div id="loading" class="text-center">
-  <div class="spinner"></div>
-  <p class="mt-2 text-gray-600">Generating your personalized plan...</p>
+<main class="flex-grow container mt-24 mb-12 px-4 md:px-8">
+<div class="text-center mb-8">
+<h1 class="text-4xl font-bold text-gray-900 mb-2">Your Marketing Plan</h1>
+<p class="text-lg text-gray-600">Powered by Gemini AI</p>
 </div>
-
+<div id="loading" class="text-center py-10">
+<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>
+<p class="text-gray-600 mt-4">Generating your personalized plan...</p>
+</div>
 <div id="plan-container" class="hidden"></div>
-<div id="error-message" class="text-red-500 hidden text-center"></div>
+<div id="error-message" class="content-card text-center text-red-500 hidden"></div>
 </main>
-
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+// Example: load plan JSON from localStorage or CF response
+const planContainer = document.getElementById('plan-container');
+const loadingEl = document.getElementById('loading');
+const errorEl = document.getElementById('error-message');
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-  authDomain: "litwire-97956.firebaseapp.com",
-  projectId: "litwire-97956",
-  storageBucket: "litwire-97956.appspot.com",
-  messagingSenderId: "263009111921",
-  appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-  measurementId: "G-ZWVFHF5YQX"
-};
+async function init() {
+    try {
+        const planData = JSON.parse(localStorage.getItem('marketingPlan')) || [];
+        if (!planData.length) throw new Error('No marketing plan found');
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+        loadingEl.classList.add('hidden');
+        planContainer.classList.remove('hidden');
 
-const loadingEl = document.getElementById("loading");
-const planContainer = document.getElementById("plan-container");
-const errorEl = document.getElementById("error-message");
+        planData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'content-card';
 
-async function loadMarketingPlan() {
-  try {
-    // Sign in anonymously
-    const userCredential = await signInAnonymously(auth);
-    const user = userCredential.user;
+            const influencerName = item.opportunity_details?.Name || 'Unknown';
+            const reason = item.rationale || 'No rationale provided';
+            const message = item.draft_message || 'No message';
 
-    // Fetch the saved plan from Firestore
-    const docRef = doc(db, `users/${user.uid}/profiles/author`);
-    const docSnap = await getDoc(docRef);
+            card.innerHTML = `
+                <h2 class="text-xl font-semibold mb-2">${influencerName}</h2>
+                <p class="mb-2"><strong>Why this influencer:</strong> ${reason}</p>
+                <p class="mb-4"><strong>Draft message:</strong> ${message}</p>
+                <button class="button" onclick='sendMessage("${encodeURIComponent(message)}")'>Send Message</button>
+            `;
 
-    if (!docSnap.exists()) throw new Error("No marketing plan found for this user.");
-
-    const data = docSnap.data();
-    const plan = data.marketingPlan || [];
-    if (!plan.length) throw new Error("Marketing plan is empty.");
-
-    // Hide spinner
-    loadingEl.classList.add("hidden");
-    planContainer.classList.remove("hidden");
-
-    // Render the plan
-    planContainer.innerHTML = plan.map((item, i) => `
-      <div class="content-card">
-        <h2 class="text-xl font-bold mb-2">Opportunity ${i+1}</h2>
-        <p><strong>Details:</strong> ${item.opportunity_details ? JSON.stringify(item.opportunity_details, null, 2) : "N/A"}</p>
-        <p><strong>Rationale:</strong> ${item.rationale || "N/A"}</p>
-        <p><strong>Draft Message:</strong> ${item.draft_message || "N/A"}</p>
-        <p><strong>Contact:</strong> ${item.contact_information || "N/A"}</p>
-      </div>
-    `).join("");
-
-  } catch (err) {
-    console.error(err);
-    loadingEl.classList.add("hidden");
-    errorEl.textContent = err.message;
-    errorEl.classList.remove("hidden");
-  }
+            planContainer.appendChild(card);
+        });
+    } catch (err) {
+        console.error(err);
+        loadingEl.classList.add('hidden');
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+    }
 }
 
-loadMarketingPlan();
+function sendMessage(message) {
+    alert('Sending message: ' + decodeURIComponent(message));
+    // Here you can implement actual sending logic via API or email service
+}
+
+init();
 </script>
 </body>
 </html>
