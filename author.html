@@ -226,7 +226,7 @@
                 </div>
 
                 <div class="text-center">
-                    <button type="submit" id="continue-btn" class="btn-continue" disabled>
+                    <button type="submit" id="continue-btn" class="btn-continue">
                         <span id="btn-text">Continue</span>
                         <span id="btn-spinner" class="hidden">
                             <i class="fas fa-spinner fa-spin"></i> Generating Plan...
@@ -272,11 +272,9 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 userId = user.uid;
-                continueBtn.disabled = false;
             } else {
                 // If not logged in, generate a temporary user ID
                 userId = crypto.randomUUID();
-                continueBtn.disabled = false;
             }
         });
 
