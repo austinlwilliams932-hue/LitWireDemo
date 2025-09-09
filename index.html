@@ -8,9 +8,7 @@ async function signInWithCloudRunToken(uid) {
             body: JSON.stringify({ uid })
         });
 
-        // 🔍 Log raw response
         console.log("Response status:", response.status);
-        console.log("Response headers:");
         for (let [key, value] of response.headers.entries()) {
             console.log(`  ${key}: ${value}`);
         }
@@ -26,11 +24,29 @@ async function signInWithCloudRunToken(uid) {
             throw new Error("No token returned from backend");
         }
 
-        // Sign in with the custom token
-        return signInWithCustomToken(auth, data.token);
+        // ✅ Try Firebase sign-in
+        return await signInWithCustomToken(auth, data.token);
 
     } catch (err) {
-        console.error("Failed to get custom token:", err);
-        throw err;
+        console.error("Custom token sign-in failed, falling back to anonymous:", err);
+        return await signInAnonymously(auth);
     }
 }
+
+// 🔑 App startup
+onAuthStateChanged(auth, async (user) => {
+    try {
+        if (!user) {
+            // No Firebase session yet → try backend token first
+            await signInWithCloudRunToken("temp-uid-" + Math.random().toString(36).substring(2, 10));
+        }
+    } catch (err) {
+        console.error("Startup auth error:", err);
+        await signInAnonymously(auth); // hard fallback
+    } finally {
+        // ✅ Always hide loading screen, show main view
+        loadingEl.classList.add("hidden");
+        mainContentView.classList.remove("hidden");
+        renderNavbar(auth.currentUser);
+    }
+});
