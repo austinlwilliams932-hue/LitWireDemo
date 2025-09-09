@@ -199,22 +199,10 @@
         <div class="text-xl font-medium">Creating your personalized marketing plan...</div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
         const form = document.getElementById('author-form');
         const errorMessage = document.getElementById('error-message');
         const loadingOverlay = document.getElementById('loading-overlay');
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -288,31 +276,12 @@
                     promotionComfort: parseInt(document.getElementById('promotion-comfort').value)
                 };
 
-                try {
-                    // Authenticate the user
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    const userId = auth.currentUser?.uid;
+                // Log form data for debugging
+                console.log('Form data:', formData);
 
-                    // Save form data to Firestore
-                    const collectionPath = `artifacts/${appId}/users/${userId}/surveySubmissions`;
-                    await addDoc(collection(db, collectionPath), formData);
-                    console.log("Form data saved to Firestore:", formData);
-
-                    // Simulate the cloud function completing
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-
-                    // Redirect the user
-                    window.location.href = 'marketingPlan.html';
-                } catch (error) {
-                    console.error("Error submitting form or saving data:", error);
-                    loadingOverlay.classList.add('hidden');
-                    errorMessage.textContent = "An error occurred. Please try again.";
-                    errorMessage.classList.remove('hidden');
-                }
+                // Simulate the "cloud function" completing and then redirect
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                window.location.href = 'marketingPlan.html';
             }
         });
     </script>
