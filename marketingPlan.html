@@ -25,18 +25,15 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <a href="loggedInLanding.html" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300"><i class="fas fa-home mr-2"></i>Home</a>
 </nav>
 </header>
-
 <main class="flex-grow container mt-24 mb-12 px-4 md:px-8">
 <div class="text-center mb-8">
 <h1 class="text-4xl font-bold text-gray-900 mb-2">Your Marketing Plan</h1>
 <p class="text-lg text-gray-600">Powered by Gemini AI</p>
 </div>
-
 <div id="loading" class="text-center py-10">
 <div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>
 <p class="text-gray-600 mt-4">Fetching your personalized plan...</p>
 </div>
-
 <div id="plan-container" class="hidden"></div>
 <div id="error-message" class="content-card text-center text-red-500 hidden"></div>
 </main>
@@ -46,7 +43,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
     authDomain: "litwire-97956.firebaseapp.com",
@@ -56,24 +52,24 @@ const firebaseConfig = {
     appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
     measurementId: "G-ZWVFHF5YQX"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// DOM elements
 const loadingEl = document.getElementById('loading');
 const planContainer = document.getElementById('plan-container');
 const errorEl = document.getElementById('error-message');
 
-function show(el) { el?.classList.remove('hidden'); }
-function hide(el) { el?.classList.add('hidden'); }
+function show(el) { el.classList.remove('hidden'); }
+function hide(el) { el.classList.add('hidden'); }
 
 function renderPlan(planData) {
     if (!planContainer) {
         console.error('[DEBUG] planContainer element not found in DOM');
         return;
     }
+
+    console.log('[DEBUG] planData fetched:', planData);
 
     planContainer.innerHTML = '';
 
@@ -84,16 +80,19 @@ function renderPlan(planData) {
             const card = document.createElement('div');
             card.className = 'content-card';
 
-            const influencerName = item.opportunity_details?.Name || 'Unknown';
-            const reason = item.rationale || 'No rationale provided';
-            const message = item.draft_message || 'No message';
+            // Map Firestore fields
+            const influencerName = item["Opportunity Name"] || 'Unknown';
+            const platform = item["Platform "] || 'Unknown Platform';
+            const type = item.Type || 'Unknown Type';
+            const audience = item["Est. Audience Size"] || 'Unknown Audience Size';
 
             card.innerHTML = `
                 <h2 class="text-xl font-semibold mb-2">${influencerName}</h2>
-                <p class="mb-2"><strong>Why this influencer:</strong> ${reason}</p>
-                <p class="mb-4"><strong>Draft message:</strong> ${message}</p>
-                <button class="button" onclick='sendMessage("${encodeURIComponent(message)}")'>Send Message</button>
+                <p class="mb-2"><strong>Platform:</strong> ${platform}</p>
+                <p class="mb-2"><strong>Type:</strong> ${type}</p>
+                <p class="mb-2"><strong>Estimated Audience Size:</strong> ${audience}</p>
             `;
+
             planContainer.appendChild(card);
         });
     }
@@ -102,27 +101,19 @@ function renderPlan(planData) {
     show(planContainer);
 }
 
-function sendMessage(message) {
-    alert('Sending message: ' + decodeURIComponent(message));
-    // Implement actual send logic via API or email service
-}
-
 async function init() {
     try {
         await signInAnonymously(auth);
-
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userId = user.uid;
-                console.log('[DEBUG] Signed in anonymously, UID:', userId);
+                console.log('[DEBUG] Authenticated userId:', userId);
 
                 const docRef = doc(db, `users/${userId}/profiles/author`);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    const planData = docSnap.data()?.marketingPlan || [];
-                    console.log('[DEBUG] planData fetched:', planData);
-
+                    const planData = docSnap.data().marketingPlan || [];
                     renderPlan(planData);
                 } else {
                     console.warn('[DEBUG] No marketing plan document found');
@@ -130,18 +121,19 @@ async function init() {
                     hide(loadingEl);
                     show(planContainer);
                 }
+            } else {
+                console.warn('[DEBUG] User not signed in yet');
             }
         });
     } catch (err) {
-        console.error('[DEBUG] Error initializing app:', err);
+        console.error(err);
         hide(loadingEl);
         errorEl.textContent = err.message;
         show(errorEl);
     }
 }
 
-// Run after DOM loaded
-document.addEventListener('DOMContentLoaded', init);
+init();
 </script>
 </body>
 </html>
