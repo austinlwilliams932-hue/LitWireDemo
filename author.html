@@ -133,20 +133,6 @@
                     <textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea"></textarea>
                 </div>
 
-                <!-- Upload Cover -->
-                <div>
-                    <label for="book-cover" class="block text-sm font-medium text-gray-700 mb-2">Upload Cover</label>
-                    <div class="file-upload-box">
-                        <input type="file" id="book-cover" name="bookCover" accept="image/*" class="hidden">
-                        <label for="book-cover" id="upload-label" class="cursor-pointer">
-                            <i class="fas fa-upload text-3xl text-gray-400 mb-2"></i>
-                            <p class="text-gray-500 font-medium">Upload</p>
-                            <p class="text-gray-400 text-sm">Drag and drop file here</p>
-                        </label>
-                        <img id="cover-preview" src="" alt="Book Cover Preview" class="hidden absolute top-0 left-0 w-full h-full object-cover">
-                    </div>
-                </div>
-
                 <!-- Subgenre -->
                 <div>
                     <label for="subgenre" class="block text-sm font-medium text-gray-700 mb-2">Subgenre</label>
@@ -256,14 +242,12 @@
         import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // Firebase Configuration
         setLogLevel('debug');
         const app = initializeApp(firebaseConfig, appId);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
         // DOM Elements
         const form = document.getElementById('author-form');
@@ -271,10 +255,7 @@
         const btnText = document.getElementById('btn-text');
         const btnSpinner = document.getElementById('btn-spinner');
         const errorMessage = document.getElementById('error-message');
-        const fileInput = document.getElementById('book-cover');
-        const uploadLabel = document.getElementById('upload-label');
-        const coverPreview = document.getElementById('cover-preview');
-
+        
         let userId = null;
 
         // Sign in the user with the custom token or anonymously
@@ -296,24 +277,6 @@
                 // If not logged in, generate a temporary user ID
                 userId = crypto.randomUUID();
                 continueBtn.disabled = false;
-            }
-        });
-
-        // Event listener for the file input to show a preview
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    coverPreview.src = e.target.result;
-                    coverPreview.classList.remove('hidden');
-                    uploadLabel.classList.add('hidden');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                coverPreview.src = '';
-                coverPreview.classList.add('hidden');
-                uploadLabel.classList.remove('hidden');
             }
         });
 
@@ -343,8 +306,6 @@
             const endDate = formData.get('endDate');
             const budget = formData.get('budget');
             const promotionComfort = parseInt(formData.get('promotionComfort'));
-            const file = formData.get('bookCover');
-
 
             // Validate individual fields and collect missing ones
             if (!bookTitle) {
@@ -408,29 +369,10 @@
                 campaign_length: campaignLengthDays,
                 budget: parseFloat(budget),
                 promotion_comfort: promotionComfort,
-                profile_type: 'author',
-                book_cover_url: '' // Initialize bookCover to an empty string
+                profile_type: 'author'
             };
 
-
-            if (file && file.size > 0) {
-                const storageRef = ref(storage, `bookCovers/${userId}/${file.name}`);
-                try {
-                    const snapshot = await uploadBytes(storageRef, file);
-                    data.book_cover_url = await getDownloadURL(snapshot.ref);
-                    await processForm(data);
-                } catch (error) {
-                    console.error("Error uploading file:", error);
-                    errorMessage.textContent = `Error uploading file: ${error.message}`;
-                    errorMessage.classList.remove('hidden');
-                    continueBtn.disabled = false;
-                    btnText.classList.remove('hidden');
-                    btnSpinner.classList.add('hidden');
-                }
-            } else {
-                // If no file, proceed directly
-                await processForm(data);
-            }
+            await processForm(data);
         });
 
         async function processForm(data) {
