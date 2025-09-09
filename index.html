@@ -22,6 +22,9 @@
         .hidden {
             display: none;
         }
+        .spinner-border {
+            border-top-color: #f3f4f6;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -179,52 +182,62 @@
 
         // Global variables for Firebase
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         // --- Firebase Initialization and Auth ---
         let db, auth, userId;
         const loadingMessageEl = document.getElementById('loading-message');
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            console.log("Firebase initialized successfully.");
-
-            // This is the main entry point for the app. It will run every time the auth state changes.
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    // User is signed in.
-                    userId = user.uid;
-                    document.getElementById('user-id').textContent = userId;
-                    console.log("Authenticated with user ID:", userId);
-                    
-                    // Now that we have a user, we can initialize the app.
-                    initApp();
-                    document.getElementById('loading').classList.add('hidden');
-                    document.getElementById('content').classList.remove('hidden');
-                } else {
-                    // User is signed out. Attempt to sign in again.
-                    console.log("No user found. Signing in.");
-                    try {
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                    } catch (error) {
-                        console.error("Firebase Auth Error:", error);
-                        loadingMessageEl.textContent = "Failed to connect. Please try again.";
-                    }
-                }
-            });
-
-        } catch (error) {
-            console.error("Firebase Initialization Error:", error);
-            loadingMessageEl.textContent = `Failed to initialize Firebase. Error: ${error.message}`;
-        }
         
+        // Ensure firebase configuration is valid.
+        let firebaseConfig;
+        try {
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if (!firebaseConfig || !firebaseConfig.projectId) {
+                throw new Error('"projectId" not provided in Firebase configuration.');
+            }
+        } catch (e) {
+            console.error("Firebase Configuration Error:", e);
+            loadingMessageEl.textContent = "Error: Missing Firebase configuration. Please refresh the page.";
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('content').classList.add('hidden');
+        }
+
+        if (firebaseConfig) {
+             try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                console.log("Firebase initialized successfully.");
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('user-id').textContent = userId;
+                        console.log("Authenticated with user ID:", userId);
+                        initApp();
+                        document.getElementById('loading').classList.add('hidden');
+                        document.getElementById('content').classList.remove('hidden');
+                    } else {
+                        console.log("No user found. Signing in.");
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Firebase Auth Error:", error);
+                            loadingMessageEl.textContent = "Failed to connect. Please try again.";
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                loadingMessageEl.textContent = `Failed to initialize Firebase. Error: ${error.message}`;
+            }
+        }
+
         // --- Data Models and Dummy Data ---
         const dummyPosts = [
             { id: uuid.v4(), author: "Samantha", content: "Just finished my latest manuscript! It's a dark romance with a touch of fantasy. I'm so excited to find the perfect influencers to review it.", type: "author", timestamp: Date.now() - 3600000 },
@@ -337,7 +350,6 @@
 
         // --- Data Fetching and Event Listeners ---
         async function initApp() {
-            // Check for existing user profile
             const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', userId);
             try {
                 const docSnap = await getDoc(userDocRef);
@@ -355,8 +367,6 @@
                 console.error("Error fetching user profile:", e);
             }
 
-
-            // Set up real-time listeners for all data
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'posts'), (snapshot) => {
                 const posts = snapshot.docs.map(doc => doc.data());
                 renderPosts(posts.concat(dummyPosts));
@@ -365,7 +375,6 @@
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'users'), async (snapshot) => {
                 const users = snapshot.docs.map(doc => doc.data());
                 
-                // Fetch books for each author
                 const authorPromises = users.filter(u => u.type === 'author').map(async (author) => {
                     const booksQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'books'), where('authorId', '==', author.userId));
                     const bookSnapshot = await getDocs(booksQuery);
@@ -381,7 +390,6 @@
                 renderInfluencers(influencers);
             });
 
-            // Set up event listeners for navigation
             document.getElementById('nav-feed').addEventListener('click', () => renderView('feed-view'));
             document.getElementById('nav-profile').addEventListener('click', () => renderView('profile-view'));
             document.getElementById('nav-authors').addEventListener('click', () => renderView('authors-view'));
@@ -393,7 +401,6 @@
                 renderView('matches-view');
             });
             
-            // Initial view
             renderView('feed-view');
         }
 
@@ -466,7 +473,6 @@
                     blurb,
                     cover,
                 });
-                // Create a dummy post for the feed
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'posts'), {
                     author: userName,
                     content: `My new book '${title}' is out now! Check it out!`,
