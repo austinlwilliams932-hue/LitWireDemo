@@ -278,99 +278,101 @@
             }
         });
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        document.addEventListener('DOMContentLoaded', () => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-            if (!userId) {
-                console.error("User ID not available.");
-                errorMessage.textContent = "Please wait, user authentication is in progress.";
-                errorMessage.classList.remove('hidden');
-                return;
-            }
-            
-            // Client-side validation
-            const formData = new FormData(form);
-            const missingFields = [];
-            const fieldsToClear = document.querySelectorAll('.is-error');
-            fieldsToClear.forEach(el => el.classList.remove('is-error'));
-            
-            // Get form values
-            const bookTitle = formData.get('bookTitle');
-            const bookDescription = formData.get('bookDescription');
-            const subgenre = formData.get('subgenre');
-            const targetAudience = formData.getAll('targetAudience');
-            const promotionChannels = formData.getAll('promotionChannels');
-            const startDate = formData.get('startDate');
-            const endDate = formData.get('endDate');
-            const budget = formData.get('budget');
-            const promotionComfort = parseInt(formData.get('promotionComfort'));
+                if (!userId) {
+                    console.error("User ID not available.");
+                    errorMessage.textContent = "Please wait, user authentication is in progress.";
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                // Client-side validation
+                const formData = new FormData(form);
+                const missingFields = [];
+                const fieldsToClear = document.querySelectorAll('.is-error');
+                fieldsToClear.forEach(el => el.classList.remove('is-error'));
+                
+                // Get form values
+                const bookTitle = formData.get('bookTitle');
+                const bookDescription = formData.get('bookDescription');
+                const subgenre = formData.get('subgenre');
+                const targetAudience = formData.getAll('targetAudience');
+                const promotionChannels = formData.getAll('promotionChannels');
+                const startDate = formData.get('startDate');
+                const endDate = formData.get('endDate');
+                const budget = formData.get('budget');
+                const promotionComfort = parseInt(formData.get('promotionComfort'));
 
-            // Validate individual fields and collect missing ones
-            if (!bookTitle) {
-                missingFields.push("Book Title");
-                document.getElementById('book-title').classList.add('is-error');
-            }
-            if (!bookDescription) {
-                missingFields.push("Book Description");
-                document.getElementById('book-description').classList.add('is-error');
-            }
-            if (!subgenre) {
-                missingFields.push("Subgenre");
-                document.getElementById('subgenre').classList.add('is-error');
-            }
-            if (targetAudience.length === 0) {
-                missingFields.push("Target Audience");
-                document.getElementById('target-audience-field').classList.add('is-error');
-            }
-            if (promotionChannels.length === 0) {
-                missingFields.push("Promotion Channels");
-                document.getElementById('promotion-channels-field').classList.add('is-error');
-            }
-            if (!startDate) {
-                missingFields.push("Start Date");
-                document.getElementById('start-date').classList.add('is-error');
-            }
-            if (!endDate) {
-                missingFields.push("End Date");
-                document.getElementById('end-date').classList.add('is-error');
-            }
-            if (!budget) {
-                missingFields.push("Budget");
-                document.getElementById('budget').classList.add('is-error');
-            }
+                // Validate individual fields and collect missing ones
+                if (!bookTitle) {
+                    missingFields.push("Book Title");
+                    document.getElementById('book-title').classList.add('is-error');
+                }
+                if (!bookDescription) {
+                    missingFields.push("Book Description");
+                    document.getElementById('book-description').classList.add('is-error');
+                }
+                if (!subgenre) {
+                    missingFields.push("Subgenre");
+                    document.getElementById('subgenre').classList.add('is-error');
+                }
+                if (targetAudience.length === 0) {
+                    missingFields.push("Target Audience");
+                    document.getElementById('target-audience-field').classList.add('is-error');
+                }
+                if (promotionChannels.length === 0) {
+                    missingFields.push("Promotion Channels");
+                    document.getElementById('promotion-channels-field').classList.add('is-error');
+                }
+                if (!startDate) {
+                    missingFields.push("Start Date");
+                    document.getElementById('start-date').classList.add('is-error');
+                }
+                if (!endDate) {
+                    missingFields.push("End Date");
+                    document.getElementById('end-date').classList.add('is-error');
+                }
+                if (!budget) {
+                    missingFields.push("Budget");
+                    document.getElementById('budget').classList.add('is-error');
+                }
 
-            if (missingFields.length > 0) {
-                const missingText = missingFields.join(', ');
-                errorMessage.textContent = `Please fill out the following fields: ${missingText}.`;
-                errorMessage.classList.remove('hidden');
-                return;
-            }
+                if (missingFields.length > 0) {
+                    const missingText = missingFields.join(', ');
+                    errorMessage.textContent = `Please fill out the following fields: ${missingText}.`;
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
 
-            // Calculate campaign length in days
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const campaignLengthDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                // Calculate campaign length in days
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const campaignLengthDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
 
-            // Show loading state
-            continueBtn.disabled = true;
-            btnText.classList.add('hidden');
-            btnSpinner.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-            
-            const data = {
-                book_title: bookTitle,
-                book_description: bookDescription,
-                book_genre: subgenre,
-                desired_audience_type: targetAudience.join(', '),
-                promotion_channels: promotionChannels.join(', '),
-                campaign_length: campaignLengthDays,
-                budget: parseFloat(budget),
-                promotion_comfort: promotionComfort,
-                profile_type: 'author'
-            };
+                // Show loading state
+                continueBtn.disabled = true;
+                btnText.classList.add('hidden');
+                btnSpinner.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                
+                const data = {
+                    book_title: bookTitle,
+                    book_description: bookDescription,
+                    book_genre: subgenre,
+                    desired_audience_type: targetAudience.join(', '),
+                    promotion_channels: promotionChannels.join(', '),
+                    campaign_length: campaignLengthDays,
+                    budget: parseFloat(budget),
+                    promotion_comfort: promotionComfort,
+                    profile_type: 'author'
+                };
 
-            await processForm(data);
+                await processForm(data);
+            });
         });
 
         async function processForm(data) {
