@@ -19,6 +19,7 @@
             measurementId: "G-ZWVFHF5YQX"
         });
         window.__app_id = "litwire-app";
+        window.__initial_auth_token = "some-auth-token";
     </script>
 
     <style>
@@ -59,23 +60,15 @@
             <div class="text-3xl font-bold text-gray-800">
                 <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
             </div>
+            <!-- Dynamic navigation will be rendered by JavaScript -->
             <div id="nav-container"></div>
         </nav>
     </header>
 
     <main class="flex-grow container mt-12 px-4 md:px-8">
+        <!-- Main content view container -->
         <div id="main-content-view" class="hidden">
-            <section id="feed-view" class="hidden text-center py-20">
-                <h1 class="text-5xl font-bold text-gray-900 leading-tight tracking-wide">Welcome back to LitWire!</h1>
-                <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
-                    Check out your feed for new matches and updates.
-                </p>
-                <div class="mt-8">
-                    <a href="feed.html" class="btn-get-started">Go to my Feed →</a>
-                </div>
-            </section>
-        
-            <section id="onboarding-view" class="hidden">
+            <section id="onboarding-view">
                 <div class="text-center py-20">
                     <h1 class="text-5xl font-bold text-gray-900 leading-tight tracking-wide">Where stories meet<br>their champions</h1>
                     <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
@@ -138,6 +131,7 @@
         </div>
     </footer>
 
+    <!-- Login Modal -->
     <div id="login-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('login-modal')">&times;</span>
@@ -157,6 +151,7 @@
         </div>
     </div>
 
+    <!-- Sign Up Modal -->
     <div id="signup-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('signup-modal')">&times;</span>
@@ -176,30 +171,32 @@
         </div>
     </div>
 
+    <!-- Loading Screen -->
     <div id="loading" class="fixed top-0 left-0 w-full h-full bg-gray-100 flex flex-col items-center justify-center z-50">
         <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-blue-900 border-r-transparent" role="status">
             <span class="sr-only">Loading...</span>
         </div>
         <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
     </div>
-
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase config
+        // Global variables provided by the canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig, appId);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // DOM references
+        // DOM References
         const loadingEl = document.getElementById('loading');
         const mainContentView = document.getElementById('main-content-view');
-        const onboardingView = document.getElementById('onboarding-view');
-        const feedView = document.getElementById('feed-view');
         const navContainer = document.getElementById('nav-container');
         const loginModal = document.getElementById('login-modal');
         const signupModal = document.getElementById('signup-modal');
@@ -216,44 +213,32 @@
             signupMessage.textContent = '';
         };
 
-        // Render navigation bar
+        // Render Navbar based on user state
         const renderNavbar = (user) => {
             navContainer.innerHTML = '';
             if (user) {
                 navContainer.innerHTML = `
-                    <div id="nav-logged-in" class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-6">
                         <a href="profile.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Profile</a>
                         <a href="feed.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Feed</a>
+                        <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Logout</button>
                     </div>
                 `;
+                document.getElementById('logout-btn').addEventListener('click', async () => {
+                    await auth.signOut();
+                    window.location.reload(); // Reload to reflect logout state
+                });
             } else {
                 navContainer.innerHTML = `
-                    <div id="nav-logged-out" class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-6">
                         <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Login</button>
                         <button id="nav-signup" class="bg-gray-800 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-900 transition duration-300">Sign Up</button>
                     </div>
                 `;
-                // Re-add event listeners for the newly created buttons
                 document.getElementById('nav-login').addEventListener('click', () => showModal('login-modal'));
                 document.getElementById('nav-signup').addEventListener('click', () => showModal('signup-modal'));
             }
         };
-
-        // Firebase Authentication Listener
-        onAuthStateChanged(auth, (user) => {
-            loadingEl.classList.add('hidden');
-            mainContentView.classList.remove('hidden');
-            renderNavbar(user);
-            if (user) {
-                // If the user is logged in, show the feed view
-                onboardingView.classList.add('hidden');
-                feedView.classList.remove('hidden');
-            } else {
-                // If the user is logged out, show the onboarding view
-                onboardingView.classList.remove('hidden');
-                feedView.classList.add('hidden');
-            }
-        });
 
         // Login handler
         loginForm.addEventListener('submit', async (e) => {
@@ -265,7 +250,7 @@
                 loginMessage.textContent = "Logged in successfully!";
                 loginMessage.style.color = "green";
                 closeModal('login-modal');
-                // The onAuthStateChanged listener will handle the view change
+                window.location.href = 'profile.html'; // Navigate to profile after login
             } catch (error) {
                 loginMessage.textContent = `Login failed: ${error.message}`;
                 loginMessage.style.color = "red";
@@ -278,16 +263,33 @@
             const email = signupForm['signup-email'].value;
             const password = signupForm['signup-password'].value;
             try {
-                await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const userProfileDocRef = doc(db, `/artifacts/${appId}/users/${user.uid}/profiles/main_profile`);
+                await setDoc(userProfileDocRef, { name: user.email.split('@')[0] });
+
                 signupMessage.textContent = "Signed up successfully!";
                 signupMessage.style.color = "green";
                 closeModal('signup-modal');
-                // The onAuthStateChanged listener will handle the view change
+                window.location.href = 'profile.html'; // Navigate to profile after signup
             } catch (error) {
                 signupMessage.textContent = `Sign up failed: ${error.message}`;
                 signupMessage.style.color = "red";
             }
         });
+
+        // Initial check and rendering
+        onAuthStateChanged(auth, (user) => {
+            loadingEl.classList.add('hidden');
+            mainContentView.classList.remove('hidden');
+            renderNavbar(user);
+        });
+
+        if (initialAuthToken) {
+            signInWithCustomToken(auth, initialAuthToken).catch(console.error);
+        } else {
+            signInAnonymously(auth).catch(console.error);
+        }
     </script>
 </body>
 </html>
