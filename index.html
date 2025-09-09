@@ -19,7 +19,6 @@
             measurementId: "G-ZWVFHF5YQX"
         });
         window.__app_id = "litwire-app";
-        window.__initial_auth_token = "some-auth-token";
     </script>
 
     <style>
@@ -60,13 +59,11 @@
             <div class="text-3xl font-bold text-gray-800">
                 <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
             </div>
-            <!-- Dynamic navigation will be rendered by JavaScript -->
             <div id="nav-container"></div>
         </nav>
     </header>
 
     <main class="flex-grow container mt-12 px-4 md:px-8">
-        <!-- Main content view container -->
         <div id="main-content-view" class="hidden">
             <section id="onboarding-view">
                 <div class="text-center py-20">
@@ -178,23 +175,20 @@
         </div>
         <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
     </div>
-    
+
+    <!-- Firebase + Cloud Run JWT script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables provided by the canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig, appId);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // DOM References
         const loadingEl = document.getElementById('loading');
         const mainContentView = document.getElementById('main-content-view');
         const navContainer = document.getElementById('nav-container');
@@ -205,15 +199,15 @@
         const loginMessage = document.getElementById('login-message');
         const signupMessage = document.getElementById('signup-message');
 
-        // Modal helpers
-        window.showModal = (id) => document.getElementById(id).classList.remove('hidden');
-        window.closeModal = (id) => {
+        window.showModal = id => document.getElementById(id).classList.remove('hidden');
+        window.closeModal = id => {
             document.getElementById(id).classList.add('hidden');
             loginMessage.textContent = '';
             signupMessage.textContent = '';
         };
 
-        // Render Navbar based on user state
+        const CLOUDRUN_JWT_URL = "https://jwt-737284668725.us-east4.run.app/getCustomToken";
+
         const renderNavbar = (user) => {
             navContainer.innerHTML = '';
             if (user) {
@@ -226,7 +220,7 @@
                 `;
                 document.getElementById('logout-btn').addEventListener('click', async () => {
                     await auth.signOut();
-                    window.location.reload(); // Reload to reflect logout state
+                    window.location.reload();
                 });
             } else {
                 navContainer.innerHTML = `
@@ -240,24 +234,43 @@
             }
         };
 
-        // Login handler
+        const signInWithCloudRunToken = async (uid) => {
+            try {
+                const res = await fetch(CLOUDRUN_JWT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ uid })
+                });
+                const data = await res.json();
+                if (data.token) {
+                    await signInWithCustomToken(auth, data.token);
+                    console.log("User signed in with custom token:", uid);
+                } else {
+                    console.error("No token returned from Cloud Run", data);
+                }
+            } catch (err) {
+                console.error("Failed to get custom token from Cloud Run:", err);
+            }
+        };
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = loginForm['login-email'].value;
             const password = loginForm['login-password'].value;
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const uid = userCredential.user.uid;
+                await signInWithCloudRunToken(uid);
                 loginMessage.textContent = "Logged in successfully!";
                 loginMessage.style.color = "green";
                 closeModal('login-modal');
-                window.location.href = 'profile.html'; // Navigate to profile after login
+                window.location.href = 'profile.html';
             } catch (error) {
                 loginMessage.textContent = `Login failed: ${error.message}`;
                 loginMessage.style.color = "red";
             }
         });
 
-        // Signup handler
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = signupForm['signup-email'].value;
@@ -265,31 +278,39 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                const userProfileDocRef = doc(db, `/artifacts/${appId}/users/${user.uid}/profiles/main_profile`);
-                await setDoc(userProfileDocRef, { name: user.email.split('@')[0] });
-
+                const uid = user.uid;
+                const userProfileDocRef = doc(db, `/artifacts/${appId}/users/${uid}/profiles/main_profile`);
+                await setDoc(userProfileDocRef, { name: email.split('@')[0] });
+                await signInWithCloudRunToken(uid);
                 signupMessage.textContent = "Signed up successfully!";
                 signupMessage.style.color = "green";
                 closeModal('signup-modal');
-                window.location.href = 'profile.html'; // Navigate to profile after signup
+                window.location.href = 'profile.html';
             } catch (error) {
                 signupMessage.textContent = `Sign up failed: ${error.message}`;
                 signupMessage.style.color = "red";
             }
         });
 
-        // Initial check and rendering
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             loadingEl.classList.add('hidden');
             mainContentView.classList.remove('hidden');
             renderNavbar(user);
+            if (user && user.isAnonymous) {
+                await signInWithCloudRunToken(user.uid);
+            }
         });
 
-        if (initialAuthToken) {
-            signInWithCustomToken(auth, initialAuthToken).catch(console.error);
-        } else {
-            signInAnonymously(auth).catch(console.error);
-        }
+        (async () => {
+            if (!auth.currentUser) {
+                try {
+                    const anonUser = await signInAnonymously(auth);
+                    await signInWithCloudRunToken(anonUser.user.uid);
+                } catch (err) {
+                    console.error("Anonymous sign-in failed:", err);
+                }
+            }
+        })();
     </script>
 </body>
 </html>
