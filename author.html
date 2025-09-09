@@ -445,12 +445,14 @@
                     },
                     body: JSON.stringify(data)
                 });
+                
+                const responseBody = await response.text();
 
                 if (!response.ok) {
-                    throw new Error(`Cloud Run request failed with status: ${response.status} - Response: ${await response.text()}`);
+                    throw new Error(`Cloud Run request failed with status: ${response.status} - Response: ${responseBody}`);
                 }
 
-                const result = await response.json();
+                const result = JSON.parse(responseBody);
                 console.log("Cloud Run response:", result);
 
                 // Save the marketing plan to Firestore
