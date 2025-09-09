@@ -204,9 +204,12 @@
   import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
   import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  // Firebase setup
-  const firebaseConfig = JSON.parse(window.__firebase_config);
-  const app = initializeApp(firebaseConfig, window.__app_id);
+  // ✅ Fix undefined JSON issue
+  let firebaseConfig = {};
+  if (window.__firebase_config && window.__firebase_config !== "undefined") {
+    firebaseConfig = JSON.parse(window.__firebase_config);
+  }
+  const app = initializeApp(firebaseConfig, window.__app_id || undefined);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
