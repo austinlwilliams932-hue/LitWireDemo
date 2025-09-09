@@ -1,426 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LitWire - Author Survey</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    
-    <script>
-        // These global variables are provided by the canvas environment.
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-    </script>
-
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .form-card {
-            background-color: #fff;
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .form-input, .form-select, .form-textarea {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #d1d5db;
-            transition: all 0.2s ease;
-        }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            border-color: #2e598b;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(46, 89, 139, 0.2);
-        }
-        .is-error {
-            border-color: #ef4444; /* Red border for errors */
-        }
-        .btn-continue {
-            background-color: #2e598b;
-            color: #fff;
-            padding: 0.75rem 2.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-continue:hover {
-            background-color: #234368;
-        }
-        .file-upload-box {
-            border: 2px dashed #d1d5db;
-            border-radius: 0.5rem;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 150px;
-        }
-        .file-upload-box:hover {
-            background-color: #f9fafb;
-        }
-        .slider-track {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 5px;
-            outline: none;
-        }
-        .slider-track::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #2e598b;
-            cursor: pointer;
-            border-radius: 50%;
-            border: none;
-        }
-        .loading-spinner {
-            border-top-color: #f3f4f6;
-            animation: spinner 1s linear infinite;
-        }
-        @keyframes spinner {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Author Form</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
-    <header class="w-full bg-white shadow-md py-4 absolute top-0">
-        <nav class="container flex justify-between items-center px-4 md:px-8">
-            <div class="text-3xl font-bold text-gray-800">
-                <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
-            </div>
-            <a href="index.html" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">
-                <i class="fas fa-arrow-left mr-2"></i>Back
-            </a>
-        </nav>
-    </header>
+<body class="bg-gray-50">
 
-    <main class="flex-grow container mt-24 mb-12 px-4 md:px-8">
-        <div class="text-center mb-8">
-            <h1 class="text-5xl font-bold text-gray-900 mb-2">Let's get your book out there</h1>
-            <p class="text-lg text-gray-600">Please provide some details to match you with the right influencers.</p>
-        </div>
+  <div class="max-w-3xl mx-auto py-10">
+    <h1 class="text-2xl font-bold mb-6">Author Marketing Plan</h1>
 
-        <div class="form-card">
-            <form id="author-form" class="space-y-6">
-                <!-- Book Title -->
-                <div>
-                    <label for="book-title" class="block text-sm font-medium text-gray-700 mb-2">Book Title</label>
-                    <input type="text" id="book-title" name="bookTitle" placeholder="Enter the title" class="form-input">
-                </div>
+    <!-- ✅ novalidate prevents browser default submission -->
+    <form id="author-form" class="space-y-6" novalidate>
 
-                <!-- Book Description -->
-                <div>
-                    <label for="book-description" class="block text-sm font-medium text-gray-700 mb-2">Book Description</label>
-                    <textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea"></textarea>
-                </div>
+      <div>
+        <label for="book-title" class="block font-medium">Book Title</label>
+        <input type="text" id="book-title" name="bookTitle" class="input">
+      </div>
 
-                <!-- Subgenre -->
-                <div>
-                    <label for="subgenre" class="block text-sm font-medium text-gray-700 mb-2">Subgenre</label>
-                    <select id="subgenre" name="subgenre" class="form-select">
-                        <option value="">Select subgenre</option>
-                        <option value="fantasy">Fantasy</option>
-                        <option value="sci-fi">Science Fiction</option>
-                        <option value="thriller">Thriller</option>
-                        <option value="romance">Romance</option>
-                        <option value="mystery">Mystery</option>
-                    </select>
-                </div>
+      <div>
+        <label for="book-description" class="block font-medium">Book Description</label>
+        <textarea id="book-description" name="bookDescription" class="input"></textarea>
+      </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Target Audience -->
-                    <div id="target-audience-field">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
-                        <div class="space-y-2">
-                            <div class="flex items-center">
-                                <input type="checkbox" id="audience-adults" name="targetAudience" value="Adults" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="audience-adults" class="ml-2 text-sm text-gray-700">Adults</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="audience-young-adults" name="targetAudience" value="Young Adults" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="audience-young-adults" class="ml-2 text-sm text-gray-700">Young Adults</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="audience-teens" name="targetAudience" value="Teens" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="audience-teens" class="ml-2 text-sm text-gray-700">Teens</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="audience-children" name="targetAudience" value="Children" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="audience-children" class="ml-2 text-sm text-gray-700">Children</label>
-                            </div>
-                        </div>
-                    </div>
+      <div>
+        <label for="subgenre" class="block font-medium">Subgenre</label>
+        <input type="text" id="subgenre" name="subgenre" class="input">
+      </div>
 
-                    <!-- Promotion Channels -->
-                    <div id="promotion-channels-field">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Promotion Channels</label>
-                        <div class="space-y-2">
-                            <div class="flex items-center">
-                                <input type="checkbox" id="channel-instagram" name="promotionChannels" value="Instagram" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="channel-instagram" class="ml-2 text-sm text-gray-700">Instagram</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="channel-booktok" name="promotionChannels" value="BookTok" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="channel-booktok" class="ml-2 text-sm text-gray-700">BookTok</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="channel-podcasts" name="promotionChannels" value="Podcasts" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="channel-podcasts" class="ml-2 text-sm text-gray-700">Podcasts</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="channel-book-tours" name="promotionChannels" value="Book Tours" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="channel-book-tours" class="ml-2 text-sm text-gray-700">Book Tours</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="channel-book-clubs" name="promotionChannels" value="Book Clubs" class="rounded-md text-blue-900 border-gray-300">
-                                <label for="channel-book-clubs" class="ml-2 text-sm text-gray-700">Book Clubs</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <div>
+        <label for="start-date" class="block font-medium">Start Date</label>
+        <input type="date" id="start-date" name="startDate" class="input">
+      </div>
 
-                <!-- Campaign Dates and Budget -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Campaign Dates -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Dates</label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="date" id="start-date" name="startDate" class="form-input">
-                            <input type="date" id="end-date" name="endDate" class="form-input">
-                        </div>
-                    </div>
-                    <!-- Budget -->
-                    <div>
-                        <label for="budget" class="block text-sm font-medium text-gray-700 mb-2">Budget ($)</label>
-                        <input type="number" id="budget" name="budget" placeholder="Enter budget" class="form-input">
-                    </div>
-                </div>
+      <div>
+        <label for="end-date" class="block font-medium">End Date</label>
+        <input type="date" id="end-date" name="endDate" class="input">
+      </div>
 
-                <!-- Promotion Comfort Slider -->
-                <div>
-                    <label for="promotion-comfort" class="block text-sm font-medium text-gray-700 mb-2">How comfortable are you with promoting your book?</label>
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-500">Not at all</span>
-                        <input type="range" id="promotion-comfort" name="promotionComfort" min="1" max="5" value="3" class="flex-grow slider-track">
-                        <span class="text-sm text-gray-500">Very</span>
-                    </div>
-                </div>
+      <div>
+        <label for="budget" class="block font-medium">Budget ($)</label>
+        <input type="number" id="budget" name="budget" class="input">
+      </div>
 
-                <div class="text-center">
-                    <button type="submit" id="continue-btn" class="btn-continue">
-                        <span id="btn-text">Continue</span>
-                        <span id="btn-spinner" class="hidden">
-                            <i class="fas fa-spinner fa-spin"></i> Generating Plan...
-                        </span>
-                    </button>
-                    <p id="error-message" class="text-red-500 text-sm mt-2 hidden"></p>
-                </div>
-            </form>
-        </div>
-    </main>
-    
-<script type="module">
+      <div>
+        <label for="promotion-comfort" class="block font-medium">Promotion Comfort (1–5)</label>
+        <input type="range" id="promotion-comfort" name="promotionComfort" min="1" max="5" value="3">
+      </div>
+
+      <div>
+        <!-- ✅ Button starts disabled -->
+        <button type="submit" id="continue-btn"
+          class="btn-continue opacity-50 cursor-not-allowed"
+          disabled>
+          <span id="btn-text">Continue</span>
+          <span id="btn-spinner" class="hidden">⏳</span>
+        </button>
+      </div>
+
+      <p id="error-message" class="text-red-600 hidden"></p>
+    </form>
+  </div>
+
+  <!-- ✅ Script placed after form -->
+  <script type="module">
     import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Firebase Configuration
-    setLogLevel('debug');
-    const app = initializeApp(firebaseConfig, appId);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    // 🔧 Globals injection safe parsing
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-    // DOM Elements
+    let firebaseConfig = {};
+    try {
+      firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    } catch (err) {
+      console.error("Invalid Firebase config JSON:", err);
+      firebaseConfig = {};
+    }
+
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    // Firebase init
+    setLogLevel('debug');
+    let app, auth, db;
+    try {
+      app = initializeApp(firebaseConfig, appId);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch (err) {
+      console.error("Firebase init failed:", err);
+    }
+
+    // DOM
     const form = document.getElementById('author-form');
     const continueBtn = document.getElementById('continue-btn');
     const btnText = document.getElementById('btn-text');
     const btnSpinner = document.getElementById('btn-spinner');
     const errorMessage = document.getElementById('error-message');
-
     let userId = null;
 
-    // 🔒 Keep button disabled until auth completes
-    continueBtn.disabled = true;
-    continueBtn.classList.add("opacity-50", "cursor-not-allowed");
-
-    // Sign in with token or anonymously
-    if (initialAuthToken) {
-        signInWithCustomToken(auth, initialAuthToken).catch(error => {
-            console.error("Error signing in with custom token:", error);
-            signInAnonymously(auth).catch(anonError => console.error("Anonymous sign-in failed:", anonError));
+    // Auth
+    if (auth) {
+      if (initialAuthToken) {
+        signInWithCustomToken(auth, initialAuthToken).catch(err => {
+          console.error("Custom token sign-in failed:", err);
+          signInAnonymously(auth).catch(anonErr => console.error("Anon sign-in failed:", anonErr));
         });
-    } else {
-        signInAnonymously(auth).catch(anonError => console.error("Anonymous sign-in failed:", anonError));
-    }
+      } else {
+        signInAnonymously(auth).catch(anonErr => console.error("Anon sign-in failed:", anonErr));
+      }
 
-    // Firebase Auth listener
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            userId = user.uid;
-        } else {
-            userId = crypto.randomUUID();
-        }
-
-        // 🔓 Enable button once we have a userId
+      onAuthStateChanged(auth, (user) => {
+        userId = user ? user.uid : crypto.randomUUID();
         continueBtn.disabled = false;
         continueBtn.classList.remove("opacity-50", "cursor-not-allowed");
-    });
-
-    // Attach submit handler directly (no DOMContentLoaded)
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        console.log("✅ Form submit intercepted"); // Debug
-
-        if (!userId) {
-            console.error("User ID not available.");
-            errorMessage.textContent = "Please wait, user authentication is in progress.";
-            errorMessage.classList.remove('hidden');
-            return;
-        }
-
-        // Client-side validation
-        const formData = new FormData(form);
-        const missingFields = [];
-        const fieldsToClear = document.querySelectorAll('.is-error');
-        fieldsToClear.forEach(el => el.classList.remove('is-error'));
-
-        const bookTitle = formData.get('bookTitle');
-        const bookDescription = formData.get('bookDescription');
-        const subgenre = formData.get('subgenre');
-        const targetAudience = formData.getAll('targetAudience');
-        const promotionChannels = formData.getAll('promotionChannels');
-        const startDate = formData.get('startDate');
-        const endDate = formData.get('endDate');
-        const budget = formData.get('budget');
-        const promotionComfort = parseInt(formData.get('promotionComfort'));
-
-        if (!bookTitle) {
-            missingFields.push("Book Title");
-            document.getElementById('book-title').classList.add('is-error');
-        }
-        if (!bookDescription) {
-            missingFields.push("Book Description");
-            document.getElementById('book-description').classList.add('is-error');
-        }
-        if (!subgenre) {
-            missingFields.push("Subgenre");
-            document.getElementById('subgenre').classList.add('is-error');
-        }
-        if (targetAudience.length === 0) {
-            missingFields.push("Target Audience");
-            document.getElementById('target-audience-field').classList.add('is-error');
-        }
-        if (promotionChannels.length === 0) {
-            missingFields.push("Promotion Channels");
-            document.getElementById('promotion-channels-field').classList.add('is-error');
-        }
-        if (!startDate) {
-            missingFields.push("Start Date");
-            document.getElementById('start-date').classList.add('is-error');
-        }
-        if (!endDate) {
-            missingFields.push("End Date");
-            document.getElementById('end-date').classList.add('is-error');
-        }
-        if (!budget) {
-            missingFields.push("Budget");
-            document.getElementById('budget').classList.add('is-error');
-        }
-
-        if (missingFields.length > 0) {
-            errorMessage.textContent = `Please fill out the following fields: ${missingFields.join(', ')}.`;
-            errorMessage.classList.remove('hidden');
-            return;
-        }
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        const campaignLengthDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-
-        // Show loading state
-        continueBtn.disabled = true;
-        btnText.classList.add('hidden');
-        btnSpinner.classList.remove('hidden');
-        errorMessage.classList.add('hidden');
-
-        const data = {
-            book_title: bookTitle,
-            book_description: bookDescription,
-            book_genre: subgenre,
-            desired_audience_type: targetAudience.join(', '),
-            promotion_channels: promotionChannels.join(', '),
-            campaign_length: campaignLengthDays,
-            budget: parseFloat(budget),
-            promotion_comfort: promotionComfort,
-            profile_type: 'author'
-        };
-
-        await processForm(data);
-    });
-
-    async function processForm(data) {
-        try {
-            const user = auth.currentUser;
-            if (!user) throw new Error("User not authenticated.");
-            const idToken = await user.getIdToken();
-
-            const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profiles/author`);
-            await setDoc(userDocRef, data);
-            console.log("✅ User data saved to Firestore.");
-
-            const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${idToken}`
-                },
-                body: JSON.stringify(data)
-            });
-
-            const responseBody = await response.text();
-            if (!response.ok) throw new Error(`Cloud Run request failed: ${response.status} - ${responseBody}`);
-
-            const result = JSON.parse(responseBody);
-            console.log("✅ Cloud Run response:", result);
-
-            if (result && result.marketingPlan) {
-                await setDoc(userDocRef, { marketingPlan: result.marketingPlan }, { merge: true });
-                console.log("✅ Marketing plan saved to Firestore.");
-                window.location.href = 'marketingPlan.html';
-            } else {
-                throw new Error("Cloud Run response is missing the marketingPlan field.");
-            }
-
-        } catch (error) {
-            console.error("❌ Error during form submission:", error);
-            errorMessage.textContent = `Error: ${error.message}`;
-            errorMessage.classList.remove('hidden');
-
-            // Revert loading state
-            continueBtn.disabled = false;
-            btnText.classList.remove('hidden');
-            btnSpinner.classList.add('hidden');
-        }
+      });
     }
-</script>
+
+    // ✅ Attach handler directly
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // stop page reload always
+      console.log("✅ Form submit intercepted");
+
+      if (!userId) {
+        errorMessage.textContent = "Please wait, authenticating…";
+        errorMessage.classList.remove('hidden');
+        return;
+      }
+
+      // Collect form data
+      const formData = new FormData(form);
+      const data = {
+        book_title: formData.get('bookTitle'),
+        book_description: formData.get('bookDescription'),
+        book_genre: formData.get('subgenre'),
+        start_date: formData.get('startDate'),
+        end_date: formData.get('endDate'),
+        budget: parseFloat(formData.get('budget')),
+        promotion_comfort: parseInt(formData.get('promotionComfort')),
+        profile_type: 'author'
+      };
+
+      // Show loading
+      continueBtn.disabled = true;
+      btnText.classList.add('hidden');
+      btnSpinner.classList.remove('hidden');
+      errorMessage.classList.add('hidden');
+
+      try {
+        // Save to Firestore
+        if (db) {
+          const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profiles/author`);
+          await setDoc(userDocRef, data);
+          console.log("✅ User data saved to Firestore.");
+        }
+
+        // Cloud Run call
+        if (auth && auth.currentUser) {
+          const idToken = await auth.currentUser.getIdToken();
+          const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify(data)
+          });
+
+          const text = await response.text();
+          if (!response.ok) throw new Error(`Cloud Run failed: ${response.status} - ${text}`);
+          const result = JSON.parse(text);
+
+          if (result && result.marketingPlan && db) {
+            const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profiles/author`);
+            await setDoc(userDocRef, { marketingPlan: result.marketingPlan }, { merge: true });
+            console.log("✅ Marketing plan saved.");
+            window.location.href = 'marketingPlan.html';
+          }
+        }
+
+      } catch (err) {
+        console.error("❌ Submission error:", err);
+        errorMessage.textContent = `Error: ${err.message}`;
+        errorMessage.classList.remove('hidden');
+        continueBtn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnSpinner.classList.add('hidden');
+      }
+    });
+  </script>
 </body>
 </html>
