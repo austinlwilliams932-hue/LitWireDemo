@@ -34,6 +34,7 @@
                 <p class="text-lg text-gray-600 mt-2">Let's build a profile that gets you matched with authors you'll love.</p>
             </header>
 
+            <!-- Form element no longer needs the onsubmit attribute as we are handling the redirect on button click -->
             <form id="onboarding-form">
                 <!-- Step 1: Profile Basics -->
                 <div id="step-1" class="step-container active">
@@ -196,7 +197,8 @@
                     <button type="button" id="back-btn" class="btn btn-secondary disabled:opacity-50" disabled>Back</button>
                     <button type="button" id="next-btn" class="btn btn-primary">Next</button>
                     <div id="final-ctas" class="hidden">
-                        <button type="submit" id="preview-matches-btn" class="btn btn-primary mr-2">Preview My Matches</button>
+                        <!-- We now call a function directly on the button's click event for reliable redirection -->
+                        <button type="button" id="preview-matches-btn" onclick="redirectToLanding()" class="btn btn-primary mr-2">Preview My Matches</button>
                         <button type="button" class="btn btn-secondary">Save & Finish Later</button>
                     </div>
                 </div>
@@ -263,6 +265,11 @@
         const nextBtn = document.getElementById('next-btn');
         const finalCtas = document.getElementById('final-ctas');
         const previewSidebar = document.getElementById('preview-sidebar');
+
+        // Function to handle the redirect
+        function redirectToLanding() {
+            window.location.href = 'loggedInLanding.html';
+        }
 
         // Function to update the view
         function updateView() {
