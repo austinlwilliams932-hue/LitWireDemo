@@ -466,12 +466,16 @@
                 const result = JSON.parse(responseBody);
                 console.log("Cloud Run response:", result);
 
-                // Save the marketing plan to Firestore
-                await setDoc(userDocRef, { marketingPlan: result.marketingPlan }, { merge: true });
-                console.log("Marketing plan saved to Firestore.");
-
-                // Redirect to the new page
-                window.location.href = 'marketingPlan.html';
+                // Check if marketingPlan exists before saving
+                if (result && result.marketingPlan) {
+                    // Save the marketing plan to Firestore
+                    await setDoc(userDocRef, { marketingPlan: result.marketingPlan }, { merge: true });
+                    console.log("Marketing plan saved to Firestore.");
+                    // Redirect to the new page
+                    window.location.href = 'marketingPlan.html';
+                } else {
+                    throw new Error("Cloud Run response is missing the marketingPlan field.");
+                }
 
             } catch (error) {
                 console.error("Error during form submission:", error);
