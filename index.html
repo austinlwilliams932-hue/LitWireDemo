@@ -1,365 +1,923 @@
-<script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+<!DOCTYPE html>
 
-        // --- Configuration and State Variables ---
-        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'demo-app';
-        let firebaseConfig = null;
-        let demoMode = false;
+<html lang="en">
 
-        try {
-            if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
-                firebaseConfig = JSON.parse(window.__firebase_config);
-            }
-        } catch (e) {
-            console.error("Failed to parse Firebase configuration:", e);
-        }
+<head>
 
-        const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
+    <meta charset="UTF-8">
 
-        let app, db, auth;
-        let userId = null;
-        let userProfile = null;
-        let currentRecipientId = null;
-        let currentChatId = null;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        let demoUsers = [];
-        let demoPosts = [];
-        let demoMessages = [];
+    <title>LitWire Social Network</title>
 
-        // --- DOM Element References ---
-        const loadingEl = document.getElementById('loading');
-        const configMissingEl = document.getElementById('config-missing');
-        const onboardingView = document.getElementById('onboarding-view');
-        const contentEl = document.getElementById('content');
-        const userIdEl = document.getElementById('user-id');
-        const userTypeEl = document.getElementById('user-type');
-        const demoIndicator = document.getElementById('demo-indicator');
+    <script src="https://cdn.tailwindcss.com"></script>
 
-        const collections = {
-            users: `users`,
-            posts: `posts`,
-            messages: `messages`,
-        };
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        // --- Core Application Logic ---
+    
 
-        /**
-         * Displays an error message on the loading screen and hides the spinner.
-         * @param {string} message - The error message to display.
-         */
-        function showError(message) {
-            console.error("LitWire Error:", message);
-            const loadingMessage = document.getElementById('loading-message');
-            const spinner = document.querySelector('#loading .spinner-border');
-            
-            if (spinner) spinner.style.display = 'none'; // Hide the spinner icon
-            
-            loadingMessage.textContent = `Error: ${message}`;
-            loadingMessage.className = 'text-red-600 font-semibold mt-4';
-        }
+        <script>
 
-        /**
-         * Hides loading/onboarding and displays the main content sections.
-         */
-        function showMainContent() {
-            loadingEl.classList.add('hidden');
-            onboardingView.classList.add('hidden');
-            configMissingEl.classList.add('hidden');
-            contentEl.classList.remove('hidden');
-        }
+        window.__firebase_config = JSON.stringify({
 
-        /**
-         * Main entry point for initializing the application.
-         */
-        async function initializeAppAndAuth() {
-            // Set a timeout as a fallback for network or config issues.
-            const startupTimeout = setTimeout(() => {
-                showError("Connection timed out. Please check your internet connection and try again.");
-            }, 15000); // 15-second timeout
+            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
 
-            // 1. Check for valid Firebase Configuration
-            if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.includes('your-api-key')) {
-                clearTimeout(startupTimeout);
-                loadingEl.classList.add('hidden');
-                configMissingEl.classList.remove('hidden');
-                return; // Stop initialization
-            }
+            authDomain: "litwire-97956.firebaseapp.com",
 
-            try {
-                // 2. Initialize Firebase services
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+            projectId: "litwire-97956",
 
-                // 3. Set up the authentication state listener
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        clearTimeout(startupTimeout); // Successful auth, clear timeout
-                        userId = user.uid;
-                        userIdEl.textContent = userId;
+            storageBucket: "litwire-97956.firebasestorage.app",
 
-                        try {
-                            // 4. Fetch the user's profile from Firestore
-                            const userDoc = await getDoc(doc(db, collections.users, userId));
-                            if (userDoc.exists()) {
-                                userProfile = userDoc.data();
-                                userTypeEl.textContent = userProfile.type || 'Not Set';
-                                if (userProfile.type === 'author') {
-                                    document.getElementById('book-form-container').classList.remove('hidden');
-                                }
-                                showMainContent();
-                                loadInitialData(); // Load feed, authors, etc.
-                            } else {
-                                // This is a new user, show the onboarding screen
-                                loadingEl.classList.add('hidden');
-                                onboardingView.classList.remove('hidden');
-                            }
-                        } catch (dbError) {
-                            showError(`Failed to load user profile. ${dbError.message}`);
-                        }
-                    }
-                    // If user is null, the sign-in attempt below will trigger this listener again.
-                });
+            messagingSenderId: "263009111921",
 
-                // 5. Attempt to sign in if no user is currently active
-                if (!auth.currentUser) {
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                }
-            } catch (error) {
-                clearTimeout(startupTimeout);
-                showError(`Initialization failed. ${error.message}`);
-            }
-        }
-        
-        /**
-         * Fetches and renders the initial data like posts and user lists.
-         */
-        async function loadInitialData() {
-            try {
-                // Fetch all users to display in Authors/Influencers lists
-                const usersSnapshot = await getDocs(query(collection(db, collections.users)));
-                const allUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
 
-                renderAuthors(allUsers.filter(u => u.type === 'author'));
-                renderInfluencers(allUsers.filter(u => u.type === 'influencer'));
-                renderMatches(allUsers.filter(u => u.id !== userId)); // Simple match logic
+            measurementId: "G-ZWVFHF5YQX"
 
-                // Fetch posts for the feed
-                const postsSnapshot = await getDocs(query(collection(db, collections.posts)));
-                const posts = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderPosts(posts);
+        });
 
-            } catch (error) {
-                console.error("Error loading initial data:", error);
-                document.getElementById('posts-container').innerHTML = `<p class="text-red-500 text-center">Could not load feed. ${error.message}</p>`;
-            }
-        }
-        
-        /**
-         * Handles saving the author or influencer profile from the onboarding form.
-         * @param {Event} e The form submission event.
-         */
-        async function handleProfileSave(e) {
-            e.preventDefault();
-            const form = e.target;
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const isAuthor = form.id === 'author-form';
-            
-            let profileData;
-            if (isAuthor) {
-                profileData = {
-                    name: document.getElementById('author-name').value,
-                    bio: document.getElementById('author-bio').value,
-                    type: 'author',
-                    id: userId
-                };
-            } else {
-                profileData = {
-                    name: document.getElementById('influencer-name').value,
-                    platform: document.getElementById('influencer-platform').value,
-                    interests: document.getElementById('influencer-interests').value,
-                    type: 'influencer',
-                    id: userId
-                };
-            }
+        window.__app_id = "litwire-app";
 
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
+    </script>
 
-            try {
-                if (demoMode) {
-                    saveDemoUser(profileData);
-                } else {
-                    await setDoc(doc(db, collections.users, userId), profileData);
-                }
-                userProfile = profileData;
-                userTypeEl.textContent = profileData.type;
-                showMainContent();
-                if (isAuthor) {
-                    document.getElementById('book-form-container').classList.remove('hidden');
-                }
-                loadInitialData(); // Reload data to show new profile
-            } catch (error) {
-                alert(`Error saving profile: ${error.message}`);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Profile';
-            }
-        }
+    
 
-        // --- Event Listeners ---
+    <style>
 
-        // Onboarding form submissions
-        document.getElementById('author-form').addEventListener('submit', handleProfileSave);
-        document.getElementById('influencer-form').addEventListener('submit', handleProfileSave);
-        
-        // Navigation logic
-        document.querySelector('nav').addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') {
-                const viewId = e.target.id.replace('nav-', '') + '-view';
-                if(document.getElementById(viewId)) {
-                    renderView(viewId);
-                }
-                if (e.target.id === 'nav-logout') {
-                    signOut(auth).catch(err => alert(err.message));
-                    window.location.reload();
-                }
-            }
-        });
-        
-        // Onboarding buttons
-        document.getElementById('author-btn').addEventListener('click', () => {
-            document.getElementById('author-form-container').classList.remove('hidden');
-            document.getElementById('influencer-form-container').classList.add('hidden');
-        });
+        body {
 
-        document.getElementById('influencer-btn').addEventListener('click', () => {
-            document.getElementById('influencer-form-container').classList.remove('hidden');
-            document.getElementById('author-form-container').classList.add('hidden');
-        });
-        
-        // Demo mode button
-        document.getElementById('demo-mode-btn').addEventListener('click', () => {
-             initDemoMode();
-             showMainContent();
-        });
+            font-family: 'Inter', sans-serif;
 
-        // --- Demo Mode Functions ---
-        function initDemoMode() {
-            demoMode = true;
-            userId = 'demo-user-' + Math.random().toString(36).substr(2, 9);
-            userIdEl.textContent = userId;
-            demoIndicator.classList.remove('hidden');
-            
-            demoPosts = [
-                { content: "Exploring dark academia themes in my new thriller. It's going to be epic!", name: "Veronica Roth", type: "author", timestamp: Date.now() - 3600000 },
-                { content: "Who are the best authors to follow for fantasy world-building tips? Asking for my next YouTube video!", name: "BookishBrian", type: "influencer", timestamp: Date.now() - 7200000 }
-            ];
-            demoUsers = [
-                { id: 'author-1', name: 'Veronica Roth', type: 'author', bio: 'NYT Bestselling author of thrillers.', books: [{ title: 'The Silent Key', blurb: 'A story of espionage.' }] },
-                { id: 'influencer-1', name: 'BookishBrian', type: 'influencer', platform: 'YouTube', interests: 'Fantasy, Sci-fi' }
-            ];
+            background-color: #f3f4f6;
 
-            renderPosts(demoPosts);
-            renderAuthors(demoUsers.filter(u => u.type === 'author'));
-            renderInfluencers(demoUsers.filter(u => u.type === 'influencer'));
-            renderMatches(demoUsers);
-        }
+        }
 
-        function saveDemoUser(user) {
-            userProfile = user;
-            demoUsers.push(user);
-            renderAuthors(demoUsers.filter(u => u.type === 'author'));
-            renderInfluencers(demoUsers.filter(u => u.type === 'influencer'));
-        }
+        .container {
 
-        // --- UI Rendering Functions (Unchanged) ---
-        function renderView(viewId) {
-            document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
-            document.getElementById(viewId).classList.remove('hidden');
-        }
+            max-width: 1200px;
 
-        function renderPosts(posts) {
-            const container = document.getElementById('posts-container');
-            container.innerHTML = posts.length > 0 ? '' : '<p class="text-center text-gray-500">The feed is quiet... for now.</p>';
-            posts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            posts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.className = 'bg-white p-6 rounded-2xl shadow-lg border-t-4 border-gray-200';
-                postElement.innerHTML = `
-                    <div class="flex items-center space-x-4 mb-2">
-                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl ${post.type === 'author' ? 'bg-purple-200 text-purple-700' : 'bg-sky-200 text-sky-700'}">${post.name.charAt(0)}</div>
-                        <div>
-                            <p class="font-semibold text-gray-800 text-lg">${post.name}</p>
-                            <p class="text-xs text-gray-500">${new Date(post.timestamp).toLocaleString()}</p>
-                        </div>
-                    </div>
-                    <p class="text-gray-700 mt-4 leading-relaxed">${post.content}</p>
-                `;
-                container.appendChild(postElement);
-            });
-        }
-        
-        function renderAuthors(authors) {
-             const container = document.getElementById('authors-container');
-             container.innerHTML = '';
-             authors.forEach(author => {
-                 const card = document.createElement('div');
-                 card.className = 'bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600';
-                 const booksHtml = author.books ? author.books.map(book => `<div class="p-2 bg-gray-100 rounded-lg text-xs font-semibold text-gray-600">${book.title}</div>`).join('') : '';
-                 card.innerHTML = `
-                     <div class="flex items-center space-x-4 mb-4">
-                         <div class="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center font-bold text-purple-700 text-2xl">${author.name.charAt(0)}</div>
-                         <h3 class="font-bold text-2xl text-gray-800">${author.name}</h3>
-                     </div>
-                     <p class="text-gray-600 text-sm leading-snug">${author.bio}</p>
-                     <div class="mt-6 flex flex-wrap gap-2">${booksHtml}</div>
-                 `;
-                 container.appendChild(card);
-             });
-        }
+            margin: 0 auto;
 
-        function renderInfluencers(influencers) {
-             const container = document.getElementById('influencers-container');
-             container.innerHTML = '';
-             influencers.forEach(influencer => {
-                 const card = document.createElement('div');
-                 card.className = 'bg-white p-8 rounded-2xl shadow-lg border-t-4 border-sky-500';
-                 card.innerHTML = `
-                     <div class="flex items-center space-x-4 mb-4">
-                         <div class="w-16 h-16 bg-sky-200 rounded-full flex items-center justify-center font-bold text-sky-700 text-2xl">${influencer.name.charAt(0)}</div>
-                         <h3 class="font-bold text-2xl text-gray-800">${influencer.name}</h3>
-                     </div>
-                     <p class="text-gray-600 text-sm">Platform: <span class="font-semibold text-gray-800">${influencer.platform}</span></p>
-                     <p class="text-gray-600 text-sm mt-1">Interests: <span class="font-semibold text-gray-800">${influencer.interests}</span></p>
-                 `;
-                 container.appendChild(card);
-             });
-        }
+        }
 
-        function renderMatches(matches) {
-             const container = document.getElementById('matches-container');
-             container.innerHTML = '';
-             matches.forEach(match => {
-                 const card = document.createElement('div');
-                 card.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200';
-                 card.innerHTML = `
-                     <h3 class="font-bold text-lg text-gray-800">${match.name}</h3>
-                     <p class="text-gray-600 text-sm mt-1">${match.type === 'author' ? 'Author' : 'Influencer'}</p>
-                     <p class="text-gray-500 text-xs mt-2 truncate">${match.bio || match.interests}</p>
-                     <button class="connect-btn mt-4 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-300" data-user-id="${match.id}">Connect</button>
-                 `;
-                 container.appendChild(card);
-             });
-        }
-        
-        // --- Start the App ---
-        initializeAppAndAuth();
+        .hidden {
 
-    </script>
+            display: none;
+
+        }
+
+        .spinner-border {
+
+            border-top-color: #f3f4f6;
+
+        }
+
+    </style>
+
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+
+
+        <header class="bg-white shadow-md py-4 sticky top-0 z-50">
+
+        <nav class="container flex justify-between items-center px-4 md:px-8">
+
+            <div class="text-3xl font-bold text-gray-800">
+
+                <span class="text-purple-600">Lit</span><span class="text-gray-900">Wire</span>
+
+            </div>
+
+            <div class="flex items-center space-x-6">
+
+                <button id="nav-feed" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Feed</button>
+
+                <button id="nav-authors" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Authors</button>
+
+                <button id="nav-influencers" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Influencers</button>
+
+                <button id="nav-profile" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Profile</button>
+
+                <button id="nav-matches" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Matches</button>
+
+                <button id="nav-messages" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Messages</button>
+
+                <button id="nav-logout" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Log Out</button>
+
+            </div>
+
+        </nav>
+
+    </header>
+
+
+
+    <main class="flex-grow container mt-12 px-4 md:px-8">
+
+                <div id="loading" class="text-center py-10">
+
+            <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-purple-600 border-r-transparent" role="status">
+
+                <span class="sr-only">Loading...</span>
+
+            </div>
+
+            <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
+
+        </div>
+
+
+
+                <div id="config-missing" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center hidden">
+
+            <h2 class="text-2xl font-bold text-red-800 mb-4">Firebase Configuration Missing</h2>
+
+            <p class="text-red-600 mb-4">To use LitWire, you need to add your Firebase project configuration.</p>
+
+            <div class="bg-white p-4 rounded border text-left text-sm">
+
+                <p class="font-semibold mb-2">Add this script tag before the closing &lt;/head&gt; tag:</p>
+
+                <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto"><code>&lt;script&gt;
+
+// Replace with your Firebase project config
+
+window.__firebase_config = JSON.stringify({
+
+  apiKey: "your-api-key",
+
+  authDomain: "your-project.firebaseapp.com",
+
+  projectId: "your-project-id",
+
+  storageBucket: "your-project.appspot.com",
+
+  messagingSenderId: "123456789",
+
+  appId: "1:123456789:web:abcdef123456"
+
+});
+
+window.__app_id = "your-app-name";
+
+&lt;/script&gt;</code></pre>
+
+            </div>
+
+            <button id="demo-mode-btn" class="mt-4 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300">
+
+                Continue in Demo Mode (No Save)
+
+            </button>
+
+        </div>
+
+
+
+                <section id="onboarding-view" class="view hidden">
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600 text-center max-w-2xl mx-auto">
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Welcome to LitWire</h2>
+
+                <p class="text-lg font-semibold mb-6">Create your profile to get started.</p>
+
+                <div class="flex space-x-4 mb-8">
+
+                    <button id="author-btn" class="flex-1 px-8 py-3 rounded-xl font-semibold transition duration-300 bg-purple-600 text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">I'm an Author</button>
+
+                    <button id="influencer-btn" class="flex-1 px-8 py-3 rounded-xl font-semibold transition duration-300 bg-sky-500 text-white hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">I'm an Influencer</button>
+
+                </div>
+
+
+
+                                <div id="author-form-container" class="hidden">
+
+                    <h3 class="text-2xl font-bold mb-6 text-purple-600">Author Profile Setup</h3>
+
+                    <form id="author-form" class="space-y-6">
+
+                        <div>
+
+                            <label for="author-name" class="block text-sm font-medium text-gray-700">Your Name</label>
+
+                            <input type="text" id="author-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3">
+
+                        </div>
+
+                        <div>
+
+                            <label for="author-bio" class="block text-sm font-medium text-gray-700">Bio</label>
+
+                            <textarea id="author-bio" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3"></textarea>
+
+                        </div>
+
+                        <button type="submit" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">Save Profile</button>
+
+                    </form>
+
+                </div>
+
+
+
+                                <div id="influencer-form-container" class="hidden">
+
+                    <h3 class="text-2xl font-bold mb-6 text-sky-500">Influencer Profile Setup</h3>
+
+                    <form id="influencer-form" class="space-y-6">
+
+                        <div>
+
+                            <label for="influencer-name" class="block text-sm font-medium text-gray-700">Your Name</label>
+
+                            <input type="text" id="influencer-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+
+                        </div>
+
+                        <div>
+
+                            <label for="influencer-platform" class="block text-sm font-medium text-gray-700">Main Platform (e.g., TikTok, Instagram, Blog)</label>
+
+                            <input type="text" id="influencer-platform" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+
+                        </div>
+
+                        <div>
+
+                            <label for="influencer-interests" class="block text-sm font-medium text-gray-700">Niche Interests (e.g., historical romance, dark academia)</label>
+
+                            <input type="text" id="influencer-interests" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+
+                        </div>
+
+                        <button type="submit" class="w-full px-6 py-3 bg-sky-500 text-white rounded-lg shadow-md hover:bg-sky-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Save Profile</button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+                <div id="content" class="space-y-12 hidden">
+
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-purple-600 text-center">
+
+                <p class="text-sm text-gray-500">Logged in as: <span id="user-id" class="font-mono text-xs text-purple-600"></span></p>
+
+                <p class="text-sm text-gray-500 mt-1">Account Type: <span id="user-type" class="font-semibold text-gray-700">Not Set</span></p>
+
+                <div id="demo-indicator" class="mt-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs inline-block hidden">
+
+                    Demo Mode - Changes won't be saved
+
+                </div>
+
+            </div>
+
+
+
+                        <section id="feed-view" class="view">
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Social Feed</h2>
+
+                <div id="posts-container" class="space-y-8">
+
+                                    </div>
+
+            </section>
+
+
+
+                        <section id="profile-view" class="view hidden">
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">My Profile</h2>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600">
+
+                                        <div id="book-form-container" class="hidden mt-12">
+
+                        <h3 class="text-2xl font-bold mb-6 text-purple-600">Ingress a New Book</h3>
+
+                        <form id="book-form" class="space-y-6">
+
+                            <div>
+
+                                <label for="book-title" class="block text-sm font-medium text-gray-700">Book Title</label>
+
+                                <input type="text" id="book-title" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
+
+                            </div>
+
+                            <div>
+
+                                <label for="book-blurb" class="block text-sm font-medium text-gray-700">Blurb</label>
+
+                                <textarea id="book-blurb" rows="4" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3"></textarea>
+
+                            </div>
+
+                            <div>
+
+                                <label for="book-cover" class="block text-sm font-medium text-gray-700">Cover Image URL</label>
+
+                                <input type="text" id="book-cover" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
+
+                            </div>
+
+                            <div>
+
+                                <label for="book-genre" class="block text-sm font-medium text-gray-700">Genre</label>
+
+                                <input type="text" id="book-genre" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
+
+                            </div>
+
+                            <div>
+
+                                <label for="campaign-length" class="block text-sm font-medium text-gray-700">Campaign Length (e.g., 1 month)</label>
+
+                                <input type="text" id="campaign-length" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
+
+                            </div>
+
+                            <div>
+
+                                <label for="budget" class="block text-sm font-medium text-gray-700">Budget (e.g., $1000)</label>
+
+                                <input type="text" id="budget" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
+
+                            </div>
+
+                            <div>
+
+                                <label for="desired-audience-type" class="block text-sm font-medium text-gray-700">Desired Audience (e.g., Teens, Millennials)</label>
+
+                                <input type="text" id="desired-audience-type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
+
+                            </div>
+
+                            <button type="submit" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">Submit Book</button>
+
+                        </form>
+
+                        
+
+                                                <div id="marketing-results-container" class="mt-12 hidden">
+
+                            <h3 class="text-2xl font-bold mb-4 text-purple-600">Marketing Recommendations</h3>
+
+                            <div id="marketing-loader" class="text-center py-4 hidden">
+
+                                <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full border-purple-600 border-r-transparent" role="status">
+
+                                    <span class="sr-only">Loading...</span>
+
+                                </div>
+
+                                <p class="text-gray-600 mt-2">Finding opportunities for your book...</p>
+
+                            </div>
+
+                            <div id="marketing-opportunities" class="space-y-6">
+
+                                                            </div>
+
+                            <div id="marketing-error" class="text-red-500 text-center py-4 hidden"></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+                        <section id="authors-view" class="view hidden">
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Authors</h2>
+
+                <div id="authors-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                                    </div>
+
+            </section>
+
+
+
+                        <section id="influencers-view" class="view hidden">
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Influencers</h2>
+
+                <div id="influencers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                                    </div>
+
+            </section>
+
+
+
+                        <section id="matches-view" class="view hidden">
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Your Matches</h2>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600">
+
+                    <p class="text-gray-600 text-center text-lg">
+
+                        This is where we'd use our matchmaking algorithm! For the MVP, here's a random selection of potential matches.
+
+                    </p>
+
+                    <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+
+                                            </div>
+
+                </div>
+
+            </section>
+
+
+
+                        <section id="messages-view" class="view hidden">
+
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Messages</h2>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600 flex flex-col md:flex-row h-full">
+
+                                        <div id="conversations-list" class="w-full md:w-1/4 pr-4 border-b md:border-b-0 md:border-r border-gray-200 overflow-y-auto max-h-[600px] mb-4 md:mb-0">
+
+                                            </div>
+
+                                        <div id="chat-container" class="w-full md:w-3/4 flex flex-col pl-4">
+
+                        <div id="chat-messages" class="flex-grow overflow-y-auto max-h-[500px] p-4 bg-gray-50 rounded-lg">
+
+                            <p class="text-gray-400 text-center">Select a conversation to start chatting.</p>
+
+                        </div>
+
+                        <form id="message-form" class="mt-4 flex">
+
+                            <input type="text" id="message-input" class="flex-grow rounded-lg border-gray-300 shadow-sm p-3" placeholder="Type a message...">
+
+                            <button type="submit" class="ml-2 px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300">Send</button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+
+        <div class="container text-center text-sm">
+
+            &copy; 2024 LitWire. All rights reserved.
+
+        </div>
+
+    </footer>
+
+
+
+    <script type="module">
+
+        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+
+
+        // Configuration variables
+
+        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'demo-app';
+
+        let firebaseConfig = null;
+
+        let demoMode = false;
+
+        
+
+        // Parse Firebase config
+
+        try {
+
+            if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
+
+                firebaseConfig = JSON.parse(window.__firebase_config);
+
+            }
+
+        } catch (e) {
+
+            console.error("Failed to parse Firebase configuration:", e);
+
+        }
+
+        
+
+        const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
+
+
+
+        let app, db, auth;
+
+        let userId = null;
+
+        let userProfile = null;
+
+        let currentRecipientId = null;
+
+        let currentChatId = null;
+
+
+
+        // Demo data for when Firebase is not configured
+
+        let demoUsers = [];
+
+        let demoPosts = [];
+
+        let demoMessages = [];
+
+
+
+        const loadingEl = document.getElementById('loading');
+
+        const configMissingEl = document.getElementById('config-missing');
+
+        const onboardingView = document.getElementById('onboarding-view');
+
+        const contentEl = document.getElementById('content');
+
+        const userIdEl = document.getElementById('user-id');
+
+        const userTypeEl = document.getElementById('user-type');
+
+        const profileView = document.getElementById('profile-view');
+
+        const demoIndicator = document.getElementById('demo-indicator');
+
+        
+
+        const collections = {
+
+            users: `users`,
+
+            posts: `posts`,
+
+            messages: `messages`,
+
+        };
+
+
+
+        // Demo mode functions
+
+        function initDemoMode() {
+
+            demoMode = true;
+
+            userId = 'demo-user-' + Math.random().toString(36).substr(2, 9);
+
+            userIdEl.textContent = userId;
+
+            demoIndicator.classList.remove('hidden');
+
+            
+
+            // Initialize with some demo data
+
+            demoPosts = [
+
+                {
+
+                    content: "Just finished my latest fantasy novel! Can't wait to share it with readers.",
+
+                    name: "Sarah Mitchell",
+
+                    type: "author",
+
+                    timestamp: Date.now() - 3600000
+
+                },
+
+                {
+
+                    content: "Looking for some great sci-fi book recommendations for my next BookTok video!",
+
+                    name: "Alex Chen",
+
+                    type: "influencer", 
+
+                    timestamp: Date.now() - 7200000
+
+                }
+
+            ];
+
+
+
+            demoUsers = [
+
+                {
+
+                    id: 'author-1',
+
+                    name: 'Sarah Mitchell',
+
+                    type: 'author',
+
+                    bio: 'Fantasy author with 3 published novels',
+
+                    books: [{ title: 'The Moonlight Chronicles', blurb: 'A magical adventure' }]
+
+                },
+
+                {
+
+                    id: 'influencer-1', 
+
+                    name: 'Alex Chen',
+
+                    type: 'influencer',
+
+                    platform: 'TikTok',
+
+                    interests: 'Sci-fi, Fantasy, Young Adult'
+
+                }
+
+            ];
+
+
+
+            renderPosts(demoPosts);
+
+            renderAuthors(demoUsers.filter(u => u.type === 'author'));
+
+            renderInfluencers(demoUsers.filter(u => u.type === 'influencer'));
+
+        }
+
+
+
+        // Demo mode data operations
+
+        function saveDemoUser(user) {
+
+            const existingIndex = demoUsers.findIndex(u => u.id === user.id);
+
+            if (existingIndex >= 0) {
+
+                demoUsers[existingIndex] = { ...demoUsers[existingIndex], ...user };
+
+            } else {
+
+                demoUsers.push(user);
+
+            }
+
+            userProfile = user;
+
+            renderAuthors(demoUsers.filter(u => u.type === 'author'));
+
+            renderInfluencers(demoUsers.filter(u => u.type === 'influencer'));
+
+        }
+
+
+
+        function addDemoPost(post) {
+
+            demoPosts.unshift(post);
+
+            renderPosts(demoPosts);
+
+        }
+
+
+
+        // Utility function to generate a consistent chat ID
+
+        function getChatId(userA, userB) {
+
+            return [userA, userB].sort().join('_');
+
+        }
+
+
+
+        function renderView(viewId) {
+
+            document.querySelectorAll('.view').forEach(view => {
+
+                view.classList.add('hidden');
+
+            });
+
+            document.getElementById(viewId).classList.remove('hidden');
+
+        }
+
+
+
+        function renderPosts(posts) {
+
+            const container = document.getElementById('posts-container');
+
+            container.innerHTML = '';
+
+            posts.sort((a, b) => b.timestamp - a.timestamp);
+
+            posts.forEach(post => {
+
+                const postElement = document.createElement('div');
+
+                postElement.className = 'bg-white p-6 rounded-2xl shadow-lg border-t-4 border-gray-200';
+
+                postElement.innerHTML = `
+
+                    <div class="flex items-center space-x-4 mb-2">
+
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl ${post.type === 'author' ? 'bg-purple-200 text-purple-700' : 'bg-sky-200 text-sky-700'}">${post.name.charAt(0)}</div>
+
+                        <div>
+
+                            <p class="font-semibold text-gray-800 text-lg">${post.name}</p>
+
+                            <p class="text-xs text-gray-500">${new Date(post.timestamp).toLocaleString()}</p>
+
+                        </div>
+
+                    </div>
+
+                    <p class="text-gray-700 mt-4 leading-relaxed">${post.content}</p>
+
+                `;
+
+                container.appendChild(postElement);
+
+            });
+
+        }
+
+
+
+        function renderAuthors(authors) {
+
+            const container = document.getElementById('authors-container');
+
+            container.innerHTML = '';
+
+            authors.forEach(author => {
+
+                const card = document.createElement('div');
+
+                card.className = 'bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600';
+
+                const booksHtml = author.books ? author.books.map(book => `
+
+                    <div class="p-2 bg-gray-100 rounded-lg text-xs font-semibold text-gray-600">${book.title}</div>
+
+                `).join('') : '';
+
+
+
+                card.innerHTML = `
+
+                    <div class="flex items-center space-x-4 mb-4">
+
+                        <div class="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center font-bold text-purple-700 text-2xl">${author.name.charAt(0)}</div>
+
+                        <h3 class="font-bold text-2xl text-gray-800">${author.name}</h3>
+
+                    </div>
+
+                    <p class="text-gray-600 text-sm leading-snug">${author.bio}</p>
+
+                    <div class="mt-6 flex flex-wrap gap-2">
+
+                        ${booksHtml}
+
+                    </div>
+
+                `;
+
+                container.appendChild(card);
+
+            });
+
+        }
+
+
+
+        function renderInfluencers(influencers) {
+
+            const container = document.getElementById('influencers-container');
+
+            container.innerHTML = '';
+
+            influencers.forEach(influencer => {
+
+                const card = document.createElement('div');
+
+                card.className = 'bg-white p-8 rounded-2xl shadow-lg border-t-4 border-sky-500';
+
+                card.innerHTML = `
+
+                    <div class="flex items-center space-x-4 mb-4">
+
+                        <div class="w-16 h-16 bg-sky-200 rounded-full flex items-center justify-center font-bold text-sky-700 text-2xl">${influencer.name.charAt(0)}</div>
+
+                        <h3 class="font-bold text-2xl text-gray-800">${influencer.name}</h3>
+
+                    </div>
+
+                    <p class="text-gray-600 text-sm">Platform: <span class="font-semibold text-gray-800">${influencer.platform}</span></p>
+
+                    <p class="text-gray-600 text-sm mt-1">Interests: <span class="font-semibold text-gray-800">${influencer.interests}</span></p>
+
+                `;
+
+                container.appendChild(card);
+
+            });
+
+        }
+
+
+
+        function renderMatches(matches) {
+
+            const container = document.getElementById('matches-container');
+
+            container.innerHTML = '';
+
+            matches.forEach(match => {
+
+                const card = document.createElement('div');
+
+                card.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200';
+
+                card.innerHTML = `
+
+                    <h3 class="font-bold text-lg text-gray-800">${match.name}</h3>
+
+                    <p class="text-gray-600 text-sm mt-1">${match.type === 'author' ? 'Author' : 'Influencer'}</p>
+
+                    <p class="text-gray-500 text-xs mt-2 truncate">${match.bio || match.interests}</p>
+
+                    <button class="connect-btn mt-4 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-300" data-user-id="${match.id}">Connect</button>
+
+                `;
+
+                container.appendChild(card);
+
+            });
+
+        }
+
+
+
+        function renderConversations(conversations) {
+
+            const container = document.getElementById('conversations-list');
+
+            container.innerHTML = '';
+
+            if (conversations.length === 0) {
+
+                container.innerHTML = `<p class="text-gray-400 text-center p-4">No active conversations.</p>`;
+
+            }
+
+            conversations.forEach(conv => {
+
+                const convItem = document.createElement('div');
+
+                convItem.className = 'p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition duration-200';
+
+                convItem.innerHTML = `<p class="font-semibold">${conv.name}</p>`;
+
+                convItem.addEventListener('click', () => {
