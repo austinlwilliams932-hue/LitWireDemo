@@ -9,17 +9,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     
     <script>
-        window.__firebase_config = JSON.stringify({
-            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-            authDomain: "litwire-97956.firebaseapp.com",
-            projectId: "litwire-97956",
-            storageBucket: "litwire-97956.firebasestorage.app",
-            messagingSenderId: "263009111921",
-            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-            measurementId: "G-ZWVFHF5YQX"
-        });
-
-        window.__app_id = "litwire-app";
+        // Use the global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
     </script>
 
     <style>
@@ -120,31 +113,8 @@
             <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
         </div>
 
-        <div id="config-missing" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center hidden">
-            <h2 class="text-2xl font-bold text-red-800 mb-4">Firebase Configuration Missing</h2>
-            <p class="text-red-600 mb-4">To use LitWire, you need to add your Firebase project configuration.</p>
-            <div class="bg-white p-4 rounded border text-left text-sm">
-                <p class="font-semibold mb-2">Add this script tag before the closing &lt;/head&gt; tag:</p>
-                <pre class="bg-gray-100 p-3 rounded text-xs overflow-x-auto"><code>&lt;script&gt;
-// Replace with your Firebase project config
-window.__firebase_config = JSON.stringify({
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-});
-window.__app_id = "litwire-app";
-&lt;/script&gt;</code></pre>
-            </div>
-            <button id="demo-mode-btn" class="mt-4 px-6 py-3 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition duration-300">
-                Continue in Demo Mode (No Save)
-            </button>
-        </div>
-
         <!-- The main landing page view -->
-        <section id="onboarding-view" class="view">
+        <section id="onboarding-view" class="view hidden">
             <div class="text-center py-20">
                 <h1 class="text-5xl font-bold text-gray-900 leading-tight">Where stories meet<br>their champions</h1>
                 <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
@@ -204,23 +174,8 @@ window.__app_id = "litwire-app";
             </div>
         </section>
 
-        <!-- This section will be shown if the user is authenticated but has no profile -->
-        <section id="profile-setup-view" class="view hidden">
-            <div class="text-center py-20">
-                <h1 class="text-5xl font-bold text-gray-900 leading-tight">Welcome to LitWire!</h1>
-                <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
-                    Please select your role to get started.
-                </p>
-                <div class="flex justify-center space-x-4 mt-8">
-                    <a href="author.html" class="btn-author">I'm an Author</a>
-                    <a href="influencer.html" class="btn-influencer">I'm an Influencer</a>
-                </div>
-            </div>
-        </section>
-
-        <div id="content" class="space-y-12 hidden">
-            <!-- This section is now hidden on this page, as it will be loaded after a profile is created -->
-        </div>
+        <!-- No longer needed -->
+        <div id="content" class="space-y-12 hidden"></div>
     </main>
 
     <footer class="bg-gray-800 text-white py-6 mt-12">
@@ -269,33 +224,14 @@ window.__app_id = "litwire-app";
         </div>
     </div>
 
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Configuration variables
-    const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'demo-app';
-    let firebaseConfig = null;
-    let demoMode = false;
-
-    // Parse Firebase config
-    try {
-        if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
-            firebaseConfig = JSON.parse(window.__firebase_config);
-        }
-    } catch (e) {
-        console.error("Failed to parse Firebase configuration:", e);
-    }
-
-    let app, db, auth;
-
     // DOM elements
     const loadingEl = document.getElementById('loading');
-    const configMissingEl = document.getElementById('config-missing');
     const onboardingView = document.getElementById('onboarding-view');
-    const profileSetupView = document.getElementById('profile-setup-view');
     const loginModal = document.getElementById('login-modal');
     const signupModal = document.getElementById('signup-modal');
     const loginForm = document.getElementById('login-form');
@@ -315,64 +251,34 @@ window.__app_id = "litwire-app";
         signupMessage.textContent = '';
     }
 
-    // Helper function to hide all views
-    function hideAllViews() {
-        onboardingView.classList.add('hidden');
-        profileSetupView.classList.add('hidden');
-    }
-
-    // Initialize Firebase or fall back to demo mode
+    // Initialize Firebase
     async function initApp() {
         if (!firebaseConfig) {
+            console.error("Firebase configuration missing. Running in demo mode.");
             loadingEl.classList.add('hidden');
-            configMissingEl.classList.remove('hidden');
-            document.getElementById('demo-mode-btn').addEventListener('click', startDemoMode);
+            onboardingView.classList.remove('hidden');
             return;
         }
 
         try {
-            // Initialize Firebase
-            app = initializeApp(firebaseConfig, appId);
-            auth = getAuth(app);
-            db = getFirestore(app);
+            const app = initializeApp(firebaseConfig, appId);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
             
-            // Check auth state
-            onAuthStateChanged(auth, async (user) => {
-                loadingEl.classList.add('hidden');
-                if (user) {
-                    const userDocRef = doc(db, "users", user.uid);
-                    const userDoc = await getDoc(userDocRef);
-                    if (userDoc.exists()) {
-                        // User has a profile, redirect to the feed
-                        window.location.href = 'loggedInLanding.html';
-                    } else {
-                        // User is authenticated but has no profile, show profile setup view
-                        hideAllViews();
-                        profileSetupView.classList.remove('hidden');
-                    }
-                } else {
-                    // User is not signed in, show the main onboarding page and sign in anonymously
-                    hideAllViews();
-                    onboardingView.classList.remove('hidden');
-                    try {
-                         await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Error signing in anonymously:", error);
-                        startDemoMode();
-                    }
-                }
-            });
-        } catch (error) {
-            console.error("Error initializing Firebase:", error);
-            startDemoMode();
-        }
-    }
+            // Sign in anonymously to get a user ID for Firestore operations later, if needed.
+            // This does not redirect and keeps the user on the landing page.
+            await signInAnonymously(auth);
 
-    function startDemoMode() {
-        demoMode = true;
-        // In demo mode, show onboarding and don't try to auto-redirect
-        loadingEl.classList.add('hidden');
-        onboardingView.classList.remove('hidden');
+            // Hide the loading spinner and show the main content
+            loadingEl.classList.add('hidden');
+            onboardingView.classList.remove('hidden');
+
+        } catch (error) {
+            console.error("Error initializing Firebase or signing in anonymously:", error);
+            // Fallback to showing the onboarding view even if auth fails.
+            loadingEl.classList.add('hidden');
+            onboardingView.classList.remove('hidden');
+        }
     }
 
     // Set up form handlers
@@ -381,11 +287,11 @@ window.__app_id = "litwire-app";
         const email = loginForm['login-email'].value;
         const password = loginForm['login-password'].value;
         try {
+            const auth = getAuth();
             await signInWithEmailAndPassword(auth, email, password);
             loginMessage.textContent = "Logged in successfully!";
             loginMessage.style.color = "green";
             closeModal('login-modal');
-            // The onAuthStateChanged listener will handle the redirect
         } catch (error) {
             loginMessage.textContent = `Login failed: ${error.message}`;
             loginMessage.style.color = "red";
@@ -398,11 +304,11 @@ window.__app_id = "litwire-app";
         const email = signupForm['signup-email'].value;
         const password = signupForm['signup-password'].value;
         try {
+            const auth = getAuth();
             await createUserWithEmailAndPassword(auth, email, password);
             signupMessage.textContent = "Signed up successfully!";
             signupMessage.style.color = "green";
             closeModal('signup-modal');
-            // The onAuthStateChanged listener will handle the redirect
         } catch (error) {
             signupMessage.textContent = `Sign up failed: ${error.message}`;
             signupMessage.style.color = "red";
