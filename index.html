@@ -8,20 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
-<script>
-    // Firebase config and initial token
-    window.__firebase_config = JSON.stringify({
-        apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-        authDomain: "litwire-97956.firebaseapp.com",
-        projectId: "litwire-97956",
-        storageBucket: "litwire-97956.firebasestorage.app",
-        messagingSenderId: "263009111921",
-        appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-        measurementId: "G-ZWVFHF5YQX"
-    });
-    window.__app_id = "litwire-app";
-</script>
-
 <style>
     body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     h1, .text-3xl { letter-spacing: 0.025em; }
@@ -40,22 +26,24 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
+<!-- Header -->
 <header class="bg-white shadow-md py-4 sticky top-0 z-50">
-<nav class="container flex justify-between items-center px-4 md:px-8">
-    <div class="text-3xl font-bold text-gray-800">
-        <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
-    </div>
-    <div id="nav-container"></div>
-</nav>
+    <nav class="container flex justify-between items-center px-4 md:px-8">
+        <div class="text-3xl font-bold text-gray-800">
+            <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
+        </div>
+        <div id="nav-container"></div>
+    </nav>
 </header>
 
+<!-- Main Content -->
 <main class="flex-grow container mt-12 px-4 md:px-8">
     <div id="main-content-view" class="hidden">
+
+        <!-- Onboarding / Hero -->
         <section id="onboarding-view">
             <div class="text-center py-20">
-                <h1 class="text-5xl font-bold text-gray-900 leading-tight tracking-wide">
-                    Where stories meet<br>their champions
-                </h1>
+                <h1 class="text-5xl font-bold text-gray-900 leading-tight tracking-wide">Where stories meet<br>their champions</h1>
                 <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
                     A curated matchmaking platform connecting authors with book influencers who actually fit their genre, style, and audience.
                 </p>
@@ -64,11 +52,55 @@
                     <a href="influencer.html" class="btn-influencer">I'm an Influencer</a>
                 </div>
             </div>
-            <!-- Other sections omitted for brevity (survey, matches, dashboard, testimonials) -->
+
+            <div class="mt-20 py-12 px-8 bg-white rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-around text-center">
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-list-check text-4xl text-blue-900"></i>
+                    <p class="mt-2 text-lg text-gray-700 font-semibold">Survey</p>
+                </div>
+                <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-user-friends text-4xl text-blue-900"></i>
+                    <p class="mt-2 text-lg text-gray-700 font-semibold">Matches</p>
+                </div>
+                <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-chart-line text-4xl text-blue-900"></i>
+                    <p class="mt-2 text-lg text-gray-700 font-semibold">Dashboard</p>
+                </div>
+            </div>
+
+            <!-- Testimonials -->
+            <div class="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
+                    <p class="text-gray-700 font-medium text-lg italic">
+                        "I've connected with amazing book lovers who really get my work."
+                    </p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
+                    <p class="text-gray-700 font-medium text-lg italic">
+                        "A game-changer for finding new reads in my niche."
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-20 flex justify-center space-x-12 items-center">
+                <span class="text-gray-400 text-5xl">🌷</span>
+                <span class="text-gray-400 text-5xl">⚫</span>
+                <span class="text-gray-400 text-5xl">▶️</span>
+                <span class="text-gray-400 text-4xl">TDJ</span>
+                <span class="text-gray-400 text-4xl">wisco</span>
+            </div>
+
+            <div class="mt-20 text-center">
+                <a href="author.html" class="btn-get-started">Start your free campaign plan today →</a>
+            </div>
         </section>
+
     </div>
 </main>
 
+<!-- Footer -->
 <footer class="bg-gray-800 text-white py-6 mt-12">
     <div class="container text-center text-sm">
         &copy; 2024 LitWire. All rights reserved.
@@ -95,7 +127,7 @@
     </div>
 </div>
 
-<!-- Sign Up Modal -->
+<!-- Signup Modal -->
 <div id="signup-modal" class="modal hidden">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal('signup-modal')">&times;</span>
@@ -125,19 +157,30 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInWithCustomToken, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Globals
-const firebaseConfig = JSON.parse(__firebase_config);
-const appId = __app_id;
-const app = initializeApp(firebaseConfig, appId);
+// Firebase config
+const firebaseConfig = {
+    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+    authDomain: "litwire-97956.firebaseapp.com",
+    projectId: "litwire-97956",
+    storageBucket: "litwire-97956.firebasestorage.app",
+    messagingSenderId: "263009111921",
+    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+    measurementId: "G-ZWVFHF5YQX"
+};
+
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// DOM refs
 const loadingEl = document.getElementById("loading");
 const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
+const loginModal = document.getElementById("login-modal");
+const signupModal = document.getElementById("signup-modal");
 const loginForm = document.getElementById("login-form");
 const signupForm = document.getElementById("signup-form");
 const loginMessage = document.getElementById("login-message");
@@ -152,7 +195,7 @@ window.closeModal = (id) => {
 };
 
 // Navbar
-function renderNavbar(user) {
+const renderNavbar = (user) => {
     navContainer.innerHTML = "";
     if (user) {
         navContainer.innerHTML = `
@@ -164,7 +207,7 @@ function renderNavbar(user) {
         `;
         document.getElementById("logout-btn").addEventListener("click", async () => {
             await auth.signOut();
-            startAuth();
+            startAuth(); // Re-run auth flow
         });
     } else {
         navContainer.innerHTML = `
@@ -176,9 +219,9 @@ function renderNavbar(user) {
         document.getElementById("nav-login").addEventListener("click", () => showModal("login-modal"));
         document.getElementById("nav-signup").addEventListener("click", () => showModal("signup-modal"));
     }
-}
+};
 
-// Sign in with Cloud Run token
+// Cloud Run JWT login
 async function signInWithCloudRunToken(uid) {
     try {
         const response = await fetch("https://jwt-737284668725.us-east4.run.app/getCustomToken", {
@@ -188,48 +231,52 @@ async function signInWithCloudRunToken(uid) {
         });
 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
         const data = await response.json();
         if (!data.token) throw new Error("No token returned from backend");
 
         return await signInWithCustomToken(auth, data.token);
-
     } catch (err) {
         console.error("Custom token sign-in failed, falling back to anonymous:", err);
         return await signInAnonymously(auth);
     }
 }
 
-// Startup auth
+// Auth flow
 async function startAuth() {
-    try {
-        await signInWithCloudRunToken("temp-uid-" + Math.random().toString(36).substring(2, 10));
-    } catch (err) {
-        console.error("Startup auth error:", err);
-        await signInAnonymously(auth);
-    } finally {
-        loadingEl.classList.add("hidden");
-        mainContentView.classList.remove("hidden");
-        renderNavbar(auth.currentUser);
-    }
+    loadingEl.classList.remove("hidden");
+    mainContentView.classList.add("hidden");
+
+    onAuthStateChanged(auth, async (user) => {
+        try {
+            if (!user) {
+                await signInWithCloudRunToken("temp-uid-" + Math.random().toString(36).substring(2, 10));
+            }
+        } catch (err) {
+            console.error("Startup auth error:", err);
+            await signInAnonymously(auth);
+        } finally {
+            loadingEl.classList.add("hidden");
+            mainContentView.classList.remove("hidden");
+            renderNavbar(auth.currentUser);
+        }
+    });
 }
 
-// Login form
+// Form handlers
 loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = loginForm["login-email"].value;
     const password = loginForm["login-password"].value;
     try {
         await signInWithEmailAndPassword(auth, email, password);
-        loginMessage.textContent = "Logged in successfully!";
-        loginMessage.style.color = "green";
         closeModal("login-modal");
     } catch (err) {
-        loginMessage.textContent = `Login failed: ${err.message}`;
+        loginMessage.textContent = err.message;
         loginMessage.style.color = "red";
     }
 });
 
-// Signup form
 signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = signupForm["signup-email"].value;
@@ -237,23 +284,18 @@ signupForm.addEventListener("submit", async (e) => {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-        const userProfileDocRef = doc(db, `/artifacts/${appId}/users/${user.uid}/profiles/main_profile`);
+        const userProfileDocRef = doc(db, `/artifacts/users/${user.uid}/profiles/main_profile`);
         await setDoc(userProfileDocRef, { name: user.email.split("@")[0] });
-        signupMessage.textContent = "Signed up successfully!";
-        signupMessage.style.color = "green";
+
         closeModal("signup-modal");
     } catch (err) {
-        signupMessage.textContent = `Sign up failed: ${err.message}`;
+        signupMessage.textContent = err.message;
         signupMessage.style.color = "red";
     }
 });
 
-// Monitor auth changes
-onAuthStateChanged(auth, (user) => renderNavbar(user));
-
-// Start
+// Start the auth flow
 startAuth();
 </script>
-
 </body>
 </html>
