@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LitWire - Matches</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    
+    <script>
+        window.__firebase_config = JSON.stringify({
+            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+            authDomain: "litwire-97956.firebaseapp.com",
+            projectId: "litwire-97956",
+            storageBucket: "litwire-97956.firebasestorage.app",
+            messagingSenderId: "263009111921",
+            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+            measurementId: "G-ZWVFHF5YQX"
+        });
+
+        window.__app_id = "litwire-app";
+        window.__initial_auth_token = "some-auth-token"; // This will be provided by Canvas
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <header class="bg-white shadow-md py-4 w-full sticky top-0 z-50">
+        <nav class="container flex justify-between items-center px-4 md:px-8">
+            <div class="text-3xl font-bold text-gray-800">
+                <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a href="feed.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Feed</a>
+                <a href="profile.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Profile</a>
+                <button id="sign-out-btn" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Sign Out</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow container mt-12 px-4 md:px-8">
+        <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+            <h1 class="text-2xl font-bold mb-4 text-gray-900">Find Your Book Matches</h1>
+            <div id="matches-container" class="space-y-6">
+                <!-- Match profiles will be dynamically added here -->
+                <div class="flex items-center justify-center space-x-4">
+                    <i class="fas fa-spinner fa-spin text-gray-400 text-2xl"></i>
+                    <p class="text-gray-500">Loading matches...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6 mt-12 w-full">
+        <div class="container text-center text-sm">
+            &copy; 2024 LitWire. All rights reserved.
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(window.__firebase_config);
+        const app = initializeApp(firebaseConfig, appId);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM Elements
+        const signOutBtn = document.getElementById('sign-out-btn');
+        const matchesContainer = document.getElementById('matches-container');
+
+        // Faux Influencer Data
+        const influencers = [
+            {
+                name: 'Literary Lexie',
+                bio: 'A fantasy and sci-fi fanatic who loves exploring new worlds and magic systems. Currently obsessed with epic sagas.',
+                interests: ['Fantasy', 'Sci-fi', 'Epic', 'Magic', 'Sagas']
+            },
+            {
+                name: 'Mystery Mike',
+                bio: 'If it\'s a thriller or a whodunit, I\'m in! A great plot twist is all I need. I also enjoy classic crime novels.',
+                interests: ['Mystery', 'Thriller', 'Crime', 'Suspense', 'Plot Twists']
+            },
+            {
+                name: 'Romance Rachel',
+                bio: 'Hopeless romantic who can\'t get enough of heartwarming love stories, historical fiction, and a little bit of drama.',
+                interests: ['Romance', 'Historical Fiction', 'Love Stories', 'Drama']
+            },
+            {
+                name: 'Historical Helen',
+                bio: 'Lover of all things historical. I enjoy non-fiction and historical fiction, especially from the Victorian era.',
+                interests: ['History', 'Non-fiction', 'Historical Fiction', 'Victorian Era']
+            },
+            {
+                name: 'Adventure Alex',
+                bio: 'Seeking adventure in every page. I love travel narratives, adventure stories, and philosophical reads.',
+                interests: ['Adventure', 'Travel', 'Philosophy']
+            }
+        ];
+
+        // Function to render a single match profile
+        function renderMatchProfile(profile, commonInterests, matchPercentage) {
+            const profileElement = document.createElement('div');
+            profileElement.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200';
+            
+            const interestsHtml = commonInterests.map(interest => 
+                `<span class="tag bg-blue-100 text-blue-800">${interest}</span>`
+            ).join(' ');
+
+            profileElement.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-user-circle text-gray-400 text-3xl"></i>
+                        <div>
+                            <p class="text-xl font-semibold text-gray-900">${profile.name}</p>
+                            <p class="text-sm text-gray-500">${profile.bio}</p>
+                        </div>
+                    </div>
+                    <span class="text-lg font-bold text-blue-900">${matchPercentage}% Match</span>
+                </div>
+                <div class="space-y-2 mt-4">
+                    <p class="text-sm text-gray-600 font-medium">Shared Interests:</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${commonInterests.length > 0 ? interestsHtml : '<p class="text-gray-500 text-sm">No common interests found.</p>'}
+                    </div>
+                </div>
+            `;
+            matchesContainer.appendChild(profileElement);
+        }
+
+        // Firebase Authentication Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userId = user.uid;
+                matchesContainer.innerHTML = '';
+                let userInterests = [];
+                try {
+                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
+                    const userDoc = await getDoc(userDocRef);
+                    
+                    if (userDoc.exists()) {
+                        userInterests = userDoc.data().interests || [];
+                    }
+                    
+                    if (userInterests.length === 0) {
+                        matchesContainer.innerHTML = `
+                            <div class="bg-yellow-50 p-6 rounded-xl shadow-md border border-yellow-200">
+                                <p class="text-yellow-800 font-medium text-center">You don't have a profile yet, or you haven't added any interests. Here are some of our top influencers!</p>
+                            </div>
+                        `;
+                        influencers.forEach(influencer => {
+                            renderMatchProfile(influencer, [], 0);
+                        });
+                        return;
+                    }
+                    
+                    // Match the user with the influencers
+                    const matches = influencers.map(influencer => {
+                        const commonInterests = influencer.interests.filter(interest => userInterests.includes(interest));
+                        const matchPercentage = Math.round((commonInterests.length / Math.max(userInterests.length, influencer.interests.length)) * 100);
+                        return { influencer, commonInterests, matchPercentage };
+                    }).filter(match => match.matchPercentage > 0).sort((a, b) => b.matchPercentage - a.matchPercentage); // Filter for matches and sort by percentage
+                    
+                    if (matches.length > 0) {
+                        matches.forEach(match => {
+                            renderMatchProfile(match.influencer, match.commonInterests, match.matchPercentage);
+                        });
+                    } else {
+                        matchesContainer.innerHTML = `
+                            <div class="bg-gray-50 p-6 rounded-xl shadow-md border border-gray-200">
+                                <p class="text-gray-600 font-medium text-center">No matches found. Try adding more interests to your profile!</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error("Error fetching user profile or finding matches:", error);
+                    matchesContainer.innerHTML = `<p class="text-red-500 text-center">Error loading matches. Please try again.</p>`;
+                }
+            } else {
+                // If not signed in, sign in anonymously
+                await signInAnonymously(auth);
+            }
+        });
+
+        // Sign Out
+        signOutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            await signInAnonymously(auth);
+        });
+    </script>
+</body>
+</html>
