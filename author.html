@@ -40,15 +40,15 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <form id="author-form" class="space-y-6" novalidate>
 <div>
 <label for="book-title" class="block text-sm font-medium text-gray-700 mb-2">Book Title *</label>
-<input type="text" id="book-title" name="bookTitle" placeholder="Enter the title" class="form-input">
+<input type="text" id="book-title" name="bookTitle" placeholder="Enter the title" class="form-input" required>
 </div>
 <div>
 <label for="book-description" class="block text-sm font-medium text-gray-700 mb-2">Book Description *</label>
-<textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea"></textarea>
+<textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea" required></textarea>
 </div>
 <div>
 <label for="subgenre" class="block text-sm font-medium text-gray-700 mb-2">Subgenre *</label>
-<select id="subgenre" name="subgenre" class="form-select">
+<select id="subgenre" name="subgenre" class="form-select" required>
 <option value="">Select subgenre</option>
 <option value="fantasy">Fantasy</option>
 <option value="sci-fi">Science Fiction</option>
@@ -82,18 +82,14 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Dates *</label>
 <div class="grid grid-cols-2 gap-4">
-<input type="date" id="start-date" name="startDate" class="form-input">
-<input type="date" id="end-date" name="endDate" class="form-input">
+<input type="date" id="start-date" name="startDate" class="form-input" required>
+<input type="date" id="end-date" name="endDate" class="form-input" required>
 </div>
 </div>
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-2">Budget ($) *</label>
-<input type="number" id="budget" name="budget" placeholder="Enter budget" class="form-input">
+<input type="number" id="budget" name="budget" placeholder="Enter budget" class="form-input" required>
 </div>
-</div>
-<div>
-<label for="promotion-comfort" class="block text-sm font-medium text-gray-700 mb-2">Promotion Comfort</label>
-<input type="range" id="promotion-comfort" name="promotionComfort" min="1" max="5" value="3" class="w-full">
 </div>
 <div class="text-center">
 <button type="submit" id="continue-btn" class="btn-continue">Continue</button>
@@ -113,7 +109,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Firebase config (hardcoded)
 const firebaseConfig = {
   apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
   authDomain: "litwire-97956.firebaseapp.com",
@@ -132,13 +127,16 @@ const errorMessage = document.getElementById('error-message');
 const loadingOverlay = document.getElementById('loading-overlay');
 
 async function generateMarketingPlan(formData) {
+  const targetAudiences = Array.from(document.querySelectorAll('input[name="targetAudience"]:checked'))
+                               .map(cb => cb.value);
+
   const payload = {
     book_title: formData.bookTitle || "Untitled",
     book_description: formData.bookDescription || "No description",
     book_genre: formData.subgenre || "Unknown",
     campaign_length: `${formData.startDate || "2025-01-01"} to ${formData.endDate || "2025-01-07"}`,
     budget: Number(formData.budget) || 0,
-    desired_audience_type: String(formData.promotionComfort || "beginner")
+    desired_audience_type: targetAudiences.join(", ") || "General"
   };
 
   console.log("DEBUG - Payload being sent to CF:", payload);
@@ -173,14 +171,12 @@ form.addEventListener('submit', async (e) => {
     subgenre: document.getElementById('subgenre').value,
     startDate: document.getElementById('start-date').value,
     endDate: document.getElementById('end-date').value,
-    budget: document.getElementById('budget').value,
-    promotionComfort: document.getElementById('promotion-comfort').value
+    budget: document.getElementById('budget').value
   };
 
   try {
     const marketingPlanResponse = await generateMarketingPlan(formData);
 
-    // Sign in anonymously and save data
     const userCredential = await signInAnonymously(auth);
     const user = userCredential.user;
 
