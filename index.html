@@ -160,14 +160,11 @@
                 document.getElementById('posts-container').innerHTML = `<p class="text-red-500 text-center">Could not load feed. ${error.message}</p>`;
             }
         }
-
-
-        // --- Event Listeners ---
-
-        // Onboarding form submissions with error handling
-        document.getElementById('author-form').addEventListener('submit', handleProfileSave);
-        document.getElementById('influencer-form').addEventListener('submit', handleProfileSave);
-
+        
+        /**
+         * Handles saving the author or influencer profile from the onboarding form.
+         * @param {Event} e The form submission event.
+         */
         async function handleProfileSave(e) {
             e.preventDefault();
             const form = e.target;
@@ -215,6 +212,12 @@
                 submitBtn.textContent = 'Save Profile';
             }
         }
+
+        // --- Event Listeners ---
+
+        // Onboarding form submissions
+        document.getElementById('author-form').addEventListener('submit', handleProfileSave);
+        document.getElementById('influencer-form').addEventListener('submit', handleProfileSave);
         
         // Navigation logic
         document.querySelector('nav').addEventListener('click', (e) => {
@@ -246,7 +249,6 @@
              initDemoMode();
              showMainContent();
         });
-
 
         // --- Demo Mode Functions ---
         function initDemoMode() {
