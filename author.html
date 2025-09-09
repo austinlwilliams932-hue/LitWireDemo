@@ -214,6 +214,26 @@
   const errorMessage = document.getElementById('error-message');
   const loadingOverlay = document.getElementById('loading-overlay');
 
+  // 🔮 Call your Cloud Function (Gemini-powered)
+  async function generateMarketingPlan(formData) {
+    try {
+      const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("Failed to generate plan");
+      const data = await response.json();
+
+      // Expecting { marketingPlan: "..." }
+      return data.marketingPlan || "AI did not return a plan.";
+    } catch (err) {
+      console.error("Error generating marketing plan:", err);
+      return "⚠️ We could not generate your marketing plan at this time.";
+    }
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -263,11 +283,13 @@
       endDate: endDate.value,
       budget: parseFloat(budget.value),
       promotionComfort: parseInt(document.getElementById('promotion-comfort').value),
-      marketingPlan: "✨ Your AI marketing plan will be generated here ✨"
     };
 
     try {
-      // Sign in (custom token preferred, otherwise anonymous)
+      // Step 1: Call Gemini backend to generate plan
+      const marketingPlan = await generateMarketingPlan(formData);
+
+      // Step 2: Sign in to Firebase
       if (window.__initial_auth_token) {
         await signInWithCustomToken(auth, window.__initial_auth_token);
       } else {
@@ -277,11 +299,11 @@
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user");
 
-      // Write form data into Firestore
+      // Step 3: Save form data + plan into Firestore
       const docRef = doc(db, `users/${user.uid}/profiles/author`);
-      await setDoc(docRef, formData, { merge: true });
+      await setDoc(docRef, { ...formData, marketingPlan }, { merge: true });
 
-      // Redirect to marketingPlan page
+      // Step 4: Redirect
       window.location.href = 'marketingPlan.html';
     } catch (err) {
       console.error("Error saving marketing plan:", err);
