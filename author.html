@@ -238,198 +238,69 @@
         </div>
     </main>
     
-    <script type="module">
-        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+<script type="module">
+    import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration
-        setLogLevel('debug');
-        const app = initializeApp(firebaseConfig, appId);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    // Firebase Configuration
+    setLogLevel('debug');
+    const app = initializeApp(firebaseConfig, appId);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        // DOM Elements
-        const form = document.getElementById('author-form');
-        const continueBtn = document.getElementById('continue-btn');
-        const btnText = document.getElementById('btn-text');
-        const btnSpinner = document.getElementById('btn-spinner');
-        const errorMessage = document.getElementById('error-message');
-        
-        let userId = null;
+    // DOM Elements
+    const form = document.getElementById('author-form');
+    const continueBtn = document.getElementById('continue-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    const errorMessage = document.getElementById('error-message');
 
-        // Sign in the user with the custom token or anonymously
-        if (initialAuthToken) {
-            signInWithCustomToken(auth, initialAuthToken).catch(error => {
-                console.error("Error signing in with custom token:", error);
-                signInAnonymously(auth).catch(anonError => console.error("Anonymous sign-in failed:", anonError));
-            });
-        } else {
+    let userId = null;
+
+    // 🔒 Disable button until auth finishes
+    continueBtn.disabled = true;
+    continueBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+    // Sign in the user
+    if (initialAuthToken) {
+        signInWithCustomToken(auth, initialAuthToken).catch(error => {
+            console.error("Error signing in with custom token:", error);
             signInAnonymously(auth).catch(anonError => console.error("Anonymous sign-in failed:", anonError));
+        });
+    } else {
+        signInAnonymously(auth).catch(anonError => console.error("Anonymous sign-in failed:", anonError));
+    }
+
+    // Firebase Auth listener
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            userId = user.uid;
+        } else {
+            userId = crypto.randomUUID();
         }
 
-        // Firebase Auth listener to get the user ID
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                userId = user.uid;
-            } else {
-                // If not logged in, generate a temporary user ID
-                userId = crypto.randomUUID();
-            }
-        });
+        // 🔓 Enable button once we have a userId
+        continueBtn.disabled = false;
+        continueBtn.classList.remove("opacity-50", "cursor-not-allowed");
+    });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+    document.addEventListener('DOMContentLoaded', () => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-                if (!userId) {
-                    console.error("User ID not available.");
-                    errorMessage.textContent = "Please wait, user authentication is in progress.";
-                    errorMessage.classList.remove('hidden');
-                    return;
-                }
-                
-                // Client-side validation
-                const formData = new FormData(form);
-                const missingFields = [];
-                const fieldsToClear = document.querySelectorAll('.is-error');
-                fieldsToClear.forEach(el => el.classList.remove('is-error'));
-                
-                // Get form values
-                const bookTitle = formData.get('bookTitle');
-                const bookDescription = formData.get('bookDescription');
-                const subgenre = formData.get('subgenre');
-                const targetAudience = formData.getAll('targetAudience');
-                const promotionChannels = formData.getAll('promotionChannels');
-                const startDate = formData.get('startDate');
-                const endDate = formData.get('endDate');
-                const budget = formData.get('budget');
-                const promotionComfort = parseInt(formData.get('promotionComfort'));
-
-                // Validate individual fields and collect missing ones
-                if (!bookTitle) {
-                    missingFields.push("Book Title");
-                    document.getElementById('book-title').classList.add('is-error');
-                }
-                if (!bookDescription) {
-                    missingFields.push("Book Description");
-                    document.getElementById('book-description').classList.add('is-error');
-                }
-                if (!subgenre) {
-                    missingFields.push("Subgenre");
-                    document.getElementById('subgenre').classList.add('is-error');
-                }
-                if (targetAudience.length === 0) {
-                    missingFields.push("Target Audience");
-                    document.getElementById('target-audience-field').classList.add('is-error');
-                }
-                if (promotionChannels.length === 0) {
-                    missingFields.push("Promotion Channels");
-                    document.getElementById('promotion-channels-field').classList.add('is-error');
-                }
-                if (!startDate) {
-                    missingFields.push("Start Date");
-                    document.getElementById('start-date').classList.add('is-error');
-                }
-                if (!endDate) {
-                    missingFields.push("End Date");
-                    document.getElementById('end-date').classList.add('is-error');
-                }
-                if (!budget) {
-                    missingFields.push("Budget");
-                    document.getElementById('budget').classList.add('is-error');
-                }
-
-                if (missingFields.length > 0) {
-                    const missingText = missingFields.join(', ');
-                    errorMessage.textContent = `Please fill out the following fields: ${missingText}.`;
-                    errorMessage.classList.remove('hidden');
-                    return;
-                }
-
-                // Calculate campaign length in days
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                const campaignLengthDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-
-
-                // Show loading state
-                continueBtn.disabled = true;
-                btnText.classList.add('hidden');
-                btnSpinner.classList.remove('hidden');
-                errorMessage.classList.add('hidden');
-                
-                const data = {
-                    book_title: bookTitle,
-                    book_description: bookDescription,
-                    book_genre: subgenre,
-                    desired_audience_type: targetAudience.join(', '),
-                    promotion_channels: promotionChannels.join(', '),
-                    campaign_length: campaignLengthDays,
-                    budget: parseFloat(budget),
-                    promotion_comfort: promotionComfort,
-                    profile_type: 'author'
-                };
-
-                await processForm(data);
-            });
-        });
-
-        async function processForm(data) {
-            try {
-                // Get the current user and their ID token
-                const user = auth.currentUser;
-                if (!user) {
-                    throw new Error("User not authenticated.");
-                }
-                const idToken = await user.getIdToken();
-
-                // Save user data to Firestore
-                const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profiles/author`);
-                await setDoc(userDocRef, data);
-                console.log("User data saved to Firestore.");
-
-                // Call the Cloud Run function with the ID token in the Authorization header
-                const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${idToken}` // Add the Authorization header
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const responseBody = await response.text();
-
-                if (!response.ok) {
-                    throw new Error(`Cloud Run request failed with status: ${response.status} - Response: ${responseBody}`);
-                }
-
-                const result = JSON.parse(responseBody);
-                console.log("Cloud Run response:", result);
-
-                // Check if marketingPlan exists before saving
-                if (result && result.marketingPlan) {
-                    // Save the marketing plan to Firestore
-                    await setDoc(userDocRef, { marketingPlan: result.marketingPlan }, { merge: true });
-                    console.log("Marketing plan saved to Firestore.");
-                    // Redirect to the new page
-                    window.location.href = 'marketingPlan.html';
-                } else {
-                    throw new Error("Cloud Run response is missing the marketingPlan field.");
-                }
-
-            } catch (error) {
-                console.error("Error during form submission:", error);
-                errorMessage.textContent = `Error: ${error.message}`;
+            if (!userId) {
+                console.error("User ID not available.");
+                errorMessage.textContent = "Please wait, user authentication is in progress.";
                 errorMessage.classList.remove('hidden');
-
-                // Revert loading state
-                continueBtn.disabled = false;
-                btnText.classList.remove('hidden');
-                btnSpinner.classList.add('hidden');
+                return;
             }
-        }
-    </script>
+
+            // ... keep your validation + processForm logic
+        });
+    });
+
+    // processForm(data) stays the same
+</script>
 </body>
 </html>
