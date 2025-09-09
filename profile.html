@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LitWire - Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    
+    <script>
+        window.__firebase_config = JSON.stringify({
+            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+            authDomain: "litwire-97956.firebaseapp.com",
+            projectId: "litwire-97956",
+            storageBucket: "litwire-97956.firebasestorage.app",
+            messagingSenderId: "263009111921",
+            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+            measurementId: "G-ZWVFHF5YQX"
+        });
+
+        window.__app_id = "litwire-app";
+        window.__initial_auth_token = "some-auth-token"; // This will be provided by Canvas
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <header class="bg-white shadow-md py-4 w-full sticky top-0 z-50">
+        <nav class="container flex justify-between items-center px-4 md:px-8">
+            <div class="text-3xl font-bold text-gray-800">
+                <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a href="feed.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Feed</a>
+                <a href="matches.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Matches</a>
+                <button id="sign-out-btn" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Sign Out</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow container mt-12 px-4 md:px-8">
+        <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+            <h1 class="text-2xl font-bold mb-4 text-gray-900">Your Profile</h1>
+            <div id="profile-container" class="space-y-4">
+                <!-- Profile data will be dynamically added here -->
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-spinner fa-spin text-gray-400 text-2xl"></i>
+                    <p class="text-gray-500">Loading profile...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6 mt-12 w-full">
+        <div class="container text-center text-sm">
+            &copy; 2024 LitWire. All rights reserved.
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(window.__firebase_config);
+        const app = initializeApp(firebaseConfig, appId);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM Elements
+        const signOutBtn = document.getElementById('sign-out-btn');
+        const profileContainer = document.getElementById('profile-container');
+
+        // Firebase Authentication Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userId = user.uid;
+                try {
+                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
+                    const userDoc = await getDoc(userDocRef);
+                    profileContainer.innerHTML = '';
+                    if (userDoc.exists()) {
+                        const userProfile = userDoc.data();
+                        profileContainer.innerHTML = `
+                            <div class="space-y-2">
+                                <p class="text-gray-700"><span class="font-semibold">Name:</span> ${userProfile.name}</p>
+                                <p class="text-gray-700"><span class="font-semibold">Bio:</span> ${userProfile.bio || 'No bio provided.'}</p>
+                            </div>
+                            <div class="mt-4 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 break-all">
+                                <span class="font-semibold">User ID:</span> ${userId}
+                            </div>
+                        `;
+                    } else {
+                        profileContainer.innerHTML = `
+                            <p class="text-gray-700">No profile data found. Create your profile on the homepage!</p>
+                            <div class="mt-4 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 break-all">
+                                <span class="font-semibold">User ID:</span> ${userId}
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error("Error fetching user profile:", error);
+                    profileContainer.innerHTML = `<p class="text-red-500">Error loading profile data. Please try again.</p>`;
+                }
+            } else {
+                // If not signed in, sign in anonymously
+                await signInAnonymously(auth);
+            }
+        });
+
+        // Sign Out
+        signOutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            await signInAnonymously(auth);
+        });
+    </script>
+</body>
+</html>
