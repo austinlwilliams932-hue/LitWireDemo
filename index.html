@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Author & Influencer Social Network</title>
+    <title>LitWire Social Network</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
@@ -28,108 +28,108 @@
 
     <!-- Navbar -->
     <header class="bg-white shadow-md py-4 sticky top-0 z-50">
-        <nav class="container flex justify-between items-center px-4 md:px-6 lg:px-8">
-            <div class="text-2xl font-bold text-gray-800">
-                <span class="text-pink-500">Book</span>Connect
+        <nav class="container flex justify-between items-center px-4 md:px-8">
+            <div class="text-3xl font-bold text-gray-800">
+                <span class="text-purple-600">Lit</span><span class="text-gray-900">Wire</span>
             </div>
-            <div class="flex items-center space-x-4">
-                <button id="nav-feed" class="text-gray-600 hover:text-pink-500 font-medium">Feed</button>
-                <button id="nav-authors" class="text-gray-600 hover:text-pink-500 font-medium">Authors</button>
-                <button id="nav-influencers" class="text-gray-600 hover:text-pink-500 font-medium">Influencers</button>
-                <button id="nav-profile" class="text-gray-600 hover:text-pink-500 font-medium">Profile</button>
-                <button id="nav-matches" class="text-gray-600 hover:text-pink-500 font-medium">Matches</button>
+            <div class="flex items-center space-x-6">
+                <button id="nav-feed" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Feed</button>
+                <button id="nav-authors" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Authors</button>
+                <button id="nav-influencers" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Influencers</button>
+                <button id="nav-profile" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Profile</button>
+                <button id="nav-matches" class="text-gray-600 hover:text-purple-600 font-medium transition duration-300">Matches</button>
             </div>
         </nav>
     </header>
 
-    <main class="flex-grow container mt-8 px-4 md:px-6 lg:px-8">
+    <main class="flex-grow container mt-12 px-4 md:px-8">
         <!-- Loading state -->
         <div id="loading" class="text-center py-10">
-            <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full border-pink-500 border-r-transparent" role="status">
+            <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-purple-600 border-r-transparent" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
-            <p class="text-gray-600 mt-2">Connecting to the library...</p>
+            <p class="text-gray-600 mt-4">Connecting to the LitWire network...</p>
         </div>
 
         <!-- Main Content View -->
-        <div id="content" class="space-y-8 hidden">
+        <div id="content" class="space-y-12 hidden">
             <!-- User Info Bar -->
-            <div class="bg-white p-4 rounded-xl shadow-sm text-center">
-                <p class="text-sm text-gray-500">Logged in as: <span id="user-id" class="font-mono text-xs text-pink-500"></span></p>
-                <p class="text-sm text-gray-500">User Type: <span id="user-type" class="font-semibold text-gray-700">Not Set</span></p>
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-purple-600 text-center">
+                <p class="text-sm text-gray-500">Logged in as: <span id="user-id" class="font-mono text-xs text-purple-600"></span></p>
+                <p class="text-sm text-gray-500 mt-1">Account Type: <span id="user-type" class="font-semibold text-gray-700">Not Set</span></p>
             </div>
 
             <!-- Feed View -->
             <section id="feed-view" class="view">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Social Feed</h2>
-                <div id="posts-container" class="space-y-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Social Feed</h2>
+                <div id="posts-container" class="space-y-8">
                     <!-- Posts will be rendered here -->
                 </div>
             </section>
 
             <!-- Profile View -->
             <section id="profile-view" class="view hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">My Profile</h2>
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <p class="text-lg font-semibold mb-4">Choose your account type:</p>
-                    <div class="flex space-x-4 mb-6">
-                        <button id="author-btn" class="px-6 py-2 rounded-lg font-semibold transition duration-300 bg-pink-500 text-white hover:bg-pink-600">I'm an Author</button>
-                        <button id="influencer-btn" class="px-6 py-2 rounded-lg font-semibold transition duration-300 bg-blue-500 text-white hover:bg-blue-600">I'm an Influencer</button>
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">My Profile</h2>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600">
+                    <p class="text-lg font-semibold mb-6">Choose your account type:</p>
+                    <div class="flex space-x-4 mb-8">
+                        <button id="author-btn" class="flex-1 px-8 py-3 rounded-xl font-semibold transition duration-300 bg-purple-600 text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">I'm an Author</button>
+                        <button id="influencer-btn" class="flex-1 px-8 py-3 rounded-xl font-semibold transition duration-300 bg-sky-500 text-white hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">I'm an Influencer</button>
                     </div>
 
                     <!-- Author Profile Form -->
                     <div id="author-form-container" class="hidden">
-                        <h3 class="text-xl font-bold mb-4 text-pink-500">Author Profile Setup</h3>
-                        <form id="author-form" class="space-y-4">
+                        <h3 class="text-2xl font-bold mb-6 text-purple-600">Author Profile Setup</h3>
+                        <form id="author-form" class="space-y-6">
                             <div>
                                 <label for="author-name" class="block text-sm font-medium text-gray-700">Your Name</label>
-                                <input type="text" id="author-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 p-2" placeholder="Jane Doe">
+                                <input type="text" id="author-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3">
                             </div>
                             <div>
                                 <label for="author-bio" class="block text-sm font-medium text-gray-700">Bio</label>
-                                <textarea id="author-bio" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 p-2" placeholder="I'm a romance author specializing in fantasy novels."></textarea>
+                                <textarea id="author-bio" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-3"></textarea>
                             </div>
-                            <button type="submit" class="px-4 py-2 bg-pink-500 text-white rounded-lg shadow-md hover:bg-pink-600 transition duration-300">Save Profile</button>
+                            <button type="submit" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">Save Profile</button>
                         </form>
                     </div>
 
                     <!-- Influencer Profile Form -->
                     <div id="influencer-form-container" class="hidden">
-                        <h3 class="text-xl font-bold mb-4 text-blue-500">Influencer Profile Setup</h3>
-                        <form id="influencer-form" class="space-y-4">
+                        <h3 class="text-2xl font-bold mb-6 text-sky-500">Influencer Profile Setup</h3>
+                        <form id="influencer-form" class="space-y-6">
                             <div>
                                 <label for="influencer-name" class="block text-sm font-medium text-gray-700">Your Name</label>
-                                <input type="text" id="influencer-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2" placeholder="John Doe">
+                                <input type="text" id="influencer-name" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
                             </div>
                             <div>
                                 <label for="influencer-platform" class="block text-sm font-medium text-gray-700">Main Platform (e.g., TikTok, Instagram, Blog)</label>
-                                <input type="text" id="influencer-platform" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2" placeholder="TikTok">
+                                <input type="text" id="influencer-platform" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
                             </div>
                             <div>
                                 <label for="influencer-interests" class="block text-sm font-medium text-gray-700">Niche Interests (e.g., historical romance, dark academia)</label>
-                                <input type="text" id="influencer-interests" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2" placeholder="Historical Romance">
+                                <input type="text" id="influencer-interests" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
                             </div>
-                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition duration-300">Save Profile</button>
+                            <button type="submit" class="w-full px-6 py-3 bg-sky-500 text-white rounded-lg shadow-md hover:bg-sky-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Save Profile</button>
                         </form>
                     </div>
 
-                    <!-- Book Ingression Form (for authors) -->
-                    <div id="book-form-container" class="hidden mt-8">
-                        <h3 class="text-xl font-bold mb-4 text-pink-500">Ingress a New Book</h3>
-                        <form id="book-form" class="space-y-4">
+                    <!-- Book Ingestion Form (for authors) -->
+                    <div id="book-form-container" class="hidden mt-12">
+                        <h3 class="text-2xl font-bold mb-6 text-purple-600">Ingress a New Book</h3>
+                        <form id="book-form" class="space-y-6">
                             <div>
                                 <label for="book-title" class="block text-sm font-medium text-gray-700">Book Title</label>
-                                <input type="text" id="book-title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                                <input type="text" id="book-title" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
                             </div>
                             <div>
                                 <label for="book-blurb" class="block text-sm font-medium text-gray-700">Blurb</label>
-                                <textarea id="book-blurb" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"></textarea>
+                                <textarea id="book-blurb" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3"></textarea>
                             </div>
                             <div>
                                 <label for="book-cover" class="block text-sm font-medium text-gray-700">Cover Image URL</label>
-                                <input type="text" id="book-cover" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                                <input type="text" id="book-cover" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3">
                             </div>
-                            <button type="submit" class="px-4 py-2 bg-pink-500 text-white rounded-lg shadow-md hover:bg-pink-600 transition duration-300">Submit Book</button>
+                            <button type="submit" class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">Submit Book</button>
                         </form>
                     </div>
                 </div>
@@ -137,28 +137,28 @@
 
             <!-- Authors View -->
             <section id="authors-view" class="view hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Authors</h2>
-                <div id="authors-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Authors</h2>
+                <div id="authors-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Author cards will be rendered here -->
                 </div>
             </section>
 
             <!-- Influencers View -->
             <section id="influencers-view" class="view hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Influencers</h2>
-                <div id="influencers-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Influencers</h2>
+                <div id="influencers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Influencer cards will be rendered here -->
                 </div>
             </section>
 
             <!-- Matches View -->
             <section id="matches-view" class="view hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Your Matches</h2>
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                    <p class="text-gray-600 text-center">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Your Matches</h2>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600">
+                    <p class="text-gray-600 text-center text-lg">
                         This is where we'd use our matchmaking algorithm! For the MVP, here's a random selection of potential matches.
                     </p>
-                    <div id="matches-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                    <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
                         <!-- Match cards will be rendered here -->
                     </div>
                 </div>
@@ -166,9 +166,9 @@
         </div>
     </main>
 
-    <footer class="bg-gray-800 text-white py-4 mt-8">
+    <footer class="bg-gray-800 text-white py-6 mt-12">
         <div class="container text-center text-sm">
-            &copy; 2024 BookConnect. All rights reserved.
+            &copy; 2024 LitWire. All rights reserved.
         </div>
     </footer>
 
@@ -253,16 +253,16 @@
             posts.sort((a, b) => b.timestamp - a.timestamp); // Sort by most recent
             posts.forEach(post => {
                 const postElement = document.createElement('div');
-                postElement.className = 'bg-white p-6 rounded-xl shadow-sm';
+                postElement.className = 'bg-white p-6 rounded-2xl shadow-lg border-t-4 border-gray-200';
                 postElement.innerHTML = `
-                    <div class="flex items-center space-x-3 mb-2">
-                        <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold text-gray-600">${post.author.charAt(0)}</div>
+                    <div class="flex items-center space-x-4 mb-2">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl ${post.type === 'author' ? 'bg-purple-200 text-purple-700' : 'bg-sky-200 text-sky-700'}">${post.author.charAt(0)}</div>
                         <div>
-                            <p class="font-semibold text-gray-800">${post.author}</p>
+                            <p class="font-semibold text-gray-800 text-lg">${post.author}</p>
                             <p class="text-xs text-gray-500">${new Date(post.timestamp).toLocaleString()}</p>
                         </div>
                     </div>
-                    <p class="text-gray-700 mt-2">${post.content}</p>
+                    <p class="text-gray-700 mt-4 leading-relaxed">${post.content}</p>
                 `;
                 container.appendChild(postElement);
             });
@@ -273,18 +273,18 @@
             container.innerHTML = '';
             authors.forEach(author => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-6 rounded-xl shadow-md';
+                card.className = 'bg-white p-8 rounded-2xl shadow-lg border-t-4 border-purple-600';
                 const booksHtml = author.books ? author.books.map(book => `
                     <div class="p-2 bg-gray-100 rounded-lg text-xs font-semibold text-gray-600">${book.title}</div>
                 `).join('') : '';
 
                 card.innerHTML = `
                     <div class="flex items-center space-x-4 mb-4">
-                        <div class="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center font-bold text-pink-700 text-lg">${author.name.charAt(0)}</div>
-                        <h3 class="font-bold text-xl text-gray-800">${author.name}</h3>
+                        <div class="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center font-bold text-purple-700 text-2xl">${author.name.charAt(0)}</div>
+                        <h3 class="font-bold text-2xl text-gray-800">${author.name}</h3>
                     </div>
-                    <p class="text-gray-600 text-sm">${author.bio}</p>
-                    <div class="mt-4 flex flex-wrap gap-2">
+                    <p class="text-gray-600 text-sm leading-snug">${author.bio}</p>
+                    <div class="mt-6 flex flex-wrap gap-2">
                         ${booksHtml}
                     </div>
                 `;
@@ -297,14 +297,14 @@
             container.innerHTML = '';
             influencers.forEach(influencer => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-6 rounded-xl shadow-md';
+                card.className = 'bg-white p-8 rounded-2xl shadow-lg border-t-4 border-sky-500';
                 card.innerHTML = `
                     <div class="flex items-center space-x-4 mb-4">
-                        <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center font-bold text-blue-700 text-lg">${influencer.name.charAt(0)}</div>
-                        <h3 class="font-bold text-xl text-gray-800">${influencer.name}</h3>
+                        <div class="w-16 h-16 bg-sky-200 rounded-full flex items-center justify-center font-bold text-sky-700 text-2xl">${influencer.name.charAt(0)}</div>
+                        <h3 class="font-bold text-2xl text-gray-800">${influencer.name}</h3>
                     </div>
-                    <p class="text-gray-600 text-sm">Platform: <span class="font-semibold">${influencer.platform}</span></p>
-                    <p class="text-gray-600 text-sm mt-1">Interests: <span class="font-semibold">${influencer.interests}</span></p>
+                    <p class="text-gray-600 text-sm">Platform: <span class="font-semibold text-gray-800">${influencer.platform}</span></p>
+                    <p class="text-gray-600 text-sm mt-1">Interests: <span class="font-semibold text-gray-800">${influencer.interests}</span></p>
                 `;
                 container.appendChild(card);
             });
@@ -315,12 +315,12 @@
             container.innerHTML = '';
             matches.forEach(match => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
+                card.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200';
                 card.innerHTML = `
                     <h3 class="font-bold text-lg text-gray-800">${match.name}</h3>
                     <p class="text-gray-600 text-sm mt-1">${match.type === 'author' ? 'Author' : 'Influencer'}</p>
                     <p class="text-gray-500 text-xs mt-2 truncate">${match.bio || match.interests}</p>
-                    <button class="mt-4 px-3 py-1 text-xs font-semibold rounded-full bg-pink-100 text-pink-600 hover:bg-pink-200 transition duration-300">Connect</button>
+                    <button class="mt-4 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-300">Connect</button>
                 `;
                 container.appendChild(card);
             });
@@ -336,6 +336,9 @@
                     document.getElementById('user-type').textContent = userType.charAt(0).toUpperCase() + userType.slice(1);
                     if (userType === 'author') {
                         document.getElementById('book-form-container').classList.remove('hidden');
+                        document.getElementById('author-form-container').classList.remove('hidden');
+                    } else if (userType === 'influencer') {
+                        document.getElementById('influencer-form-container').classList.remove('hidden');
                     }
                 }
             }).catch(e => console.error("Error fetching user profile:", e));
