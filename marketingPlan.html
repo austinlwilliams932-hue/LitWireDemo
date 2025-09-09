@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LitWire - Your Marketing Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    
+    <script>
+        window.__firebase_config = JSON.stringify({
+            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+            authDomain: "litwire-97956.firebaseapp.com",
+            projectId: "litwire-97956",
+            storageBucket: "litwire-97956.firebasestorage.app",
+            messagingSenderId: "263009111921",
+            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+            measurementId: "G-ZWVFHF5YQX"
+        });
+        window.__app_id = "litwire-app";
+        window.__initial_auth_token = "some-auth-token"; // This will be provided by Canvas
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .content-card {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            white-space: pre-wrap; /* Preserve formatting from the response */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+    <header class="w-full bg-white shadow-md py-4 absolute top-0">
+        <nav class="container flex justify-between items-center px-4 md:px-8">
+            <div class="text-3xl font-bold text-gray-800">
+                <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
+            </div>
+            <a href="loggedInLanding.html" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">
+                <i class="fas fa-home mr-2"></i>Home
+            </a>
+        </nav>
+    </header>
+
+    <main class="flex-grow container mt-24 mb-12 px-4 md:px-8">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Your Marketing Plan</h1>
+            <p class="text-lg text-gray-600">Powered by Gemini AI</p>
+        </div>
+        
+        <div id="loading" class="text-center py-10">
+            <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-blue-900 border-r-transparent" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="text-gray-600 mt-4">Generating your personalized plan...</p>
+        </div>
+
+        <div id="plan-container" class="content-card hidden">
+            <!-- Marketing plan will be displayed here -->
+        </div>
+
+        <div id="error-message" class="content-card text-center text-red-500 hidden">
+            <p>We could not retrieve your marketing plan. Please try again later.</p>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(window.__firebase_config);
+        const app = initializeApp(firebaseConfig, appId);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM Elements
+        const loadingEl = document.getElementById('loading');
+        const planContainer = document.getElementById('plan-container');
+        const errorMessage = document.getElementById('error-message');
+
+        // Firebase Auth listener to get the user ID and fetch the plan
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profiles/author`);
+                    const userDoc = await getDoc(userDocRef);
+
+                    if (userDoc.exists() && userDoc.data().marketingPlan) {
+                        const plan = userDoc.data().marketingPlan;
+                        planContainer.textContent = plan;
+                        planContainer.classList.remove('hidden');
+                    } else {
+                        errorMessage.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error("Error fetching marketing plan:", error);
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    loadingEl.classList.add('hidden');
+                }
+            } else {
+                // If not logged in, redirect to index
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
