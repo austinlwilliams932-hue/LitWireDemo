@@ -66,31 +66,31 @@
   </div>
 
   <script type="module">
-    async function generateMarketingPlan(formData) {
-      try {
-        const response = await fetch("https://bookie-737284668725.us-central1.run.app/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            book_title: formData.bookTitle,
-            book_description: formData.bookDescription,
-            book_genre: formData.subgenre,
-            campaign_length: `${formData.startDate} to ${formData.endDate}`,
-            budget: formData.budget,
-            desired_audience_type: formData.promotionComfort
-          })
-        });
+async function generateMarketingPlan(formData) {
+  const payload = {
+    book_title: formData.bookTitle,
+    book_description: formData.bookDescription,
+    book_genre: formData.subgenre,
+    campaign_length: `${formData.startDate} to ${formData.endDate}`,
+    budget: formData.budget,
+    desired_audience_type: formData.promotionComfort
+  };
 
-        if (!response.ok) {
-          throw new Error("Failed to generate plan");
-        }
+  console.log("DEBUG - Payload being sent to CF:", payload);
 
-        return await response.json();
-      } catch (err) {
-        console.error("Error generating marketing plan:", err);
-        throw err;
-      }
-    }
+  const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to generate plan");
+  }
+
+  return await response.json();
+}
+
 
     document.getElementById("authorForm").addEventListener("submit", async (e) => {
       e.preventDefault();
