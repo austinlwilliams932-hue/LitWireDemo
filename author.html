@@ -304,21 +304,36 @@
                 errorMessage.classList.remove('hidden');
                 return;
             }
+            
+            // Client-side validation
+            const formData = new FormData(form);
+            const bookTitle = formData.get('bookTitle');
+            const subgenre = formData.get('subgenre');
+            const targetAudience = formData.getAll('targetAudience');
+            const promotionChannels = formData.getAll('promotionChannels');
+            const startDate = formData.get('startDate');
+            const endDate = formData.get('endDate');
+
+            if (!bookTitle || !subgenre || targetAudience.length === 0 || promotionChannels.length === 0 || !startDate || !endDate) {
+                errorMessage.textContent = "Please fill out all required fields.";
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
 
             // Show loading state
             continueBtn.disabled = true;
             btnText.classList.add('hidden');
             btnSpinner.classList.remove('hidden');
             errorMessage.classList.add('hidden');
-
-            const formData = new FormData(form);
+            
             const data = {
-                bookTitle: formData.get('bookTitle'),
-                subgenre: formData.get('subgenre'),
-                targetAudience: formData.getAll('targetAudience'),
-                promotionChannels: formData.getAll('promotionChannels'),
-                startDate: formData.get('startDate'),
-                endDate: formData.get('endDate'),
+                bookTitle: bookTitle,
+                subgenre: subgenre,
+                targetAudience: targetAudience.join(', '), // Convert array to comma-separated string
+                promotionChannels: promotionChannels.join(', '), // Convert array to comma-separated string
+                startDate: startDate,
+                endDate: endDate,
                 promotionComfort: parseInt(formData.get('promotionComfort')),
                 profileType: 'author',
                 bookCover: '' // Initialize bookCover to an empty string
@@ -344,8 +359,6 @@
                 const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profiles/author`);
                 await setDoc(userDocRef, data);
                 console.log("User data saved to Firestore.");
-
-                console.log("Sending data to Cloud Run:", data); // Log the data before sending
 
                 // Call the Cloud Run function
                 const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
