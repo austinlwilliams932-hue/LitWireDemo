@@ -1,179 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LitWire Social Network</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f3f4f6;
-    }
-    .container { max-width: 1200px; margin: 0 auto; }
-    .hidden { display: none; }
-    .spinner-border { border-top-color: #f3f4f6; }
-    .btn-author {
-      background-color: #2e598b; color: #fff; padding: 0.75rem 2rem;
-      border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease;
-    }
-    .btn-author:hover { background-color: #234368; }
-    .btn-influencer {
-      background-color: #e5e7eb; color: #1f2937; padding: 0.75rem 2rem;
-      border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease;
-    }
-    .btn-influencer:hover { background-color: #d1d5db; }
-    .btn-get-started {
-      background-color: #2e598b; color: #fff; padding: 1.25rem 2rem;
-      border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease;
-    }
-    .btn-get-started:hover { background-color: #234368; }
-    .modal {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex; justify-content: center; align-items: center; z-index: 100;
-    }
-    .modal-content {
-      background-color: #fff; padding: 2rem; border-radius: 1rem;
-      width: 90%; max-width: 400px; position: relative;
-    }
-    .close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
-  </style>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-  <header class="bg-white shadow-md py-4 sticky top-0 z-50">
-    <nav class="container flex justify-between items-center px-4 md:px-8">
-      <div class="text-3xl font-bold text-gray-800">
-        <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
-      </div>
-      <div class="flex items-center space-x-6">
-        <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Login</button>
-        <button id="nav-signup" class="bg-gray-800 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-900 transition duration-300">Sign Up</button>
-      </div>
-    </nav>
-  </header>
-
-  <main class="flex-grow container mt-12 px-4 md:px-8">
-    <div id="loading" class="text-center py-10">
-      <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-blue-900 border-r-transparent" role="status">
-        <span class="sr-only">Loading...</span>
-      </div>
-      <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
-    </div>
-
-    <section id="onboarding-view" class="view hidden">
-      <div class="text-center py-20">
-        <h1 class="text-5xl font-bold text-gray-900 leading-tight">Where stories meet<br>their champions</h1>
-        <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
-          A curated matchmaking platform connecting authors with book influencers who actually fit their genre, style, and audience.
-        </p>
-        <div class="flex justify-center space-x-4 mt-8">
-          <a href="author.html" class="btn-author">I'm an Author</a>
-          <a href="influencer.html" class="btn-influencer">I'm an Influencer</a>
-        </div>
-      </div>
-
-      <div class="mt-20 py-12 px-8 bg-white rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-around text-center">
-        <div class="flex flex-col items-center">
-          <i class="fas fa-list-check text-4xl text-blue-900"></i>
-          <p class="mt-2 text-lg text-gray-700 font-semibold">Survey</p>
-        </div>
-        <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
-        <div class="flex flex-col items-center">
-          <i class="fas fa-user-friends text-4xl text-blue-900"></i>
-          <p class="mt-2 text-lg text-gray-700 font-semibold">Matches</p>
-        </div>
-        <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
-        <div class="flex flex-col items-center">
-          <i class="fas fa-chart-line text-4xl text-blue-900"></i>
-          <p class="mt-2 text-lg text-gray-700 font-semibold">Dashboard</p>
-        </div>
-      </div>
-
-      <div class="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
-          <p class="text-gray-700 font-medium text-lg italic">
-            "I've connected with amazing book lovers who really get my work."
-          </p>
-        </div>
-        <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
-          <p class="text-gray-700 font-medium text-lg italic">
-            "A game-changer for finding new reads in my niche."
-          </p>
-        </div>
-      </div>
-
-      <div class="mt-20 flex justify-center space-x-12 items-center">
-        <span class="text-gray-400 text-5xl">🌷</span>
-        <span class="text-gray-400 text-5xl">⚫</span>
-        <span class="text-gray-400 text-5xl">▶️</span>
-        <span class="text-gray-400 text-4xl">TDJ</span>
-        <span class="text-gray-400 text-4xl">wisco</span>
-      </div>
-
-      <div class="mt-20 text-center">
-        <a href="author.html" class="btn-get-started">Start your free campaign plan today →</a>
-      </div>
-    </section>
-  </main>
-
-  <footer class="bg-gray-800 text-white py-6 mt-12">
-    <div class="container text-center text-sm">
-      &copy; 2024 LitWire. All rights reserved.
-    </div>
-  </footer>
-
-  <!-- Login Modal -->
-  <div id="login-modal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal('login-modal')">&times;</span>
-      <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Login</h2>
-      <form id="login-form" class="space-y-4">
-        <div>
-          <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="login-email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
-        </div>
-        <div>
-          <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
-          <input type="password" id="login-password" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
-        </div>
-        <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Login</button>
-        <p id="login-message" class="text-sm text-center mt-4"></p>
-      </form>
-    </div>
-  </div>
-
-  <!-- Sign Up Modal -->
-  <div id="signup-modal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal('signup-modal')">&times;</span>
-      <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Sign Up</h2>
-      <form id="signup-form" class="space-y-4">
-        <div>
-          <label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="signup-email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
-        </div>
-        <div>
-          <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</label>
-          <input type="password" id="signup-password" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
-        </div>
-        <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Sign Up</button>
-        <p id="signup-message" class="text-sm text-center mt-4"></p>
-      </form>
-    </div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-    import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // Hardcoded Firebase config
-    const firebaseConfig = {
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LitWire - Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  
+  <script>
+    window.__firebase_config = JSON.stringify({
       apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
       authDomain: "litwire-97956.firebaseapp.com",
       projectId: "litwire-97956",
@@ -181,11 +17,185 @@
       messagingSenderId: "263009111921",
       appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
       measurementId: "G-ZWVFHF5YQX"
-    };
+    });
+    window.__app_id = "litwire-app";
+    window.__initial_auth_token = "some-auth-token";
+  </script>
 
-    // Init Firebase
-    const app = initializeApp(firebaseConfig);
-    getAnalytics(app);
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+    }
+    h1, .text-3xl { letter-spacing: 0.025em; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .hidden { display: none; }
+    .spinner-border { border-top-color: #f3f4f6; }
+    .btn-author {
+      background-color: #2e598b; color: #fff; padding: 0.75rem 2rem;
+      border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease;
+    }
+    .btn-author:hover { background-color: #234368; }
+    .btn-influencer {
+      background-color: #e5e7eb; color: #1f2937; padding: 0.75rem 2rem;
+      border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease;
+    }
+    .btn-influencer:hover { background-color: #d1d5db; }
+    .btn-get-started {
+      background-color: #2e598b; color: #fff; padding: 1.25rem 2rem;
+      border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease;
+    }
+    .btn-get-started:hover { background-color: #234368; }
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex; justify-content: center; align-items: center; z-index: 100;
+    }
+    .modal-content {
+      background-color: #fff; padding: 2rem; border-radius: 1rem;
+      width: 90%; max-width: 400px; position: relative;
+    }
+    .close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <header class="bg-white shadow-md py-4 sticky top-0 z-50">
+    <nav class="container flex justify-between items-center px-4 md:px-8">
+      <div class="text-3xl font-bold text-gray-800">
+        <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
+      </div>
+      <!-- Logged-out navigation -->
+      <div id="nav-logged-out" class="flex items-center space-x-6">
+        <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Login</button>
+        <button id="nav-signup" class="bg-gray-800 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-900 transition duration-300">Sign Up</button>
+      </div>
+      <!-- Logged-in navigation -->
+      <div id="nav-logged-in" class="hidden flex items-center space-x-6">
+          <a href="profile.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Profile</a>
+          <a href="feed.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Feed</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="flex-grow container mt-12 px-4 md:px-8">
+    <div id="loading" class="text-center py-10">
+      <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-blue-900 border-r-transparent" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
+    </div>
+
+    <section id="onboarding-view" class="view hidden">
+      <div class="text-center py-20">
+        <h1 class="text-5xl font-bold text-gray-900 leading-tight tracking-wide">Where stories meet<br>their champions</h1>
+        <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
+          A curated matchmaking platform connecting authors with book influencers who actually fit their genre, style, and audience.
+        </p>
+        <div class="flex justify-center space-x-4 mt-8">
+          <a href="author.html" class="btn-author">I'm an Author</a>
+          <a href="influencer.html" class="btn-influencer">I'm an Influencer</a>
+        </div>
+      </div>
+
+      <div class="mt-20 py-12 px-8 bg-white rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-around text-center">
+        <div class="flex flex-col items-center">
+          <i class="fas fa-list-check text-4xl text-blue-900"></i>
+          <p class="mt-2 text-lg text-gray-700 font-semibold">Survey</p>
+        </div>
+        <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
+        <div class="flex flex-col items-center">
+          <i class="fas fa-user-friends text-4xl text-blue-900"></i>
+          <p class="mt-2 text-lg text-gray-700 font-semibold">Matches</p>
+        </div>
+        <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
+        <div class="flex flex-col items-center">
+          <i class="fas fa-chart-line text-4xl text-blue-900"></i>
+          <p class="mt-2 text-lg text-gray-700 font-semibold">Dashboard</p>
+        </div>
+      </div>
+
+      <div class="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
+          <p class="text-gray-700 font-medium text-lg italic">
+            "I've connected with amazing book lovers who really get my work."
+          </p>
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
+          <p class="text-gray-700 font-medium text-lg italic">
+            "A game-changer for finding new reads in my niche."
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-20 flex justify-center space-x-12 items-center">
+        <span class="text-gray-400 text-5xl">🌷</span>
+        <span class="text-gray-400 text-5xl">⚫</span>
+        <span class="text-gray-400 text-5xl">▶️</span>
+        <span class="text-gray-400 text-4xl">TDJ</span>
+        <span class="text-gray-400 text-4xl">wisco</span>
+      </div>
+
+      <div class="mt-20 text-center">
+        <a href="author.html" class="btn-get-started">Start your free campaign plan today →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-gray-800 text-white py-6 mt-12">
+    <div class="container text-center text-sm">
+      &copy; 2024 LitWire. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('login-modal')">&times;</span>
+      <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Login</h2>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" id="login-email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
+        </div>
+        <div>
+          <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" id="login-password" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
+        </div>
+        <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Login</button>
+        <p id="login-message" class="text-sm text-center mt-4"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sign Up Modal -->
+  <div id="signup-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('signup-modal')">&times;</span>
+      <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Sign Up</h2>
+      <form id="signup-form" class="space-y-4">
+        <div>
+          <label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" id="signup-email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
+        </div>
+        <div>
+          <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" id="signup-password" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
+        </div>
+        <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Sign Up</button>
+        <p id="signup-message" class="text-sm text-center mt-4"></p>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Firebase config
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    const app = initializeApp(firebaseConfig, appId);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
@@ -198,62 +208,67 @@
     const signupForm = document.getElementById('signup-form');
     const loginMessage = document.getElementById('login-message');
     const signupMessage = document.getElementById('signup-message');
+    const navLoggedOut = document.getElementById('nav-logged-out');
+    const navLoggedIn = document.getElementById('nav-logged-in');
 
-    // Modal helpers
-    window.showModal = (id) => document.getElementById(id).classList.remove('hidden');
-    window.closeModal = (id) => {
-      document.getElementById(id).classList.add('hidden');
-      loginMessage.textContent = '';
-      signupMessage.textContent = '';
-    };
+    // Modal helpers
+    window.showModal = (id) => document.getElementById(id).classList.remove('hidden');
+    window.closeModal = (id) => {
+      document.getElementById(id).classList.add('hidden');
+      loginMessage.textContent = '';
+      signupMessage.textContent = '';
+    };
 
-    // Initialize app flow
-    async function initApp() {
-      try {
-        await signInAnonymously(auth);
-      } catch (e) {
-        console.error("Anon sign-in failed", e);
-      }
-      loadingEl.classList.add('hidden');
-      onboardingView.classList.remove('hidden');
-    }
-    initApp();
-
-    // Login handler
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = loginForm['login-email'].value;
-      const password = loginForm['login-password'].value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        loginMessage.textContent = "Logged in successfully!";
-        loginMessage.style.color = "green";
-        closeModal('login-modal');
-      } catch (error) {
-        loginMessage.textContent = `Login failed: ${error.message}`;
-        loginMessage.style.color = "red";
-      }
+    // Firebase Authentication Listener
+    onAuthStateChanged(auth, (user) => {
+        loadingEl.classList.add('hidden');
+        onboardingView.classList.remove('hidden');
+        if (user) {
+            navLoggedOut.classList.add('hidden');
+            navLoggedIn.classList.remove('hidden');
+        } else {
+            navLoggedOut.classList.remove('hidden');
+            navLoggedIn.classList.add('hidden');
+        }
     });
 
-    // Signup handler
-    signupForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = signupForm['signup-email'].value;
-      const password = signupForm['signup-password'].value;
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        signupMessage.textContent = "Signed up successfully!";
-        signupMessage.style.color = "green";
-        closeModal('signup-modal');
-      } catch (error) {
-        signupMessage.textContent = `Sign up failed: ${error.message}`;
-        signupMessage.style.color = "red";
-      }
-    });
+    // Login handler
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = loginForm['login-email'].value;
+      const password = loginForm['login-password'].value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        loginMessage.textContent = "Logged in successfully!";
+        loginMessage.style.color = "green";
+        closeModal('login-modal');
+        window.location.href = 'feed.html';
+      } catch (error) {
+        loginMessage.textContent = `Login failed: ${error.message}`;
+        loginMessage.style.color = "red";
+      }
+    });
 
-    // Nav buttons
-    document.getElementById('nav-login').addEventListener('click', () => showModal('login-modal'));
-    document.getElementById('nav-signup').addEventListener('click', () => showModal('signup-modal'));
-  </script>
+    // Signup handler
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = signupForm['signup-email'].value;
+      const password = signupForm['signup-password'].value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        signupMessage.textContent = "Signed up successfully!";
+        signupMessage.style.color = "green";
+        closeModal('signup-modal');
+        window.location.href = 'feed.html';
+      } catch (error) {
+        signupMessage.textContent = `Sign up failed: ${error.message}`;
+        signupMessage.style.color = "red";
+      }
+    });
+
+    // Nav buttons
+    document.getElementById('nav-login').addEventListener('click', () => showModal('login-modal'));
+    document.getElementById('nav-signup').addEventListener('click', () => showModal('signup-modal'));
+  </script>
 </body>
 </html>
