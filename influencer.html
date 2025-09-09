@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LitWire - Influencer Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        window.__firebase_config = JSON.stringify({
+            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+            authDomain: "litwire-97956.firebaseapp.com",
+            projectId: "litwire-97956",
+            storageBucket: "litwire-97956.firebasestorage.app",
+            messagingSenderId: "263009111921",
+            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+            measurementId: "G-ZWVFHF5YQX"
+        });
+
+        window.__app_id = "litwire-app";
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .btn-influencer {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-influencer:hover {
+            background-color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+    <header class="bg-white shadow-md py-4 w-full fixed top-0 z-50">
+        <nav class="container flex justify-between items-center px-4 md:px-8">
+            <div class="text-3xl font-bold text-gray-800">
+                <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a href="index.html" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Go Back</a>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="flex-grow container mt-20 px-4 md:px-8">
+        <div id="influencer-form-container" class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-lg mx-auto">
+            <h3 class="text-2xl font-bold mb-6 text-sky-500 text-center">Influencer Profile Setup</h3>
+            <p class="text-gray-600 mb-6 text-center">Tell us a little about yourself to find books you'll love.</p>
+            <form id="influencer-form" class="space-y-6">
+                <div>
+                    <label for="influencer-name" class="block text-sm font-medium text-gray-700">Your Name</label>
+                    <input type="text" id="influencer-name" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+                </div>
+                <div>
+                    <label for="influencer-platform" class="block text-sm font-medium text-gray-700">Main Platform (e.g., TikTok, Instagram, Blog)</label>
+                    <input type="text" id="influencer-platform" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+                </div>
+                <div>
+                    <label for="influencer-interests" class="block text-sm font-medium text-gray-700">Niche Interests (e.g., historical romance, dark academia)</label>
+                    <input type="text" id="influencer-interests" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 p-3">
+                </div>
+                <button type="submit" class="w-full px-6 py-3 bg-sky-500 text-white rounded-lg shadow-md hover:bg-sky-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">Save Profile</button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6 mt-12 w-full">
+        <div class="container text-center text-sm">
+            &copy; 2024 LitWire. All rights reserved.
+        </div>
+    </footer>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'demo-app';
+        let firebaseConfig = null;
+        let demoMode = false;
+        
+        try {
+            if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
+                firebaseConfig = JSON.parse(window.__firebase_config);
+            }
+        } catch (e) {
+            console.error("Failed to parse Firebase configuration:", e);
+        }
+        
+        let app, db, auth;
+        let userId = null;
+        
+        async function initApp() {
+            if (!firebaseConfig) {
+                demoMode = true;
+                userId = 'demo-user-' + Math.random().toString(36).substr(2, 9);
+                setupInfluencerForm();
+                return;
+            }
+            
+            app = initializeApp(firebaseConfig, appId);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    // Check if profile exists, redirect if so
+                    const userDoc = await getDoc(doc(db, "users", userId));
+                    if (userDoc.exists() && userDoc.data().type === 'influencer') {
+                        window.location.href = 'main.html';
+                    } else {
+                        setupInfluencerForm();
+                    }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            });
+        }
+        
+        function setupInfluencerForm() {
+            document.getElementById('influencer-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('influencer-name').value;
+                const platform = document.getElementById('influencer-platform').value;
+                const interests = document.getElementById('influencer-interests').value;
+
+                const userData = {
+                    id: userId,
+                    name,
+                    platform,
+                    interests,
+                    type: 'influencer'
+                };
+
+                if (demoMode) {
+                    // In demo mode, just redirect
+                    window.location.href = 'main.html';
+                } else {
+                    try {
+                        await setDoc(doc(db, "users", userId), userData);
+                        window.location.href = 'main.html';
+                    } catch (error) {
+                        console.error("Error saving influencer profile:", error);
+                    }
+                }
+            });
+        }
+        
+        initApp();
+    </script>
+</body>
+</html>
