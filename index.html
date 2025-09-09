@@ -336,10 +336,11 @@
         }
 
         // --- Data Fetching and Event Listeners ---
-        function initApp() {
+        async function initApp() {
             // Check for existing user profile
             const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', userId);
-            getDoc(userDocRef).then(docSnap => {
+            try {
+                const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
                     userType = docSnap.data().type;
                     document.getElementById('user-type').textContent = userType.charAt(0).toUpperCase() + userType.slice(1);
@@ -350,7 +351,10 @@
                         document.getElementById('influencer-form-container').classList.remove('hidden');
                     }
                 }
-            }).catch(e => console.error("Error fetching user profile:", e));
+            } catch (e) {
+                console.error("Error fetching user profile:", e);
+            }
+
 
             // Set up real-time listeners for all data
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'posts'), (snapshot) => {
