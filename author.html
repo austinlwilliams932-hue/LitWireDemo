@@ -315,29 +315,38 @@
             const missingFields = [];
             const fieldsToClear = document.querySelectorAll('.is-error');
             fieldsToClear.forEach(el => el.classList.remove('is-error'));
+            
+            // Get form values
+            const bookTitle = formData.get('bookTitle');
+            const subgenre = formData.get('subgenre');
+            const targetAudience = formData.getAll('targetAudience');
+            const promotionChannels = formData.getAll('promotionChannels');
+            const startDate = formData.get('startDate');
+            const endDate = formData.get('endDate');
+
 
             // Validate individual fields and collect missing ones
-            if (!formData.get('bookTitle')) {
+            if (!bookTitle) {
                 missingFields.push("Book Title");
                 document.getElementById('book-title').classList.add('is-error');
             }
-            if (!formData.get('subgenre')) {
+            if (!subgenre) {
                 missingFields.push("Subgenre");
                 document.getElementById('subgenre').classList.add('is-error');
             }
-            if (formData.getAll('targetAudience').length === 0) {
+            if (targetAudience.length === 0) {
                 missingFields.push("Target Audience");
                 document.getElementById('target-audience-field').classList.add('is-error');
             }
-            if (formData.getAll('promotionChannels').length === 0) {
+            if (promotionChannels.length === 0) {
                 missingFields.push("Promotion Channels");
                 document.getElementById('promotion-channels-field').classList.add('is-error');
             }
-            if (!formData.get('startDate')) {
+            if (!startDate) {
                 missingFields.push("Start Date");
                 document.getElementById('start-date').classList.add('is-error');
             }
-            if (!formData.get('endDate')) {
+            if (!endDate) {
                 missingFields.push("End Date");
                 document.getElementById('end-date').classList.add('is-error');
             }
