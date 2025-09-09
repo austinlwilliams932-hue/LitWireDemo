@@ -64,23 +64,26 @@ function hide(el) { el.classList.add('hidden'); }
 
 function renderPlan(planData) {
     planContainer.innerHTML = '';
-    planData.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'content-card';
+    if (!planData.length) {
+        planContainer.innerHTML = `<div class="content-card text-center text-gray-700">Nothing found in Firestore.</div>`;
+    } else {
+        planData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'content-card';
 
-        const influencerName = item.opportunity_details?.Name || 'Unknown';
-        const reason = item.rationale || 'No rationale provided';
-        const message = item.draft_message || 'No message';
+            const influencerName = item.opportunity_details?.Name || 'Unknown';
+            const reason = item.rationale || 'No rationale provided';
+            const message = item.draft_message || 'No message';
 
-        card.innerHTML = `
-            <h2 class="text-xl font-semibold mb-2">${influencerName}</h2>
-            <p class="mb-2"><strong>Why this influencer:</strong> ${reason}</p>
-            <p class="mb-4"><strong>Draft message:</strong> ${message}</p>
-            <button class="button" onclick='sendMessage("${encodeURIComponent(message)}")'>Send Message</button>
-        `;
-
-        planContainer.appendChild(card);
-    });
+            card.innerHTML = `
+                <h2 class="text-xl font-semibold mb-2">${influencerName}</h2>
+                <p class="mb-2"><strong>Why this influencer:</strong> ${reason}</p>
+                <p class="mb-4"><strong>Draft message:</strong> ${message}</p>
+                <button class="button" onclick='sendMessage("${encodeURIComponent(message)}")'>Send Message</button>
+            `;
+            planContainer.appendChild(card);
+        });
+    }
     hide(loadingEl);
     show(planContainer);
 }
@@ -92,27 +95,39 @@ function sendMessage(message) {
 
 async function init() {
     try {
+        console.log('[DEBUG] Signing in anonymously...');
         await signInAnonymously(auth);
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userId = user.uid;
+                console.log('[DEBUG] User signed in with UID:', userId);
+
                 const docRef = doc(db, `users/${userId}/profiles/author`);
+                console.log('[DEBUG] Fetching Firestore document:', docRef.path);
+
                 const docSnap = await getDoc(docRef);
+                console.log('[DEBUG] Document snapshot:', docSnap);
 
                 if (docSnap.exists()) {
-                    const planData = docSnap.data().marketingPlan || [];
-                    if (planData.length) {
-                        renderPlan(planData);
-                    } else {
-                        throw new Error('No marketing plan found in Firestore');
-                    }
+                    const docData = docSnap.data();
+                    console.log('[DEBUG] Document data:', docData);
+
+                    const planData = docData.marketingPlan || [];
+                    console.log('[DEBUG] Marketing plan array:', planData);
+
+                    renderPlan(planData);
                 } else {
-                    throw new Error('No marketing plan document found');
+                    console.warn('[DEBUG] Firestore document does not exist for this user');
+                    renderPlan([]); // Show "Nothing found in Firestore"
                 }
+            } else {
+                console.warn('[DEBUG] No user is currently signed in');
+                renderPlan([]); // Show "Nothing found in Firestore"
             }
         });
     } catch (err) {
-        console.error(err);
+        console.error('[DEBUG] Error during init:', err);
         hide(loadingEl);
         errorEl.textContent = err.message;
         show(errorEl);
