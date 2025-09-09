@@ -201,7 +201,7 @@ const renderNavbar = (user) => {
         navContainer.innerHTML = `
             <div class="flex items-center space-x-6">
                 <a href="profile.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Profile</a>
-                <a href="feed.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Feed</a>
+                <a href="loggedInLanding.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Feed</a>
                 <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Logout</button>
             </div>
         `;
@@ -220,6 +220,7 @@ const renderNavbar = (user) => {
         document.getElementById("nav-signup").addEventListener("click", () => showModal("signup-modal"));
     }
 };
+
 
 // Cloud Run JWT login
 async function signInWithCloudRunToken(uid) {
