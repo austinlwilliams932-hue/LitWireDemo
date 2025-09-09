@@ -258,11 +258,11 @@
 
     let userId = null;
 
-    // 🔒 Disable button until auth finishes
+    // 🔒 Keep button disabled until auth completes
     continueBtn.disabled = true;
     continueBtn.classList.add("opacity-50", "cursor-not-allowed");
 
-    // Sign in the user
+    // Sign in with token or anonymously
     if (initialAuthToken) {
         signInWithCustomToken(auth, initialAuthToken).catch(error => {
             console.error("Error signing in with custom token:", error);
@@ -285,22 +285,142 @@
         continueBtn.classList.remove("opacity-50", "cursor-not-allowed");
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    // Attach submit handler directly (no DOMContentLoaded)
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log("✅ Form submit intercepted"); // Debug
 
-            if (!userId) {
-                console.error("User ID not available.");
-                errorMessage.textContent = "Please wait, user authentication is in progress.";
-                errorMessage.classList.remove('hidden');
-                return;
-            }
+        if (!userId) {
+            console.error("User ID not available.");
+            errorMessage.textContent = "Please wait, user authentication is in progress.";
+            errorMessage.classList.remove('hidden');
+            return;
+        }
 
-            // ... keep your validation + processForm logic
-        });
+        // Client-side validation
+        const formData = new FormData(form);
+        const missingFields = [];
+        const fieldsToClear = document.querySelectorAll('.is-error');
+        fieldsToClear.forEach(el => el.classList.remove('is-error'));
+
+        const bookTitle = formData.get('bookTitle');
+        const bookDescription = formData.get('bookDescription');
+        const subgenre = formData.get('subgenre');
+        const targetAudience = formData.getAll('targetAudience');
+        const promotionChannels = formData.getAll('promotionChannels');
+        const startDate = formData.get('startDate');
+        const endDate = formData.get('endDate');
+        const budget = formData.get('budget');
+        const promotionComfort = parseInt(formData.get('promotionComfort'));
+
+        if (!bookTitle) {
+            missingFields.push("Book Title");
+            document.getElementById('book-title').classList.add('is-error');
+        }
+        if (!bookDescription) {
+            missingFields.push("Book Description");
+            document.getElementById('book-description').classList.add('is-error');
+        }
+        if (!subgenre) {
+            missingFields.push("Subgenre");
+            document.getElementById('subgenre').classList.add('is-error');
+        }
+        if (targetAudience.length === 0) {
+            missingFields.push("Target Audience");
+            document.getElementById('target-audience-field').classList.add('is-error');
+        }
+        if (promotionChannels.length === 0) {
+            missingFields.push("Promotion Channels");
+            document.getElementById('promotion-channels-field').classList.add('is-error');
+        }
+        if (!startDate) {
+            missingFields.push("Start Date");
+            document.getElementById('start-date').classList.add('is-error');
+        }
+        if (!endDate) {
+            missingFields.push("End Date");
+            document.getElementById('end-date').classList.add('is-error');
+        }
+        if (!budget) {
+            missingFields.push("Budget");
+            document.getElementById('budget').classList.add('is-error');
+        }
+
+        if (missingFields.length > 0) {
+            errorMessage.textContent = `Please fill out the following fields: ${missingFields.join(', ')}.`;
+            errorMessage.classList.remove('hidden');
+            return;
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const campaignLengthDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+        // Show loading state
+        continueBtn.disabled = true;
+        btnText.classList.add('hidden');
+        btnSpinner.classList.remove('hidden');
+        errorMessage.classList.add('hidden');
+
+        const data = {
+            book_title: bookTitle,
+            book_description: bookDescription,
+            book_genre: subgenre,
+            desired_audience_type: targetAudience.join(', '),
+            promotion_channels: promotionChannels.join(', '),
+            campaign_length: campaignLengthDays,
+            budget: parseFloat(budget),
+            promotion_comfort: promotionComfort,
+            profile_type: 'author'
+        };
+
+        await processForm(data);
     });
 
-    // processForm(data) stays the same
+    async function processForm(data) {
+        try {
+            const user = auth.currentUser;
+            if (!user) throw new Error("User not authenticated.");
+            const idToken = await user.getIdToken();
+
+            const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/profiles/author`);
+            await setDoc(userDocRef, data);
+            console.log("✅ User data saved to Firestore.");
+
+            const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            const responseBody = await response.text();
+            if (!response.ok) throw new Error(`Cloud Run request failed: ${response.status} - ${responseBody}`);
+
+            const result = JSON.parse(responseBody);
+            console.log("✅ Cloud Run response:", result);
+
+            if (result && result.marketingPlan) {
+                await setDoc(userDocRef, { marketingPlan: result.marketingPlan }, { merge: true });
+                console.log("✅ Marketing plan saved to Firestore.");
+                window.location.href = 'marketingPlan.html';
+            } else {
+                throw new Error("Cloud Run response is missing the marketingPlan field.");
+            }
+
+        } catch (error) {
+            console.error("❌ Error during form submission:", error);
+            errorMessage.textContent = `Error: ${error.message}`;
+            errorMessage.classList.remove('hidden');
+
+            // Revert loading state
+            continueBtn.disabled = false;
+            btnText.classList.remove('hidden');
+            btnSpinner.classList.add('hidden');
+        }
+    }
 </script>
 </body>
 </html>
