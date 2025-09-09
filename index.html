@@ -176,70 +176,11 @@
     </footer>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Data Models and Dummy Data
+        let userType = null;
+        let userData = { name: 'New User', bio: 'Bio not set.', interests: 'Interests not set.', platform: 'Platform not set.' };
 
-        // Global variables for Firebase
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // --- Firebase Initialization and Auth ---
-        let db, auth, userId;
-        const loadingMessageEl = document.getElementById('loading-message');
-        
-        // Ensure firebase configuration is valid.
-        let firebaseConfig;
-        try {
-            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-            if (!firebaseConfig || !firebaseConfig.projectId) {
-                throw new Error('"projectId" not provided in Firebase configuration.');
-            }
-        } catch (e) {
-            console.error("Firebase Configuration Error:", e);
-            loadingMessageEl.textContent = "Error: Missing Firebase configuration. Please refresh the page.";
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('content').classList.add('hidden');
-        }
-
-        if (firebaseConfig) {
-             try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                console.log("Firebase initialized successfully.");
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('user-id').textContent = userId;
-                        console.log("Authenticated with user ID:", userId);
-                        initApp();
-                        document.getElementById('loading').classList.add('hidden');
-                        document.getElementById('content').classList.remove('hidden');
-                    } else {
-                        console.log("No user found. Signing in.");
-                        try {
-                            if (initialAuthToken) {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        } catch (error) {
-                            console.error("Firebase Auth Error:", error);
-                            loadingMessageEl.textContent = "Failed to connect. Please try again.";
-                        }
-                    }
-                });
-
-            } catch (error) {
-                console.error("Firebase Initialization Error:", error);
-                loadingMessageEl.textContent = `Failed to initialize Firebase. Error: ${error.message}`;
-            }
-        }
-
-        // --- Data Models and Dummy Data ---
-        const dummyPosts = [
+        let dummyPosts = [
             { id: uuid.v4(), author: "Samantha", content: "Just finished my latest manuscript! It's a dark romance with a touch of fantasy. I'm so excited to find the perfect influencers to review it.", type: "author", timestamp: Date.now() - 3600000 },
             { id: uuid.v4(), author: "Bookworm Emily", content: "Looking for new authors to collaborate with! My channel focuses on spicy historical romance. Drop your books below!", type: "influencer", timestamp: Date.now() - 7200000 },
             { id: uuid.v4(), author: "Liam Jones", content: "Thinking about a new campaign for my book 'Crimson Vows'. Maybe a giveaway for a signed copy and a cozy bookmark.", type: "author", timestamp: Date.now() - 10800000 },
@@ -247,19 +188,43 @@
             { id: uuid.v4(), author: "Chloe's Novels", content: "My new book cover reveal is coming soon! Any influencers interested in a sneak peek?", type: "author", timestamp: Date.now() - 18000000 },
         ];
 
-        const dummyAuthors = [
+        let dummyAuthors = [
             { id: 'dummy-author-1', name: 'Samantha', bio: 'Romance author specializing in fantasy and paranormal. Known for strong female leads and intricate world-building.' },
             { id: 'dummy-author-2', name: 'Liam Jones', bio: 'New York Times bestselling author of contemporary romance novels with a hint of suspense. I love writing about second chances.' },
             { id: 'dummy-author-3', name: 'Chloe\'s Novels', bio: 'I write steamy, feel-good romance novels set in small towns. Currently working on a new series!' }
         ];
 
-        const dummyInfluencers = [
+        let dummyInfluencers = [
             { id: 'dummy-influencer-1', name: 'Bookworm Emily', platform: 'TikTok, Instagram', interests: 'Historical Romance, Spicy Romcoms' },
             { id: 'dummy-influencer-2', name: 'Reading Sarah', platform: 'Blog, YouTube', interests: 'Dark Academia, Fantasy Romance' },
             { id: 'dummy-influencer-3', name: 'The Book Nook', platform: 'YouTube', interests: 'Contemporary Romance, Paranormal Romance' }
         ];
 
-        let userType = null;
+        const loadingEl = document.getElementById('loading');
+        const contentEl = document.getElementById('content');
+        
+        // Simulating app initialization without Firebase
+        function initApp() {
+            loadingEl.classList.add('hidden');
+            contentEl.classList.remove('hidden');
+            document.getElementById('user-id').textContent = 'local-user-id';
+            document.getElementById('user-type').textContent = userType ? userType.charAt(0).toUpperCase() + userType.slice(1) : 'Not Set';
+            
+            renderPosts(dummyPosts);
+            renderAuthors(dummyAuthors);
+            renderInfluencers(dummyInfluencers);
+            
+            // Show the correct profile form if a type is set
+            if (userType === 'author') {
+                document.getElementById('author-form-container').classList.remove('hidden');
+                document.getElementById('book-form-container').classList.remove('hidden');
+            } else if (userType === 'influencer') {
+                document.getElementById('influencer-form-container').classList.remove('hidden');
+            }
+        }
+        
+        // Initial render
+        initApp();
 
         // --- UI Rendering Functions ---
         function renderView(viewId) {
@@ -348,114 +313,84 @@
             });
         }
 
-        // --- Data Fetching and Event Listeners ---
-        async function initApp() {
-            const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', userId);
-            try {
-                const docSnap = await getDoc(userDocRef);
-                if (docSnap.exists()) {
-                    userType = docSnap.data().type;
-                    document.getElementById('user-type').textContent = userType.charAt(0).toUpperCase() + userType.slice(1);
-                    if (userType === 'author') {
-                        document.getElementById('book-form-container').classList.remove('hidden');
-                        document.getElementById('author-form-container').classList.remove('hidden');
-                    } else if (userType === 'influencer') {
-                        document.getElementById('influencer-form-container').classList.remove('hidden');
-                    }
-                }
-            } catch (e) {
-                console.error("Error fetching user profile:", e);
-            }
-
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'posts'), (snapshot) => {
-                const posts = snapshot.docs.map(doc => doc.data());
-                renderPosts(posts.concat(dummyPosts));
-            });
-
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'users'), async (snapshot) => {
-                const users = snapshot.docs.map(doc => doc.data());
-                
-                const authorPromises = users.filter(u => u.type === 'author').map(async (author) => {
-                    const booksQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'books'), where('authorId', '==', author.userId));
-                    const bookSnapshot = await getDocs(booksQuery);
-                    const books = bookSnapshot.docs.map(doc => doc.data());
-                    return { ...author, books };
-                });
-                
-                const fetchedAuthors = await Promise.all(authorPromises);
-                const authors = fetchedAuthors.concat(dummyAuthors);
-                const influencers = users.filter(u => u.type === 'influencer').concat(dummyInfluencers);
-
-                renderAuthors(authors);
-                renderInfluencers(influencers);
-            });
-
-            document.getElementById('nav-feed').addEventListener('click', () => renderView('feed-view'));
-            document.getElementById('nav-profile').addEventListener('click', () => renderView('profile-view'));
-            document.getElementById('nav-authors').addEventListener('click', () => renderView('authors-view'));
-            document.getElementById('nav-influencers').addEventListener('click', () => renderView('influencers-view'));
-            document.getElementById('nav-matches').addEventListener('click', () => {
-                const allUsers = [...dummyAuthors, ...dummyInfluencers];
-                const matches = allUsers.sort(() => 0.5 - Math.random()).slice(0, 6);
-                renderMatches(matches);
-                renderView('matches-view');
-            });
-            
+        // --- Event Listeners ---
+        document.getElementById('nav-feed').addEventListener('click', () => {
+            renderPosts(dummyPosts);
             renderView('feed-view');
-        }
+        });
+        document.getElementById('nav-profile').addEventListener('click', () => {
+            document.getElementById('author-name').value = userData.name;
+            document.getElementById('author-bio').value = userData.bio;
+            document.getElementById('influencer-name').value = userData.name;
+            document.getElementById('influencer-platform').value = userData.platform;
+            document.getElementById('influencer-interests').value = userData.interests;
+            renderView('profile-view');
+        });
+        document.getElementById('nav-authors').addEventListener('click', () => {
+            renderAuthors(dummyAuthors);
+            renderView('authors-view');
+        });
+        document.getElementById('nav-influencers').addEventListener('click', () => {
+            renderInfluencers(dummyInfluencers);
+            renderView('influencers-view');
+        });
+        document.getElementById('nav-matches').addEventListener('click', () => {
+            const allUsers = [...dummyAuthors, ...dummyInfluencers];
+            const matches = allUsers.sort(() => 0.5 - Math.random()).slice(0, 6);
+            renderMatches(matches);
+            renderView('matches-view');
+        });
+        
+        renderView('feed-view');
 
         // --- Forms and Data Submission ---
         document.getElementById('author-btn').addEventListener('click', () => {
+            userType = 'author';
+            document.getElementById('user-type').textContent = 'Author';
             document.getElementById('author-form-container').classList.remove('hidden');
+            document.getElementById('book-form-container').classList.remove('hidden');
             document.getElementById('influencer-form-container').classList.add('hidden');
         });
 
         document.getElementById('influencer-btn').addEventListener('click', () => {
+            userType = 'influencer';
+            document.getElementById('user-type').textContent = 'Influencer';
             document.getElementById('influencer-form-container').classList.remove('hidden');
             document.getElementById('author-form-container').classList.add('hidden');
+            document.getElementById('book-form-container').classList.add('hidden');
         });
 
         document.getElementById('author-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('author-name').value;
-            const bio = document.getElementById('author-bio').value;
+            userData.name = document.getElementById('author-name').value;
+            userData.bio = document.getElementById('author-bio').value;
 
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId), {
-                    userId,
-                    type: 'author',
-                    name,
-                    bio,
-                });
-                userType = 'author';
-                document.getElementById('user-type').textContent = 'Author';
-                document.getElementById('book-form-container').classList.remove('hidden');
-                console.log("Author profile saved successfully!");
-            } catch (e) {
-                console.error("Error saving author profile: ", e);
-            }
+            const newAuthor = {
+                id: uuid.v4(),
+                name: userData.name,
+                bio: userData.bio,
+                books: [],
+            };
+            dummyAuthors = dummyAuthors.filter(a => a.id !== 'local-user-id').concat(newAuthor);
+            renderAuthors(dummyAuthors);
+            console.log("Author profile saved successfully!");
         });
 
         document.getElementById('influencer-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('influencer-name').value;
-            const platform = document.getElementById('influencer-platform').value;
-            const interests = document.getElementById('influencer-interests').value;
+            userData.name = document.getElementById('influencer-name').value;
+            userData.platform = document.getElementById('influencer-platform').value;
+            userData.interests = document.getElementById('influencer-interests').value;
 
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId), {
-                    userId,
-                    type: 'influencer',
-                    name,
-                    platform,
-                    interests,
-                });
-                userType = 'influencer';
-                document.getElementById('user-type').textContent = 'Influencer';
-                console.log("Influencer profile saved successfully!");
-            } catch (e) {
-                console.error("Error saving influencer profile: ", e);
-            }
+            const newInfluencer = {
+                id: uuid.v4(),
+                name: userData.name,
+                platform: userData.platform,
+                interests: userData.interests,
+            };
+            dummyInfluencers = dummyInfluencers.filter(i => i.id !== 'local-user-id').concat(newInfluencer);
+            renderInfluencers(dummyInfluencers);
+            console.log("Influencer profile saved successfully!");
         });
 
         document.getElementById('book-form').addEventListener('submit', async (e) => {
@@ -465,25 +400,31 @@
             const cover = document.getElementById('book-cover').value;
             const userName = document.getElementById('author-name').value;
 
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'books'), {
-                    authorId: userId,
-                    authorName: userName,
-                    title,
-                    blurb,
-                    cover,
-                });
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'posts'), {
-                    author: userName,
-                    content: `My new book '${title}' is out now! Check it out!`,
-                    type: "author",
-                    timestamp: Date.now(),
-                });
-                e.target.reset();
-                console.log("Book and post submitted successfully!");
-            } catch (e) {
-                console.error("Error submitting book: ", e);
+            // Add new book to the user's author object
+            const userAuthor = dummyAuthors.find(a => a.name === userName);
+            if (userAuthor) {
+                if (!userAuthor.books) {
+                    userAuthor.books = [];
+                }
+                userAuthor.books.push({ title, blurb, cover });
             }
+
+            // Create new post
+            const newPost = {
+                id: uuid.v4(),
+                author: userName,
+                content: `My new book '${title}' is out now! Check it out!`,
+                type: "author",
+                timestamp: Date.now(),
+            };
+            dummyPosts.push(newPost);
+            
+            // Re-render the relevant sections
+            renderPosts(dummyPosts);
+            renderAuthors(dummyAuthors);
+
+            e.target.reset();
+            console.log("Book and post submitted successfully!");
         });
     </script>
 </body>
