@@ -68,9 +68,11 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        setLogLevel('debug');
+        
         // Firebase Configuration
         const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(window.__firebase_config);
@@ -87,6 +89,21 @@
         // User Data
         let userId = null;
         let userProfile = null;
+        
+        // Function to render a single post to the feed
+        function renderPost(post) {
+            const postElement = document.createElement('div');
+            postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
+            postElement.innerHTML = `
+                <div class="flex items-center space-x-4 mb-2">
+                    <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
+                    <span class="font-semibold text-gray-800">${post.authorName || 'Anonymous'}</span>
+                </div>
+                <p class="text-gray-700">${post.content}</p>
+                <p class="text-xs text-gray-400 mt-2">${post.createdAt ? new Date(post.createdAt.toDate()).toLocaleString() : 'Just now'}</p>
+            `;
+            feedContainer.appendChild(postElement);
+        }
 
         // Firebase Authentication Listener
         onAuthStateChanged(auth, async (user) => {
@@ -98,27 +115,69 @@
                     if (userDoc.exists()) {
                         userProfile = userDoc.data();
                     } else {
-                        // User is logged in but has no profile, redirect to index
-                        window.location.href = 'index.html';
+                        // User is logged in but has no profile, set default name
+                        console.warn("User profile not found. Using 'Anonymous'.");
+                        userProfile = { name: 'Anonymous' };
                     }
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
-                    window.location.href = 'index.html';
+                    userProfile = { name: 'Anonymous' };
                 }
+                
+                // Add fake posts to show off the way that the page would look.
+                addFakePosts();
                 
                 // Set up real-time feed listener
                 setupFeedListener();
 
             } else {
-                // User is not signed in, redirect to index page
-                window.location.href = 'index.html';
+                // If the user is not signed in, sign in anonymously.
+                console.log("No user signed in. Signing in anonymously...");
+                await signInAnonymously(auth);
             }
         });
 
         // Sign Out
         signOutBtn.addEventListener('click', async () => {
             await signOut(auth);
+            // After signing out, sign in anonymously again to allow access
+            await signInAnonymously(auth);
         });
+
+        // Function to add fake posts to the page
+        function addFakePosts() {
+            const fakePosts = [
+                {
+                    authorName: 'Bookworm Jane',
+                    content: 'Just finished "The Midnight Library" and it was absolutely stunning. A great read that makes you think about all the possibilities in life.',
+                    createdAt: new Date(Date.now() - 3600000) // 1 hour ago
+                },
+                {
+                    authorName: 'Literary Leo',
+                    content: 'Starting "Dune" for the first time. The world-building is incredible, but it\'s a lot to take in! Wish me luck on this epic journey.',
+                    createdAt: new Date(Date.now() - 7200000) // 2 hours ago
+                },
+                {
+                    authorName: 'History Buff',
+                    content: 'Highly recommend "Sapiens" by Yuval Noah Harari. It provides a fascinating perspective on the history of humanity.',
+                    createdAt: new Date(Date.now() - 10800000) // 3 hours ago
+                },
+            ];
+
+            fakePosts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
+                postElement.innerHTML = `
+                    <div class="flex items-center space-x-4 mb-2">
+                        <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
+                        <span class="font-semibold text-gray-800">${post.authorName || 'Anonymous'}</span>
+                    </div>
+                    <p class="text-gray-700">${post.content}</p>
+                    <p class="text-xs text-gray-400 mt-2">${new Date(post.createdAt).toLocaleString()}</p>
+                `;
+                feedContainer.appendChild(postElement);
+            });
+        }
 
         // Set up Real-time Feed Listener
         function setupFeedListener() {
@@ -126,20 +185,24 @@
             const q = query(feedCollectionRef, orderBy('createdAt', 'desc'));
 
             onSnapshot(q, (snapshot) => {
-                feedContainer.innerHTML = ''; // Clear the feed
+                // Clear the real posts to prevent duplicates on update
+                // This assumes fake posts are only added once at the beginning
+                const realPosts = feedContainer.querySelectorAll('.real-post');
+                realPosts.forEach(post => post.remove());
+
                 snapshot.forEach((doc) => {
                     const post = doc.data();
                     const postElement = document.createElement('div');
-                    postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
+                    postElement.className = 'real-post bg-white p-6 rounded-xl shadow-md border border-gray-200';
                     postElement.innerHTML = `
                         <div class="flex items-center space-x-4 mb-2">
                             <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
                             <span class="font-semibold text-gray-800">${post.authorName || 'Anonymous'}</span>
                         </div>
                         <p class="text-gray-700">${post.content}</p>
-                        <p class="text-xs text-gray-400 mt-2">${new Date(post.createdAt.toDate()).toLocaleString()}</p>
+                        <p class="text-xs text-gray-400 mt-2">${post.createdAt ? new Date(post.createdAt.toDate()).toLocaleString() : 'Just now'}</p>
                     `;
-                    feedContainer.appendChild(postElement);
+                    feedContainer.prepend(postElement); // Add new posts to the top
                 });
             });
         }
