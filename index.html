@@ -81,7 +81,7 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 <!-- Login Modal -->
 <div id="login-modal" class="modal hidden">
     <div class="modal-content">
-        <span class="close-btn" onclick="closeModal('login-modal')">&times;</span>
+        <span class="close-btn">&times;</span>
         <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Login</h2>
         <form id="login-form" class="space-y-4">
             <input type="email" id="login-email" placeholder="Email" required class="w-full p-3 border rounded-lg">
@@ -95,7 +95,7 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 <!-- Signup Modal -->
 <div id="signup-modal" class="modal hidden">
     <div class="modal-content">
-        <span class="close-btn" onclick="closeModal('signup-modal')">&times;</span>
+        <span class="close-btn">&times;</span>
         <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Sign Up</h2>
         <form id="signup-form" class="space-y-4">
             <input type="text" id="signup-name" placeholder="Full Name" required class="w-full p-3 border rounded-lg">
@@ -142,9 +142,14 @@ const signupForm = document.getElementById("signup-form");
 const loginMessage = document.getElementById("login-message");
 const signupMessage = document.getElementById("signup-message");
 
-function showModal(id){ document.getElementById(id).classList.remove("hidden"); }
-function closeModal(id){ document.getElementById(id).classList.add("hidden"); loginMessage.textContent=""; signupMessage.textContent=""; }
+function showModal(modal) { modal.classList.remove("hidden"); }
+function hideModal(modal) { 
+    modal.classList.add("hidden"); 
+    loginMessage.textContent = "";
+    signupMessage.textContent = "";
+}
 
+// Navbar
 function renderNavbar(user){
     navContainer.innerHTML = "";
     if(user){
@@ -162,8 +167,8 @@ function renderNavbar(user){
                 <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
             </div>
         `;
-        document.getElementById("nav-login").addEventListener("click",()=>showModal("login-modal"));
-        document.getElementById("nav-signup").addEventListener("click",()=>showModal("signup-modal"));
+        document.getElementById("nav-login").addEventListener("click",()=>showModal(loginModal));
+        document.getElementById("nav-signup").addEventListener("click",()=>showModal(signupModal));
     }
 }
 
@@ -180,7 +185,7 @@ loginForm.addEventListener("submit", async e=>{
     const password = loginForm["login-password"].value;
     try{
         await signInWithEmailAndPassword(auth,email,password);
-        closeModal("login-modal");
+        hideModal(loginModal);
     }catch(err){
         loginMessage.textContent = err.message;
         loginMessage.style.color = "red";
@@ -201,11 +206,28 @@ signupForm.addEventListener("submit", async e=>{
         const userCredential = await createUserWithEmailAndPassword(auth,email,password);
         const user = userCredential.user;
         await setDoc(doc(db,`/artifacts/users/${user.uid}/profile/data`),{name,email,role,bio,photo});
-        closeModal("signup-modal");
+        hideModal(signupModal);
     }catch(err){
         signupMessage.textContent = err.message;
         signupMessage.style.color = "red";
     }
+});
+
+// Close modals
+document.querySelectorAll(".close-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const modal = btn.closest(".modal");
+        hideModal(modal);
+    });
+});
+
+// Close modal when clicking outside content
+document.querySelectorAll(".modal").forEach(modal => {
+    modal.addEventListener("click", e => {
+        if(e.target === modal){
+            hideModal(modal);
+        }
+    });
 });
 </script>
 </body>
