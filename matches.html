@@ -104,9 +104,14 @@ function renderMatch(profile) {
     const el = document.createElement('div');
     el.className = 'content-card';
 
-    const percentBadge = profile.matchPercentage
-        ? `<span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">${profile.matchPercentage}% match</span>`
-        : '';
+-    const percentBadge = profile.matchPercentage
+-        ? `<span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">${profile.matchPercentage}% match</span>`
+-        : '';
++    // Support either `matchPercentage` or `similarity` from CF
++    const percentage = profile.matchPercentage ?? profile.similarity ?? null;
++    const percentBadge = percentage
++        ? `<span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">${percentage}% match</span>`
++        : '';
 
     el.innerHTML = `
         <div class="flex justify-between items-center">
@@ -116,13 +121,15 @@ function renderMatch(profile) {
         <p class="mb-1"><strong>Platform:</strong> ${profile["Platform "] || 'Unknown'}</p>
         <p class="mb-1"><strong>Type:</strong> ${profile.Type || 'Unknown'}</p>
         <p class="mb-1"><strong>Estimated Audience:</strong> ${profile["Est. Audience Size"] || 'Unknown'}</p>
-        ${profile.blurb ? `<p class="mt-2 text-gray-700">${profile.blurb}</p>` : ''}
+-        ${profile.blurb ? `<p class="mt-2 text-gray-700">${profile.blurb}</p>` : ''}
++        ${profile.blurb ? `<p class="mt-2 italic text-gray-700">${profile.blurb}</p>` : ''}
         ${profile["Source Link"] 
             ? `<button class="button mt-2" onclick="window.open('${profile["Source Link"]}','_blank')">View Profile</button>`
             : ''}
     `;
     matchesContainer.appendChild(el);
 }
+
 
 async function callCloudRun(userProfile, influencers) {
     try {
