@@ -143,7 +143,7 @@ function hideModal(modal) { modal.classList.remove("show"); loginMessage.textCon
 async function renderNavbar(user){
     navContainer.innerHTML = "";
     if(user){
-        // Corrected doc path to match new subcollection structure
+        // Corrected doc path
         const profileRef = doc(db, "artifacts", "users", user.uid, "profile", "myProfileDoc");
         const profileSnap = await getDoc(profileRef, { source: "server" });
         const hasDashboard = profileSnap.exists() && profileSnap.data().onboardingComplete;
@@ -175,7 +175,7 @@ async function renderNavbar(user){
 // Update CTA buttons depending on profile completion
 async function updateCTAs(user){
     if(!user) return;
-    // Corrected doc path to match new subcollection structure
+    // Corrected doc path
     const profileRef = doc(db, "artifacts", "users", user.uid, "profile", "myProfileDoc");
     const profileSnap = await getDoc(profileRef, { source: "server" }); // fresh read
     const onboardingComplete = profileSnap.exists() ? profileSnap.data().onboardingComplete : false;
