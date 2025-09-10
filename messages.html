@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LitWire - Messages</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+<style>
+body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+h1, .text-3xl { letter-spacing: 0.025em; }
+.container { max-width: 1200px; margin: 0 auto; }
+.hidden { display: none !important; }
+.btn-author { background-color: #2e598b; color: #fff; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
+.btn-author:hover { background-color: #234368; }
+.btn-influencer { background-color: #e5e7eb; color: #1f2937; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
+.btn-influencer:hover { background-color: #d1d5db; }
+.btn-dashboard { background-color: #10b981; color: #fff; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
+.btn-dashboard:hover { background-color: #059669; }
+
+.modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+  z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.modal.show { opacity: 1; pointer-events: auto; }
+.modal-content { background-color: #fff; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; position: relative; transform: translateY(-20px); transition: transform 0.3s ease; }
+.modal.show .modal-content { transform: translateY(0); }
+.close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
+
+.chat-container { display: flex; height: calc(100vh - 12rem); }
+.sidebar { width: 300px; min-width: 300px; background-color: #fff; border-right: 1px solid #e5e7eb; overflow-y: auto; }
+.chat-window { flex-grow: 1; display: flex; flex-direction: column; background-color: #f9fafb; }
+.chat-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; background-color: #fff; }
+.chat-messages { flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
+.message-bubble { max-width: 75%; padding: 0.75rem 1rem; border-radius: 1.25rem; }
+.sent { background-color: #3b82f6; color: #fff; align-self: flex-end; }
+.received { background-color: #e5e7eb; color: #1f2937; align-self: flex-start; }
+.chat-input { padding: 1rem; background-color: #fff; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; }
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<header class="bg-white shadow-md py-4 sticky top-0 z-50">
+    <nav class="container flex justify-between items-center px-4 md:px-8">
+        <div class="text-3xl font-bold text-gray-800"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></div>
+        <div id="nav-container"></div>
+    </nav>
+</header>
+
+<main class="flex-grow container mt-8 px-4 md:px-8">
+    <div id="main-content-view" class="hidden">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Messages</h1>
+        <div class="bg-white rounded-lg shadow-lg chat-container">
+            <div id="conversations-sidebar" class="sidebar">
+                <div class="p-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold">Conversations</h2>
+                </div>
+                <ul id="conversation-list">
+                    <li class="p-4 flex items-center border-b border-gray-200 cursor-pointer hover:bg-gray-100" data-user-id="user1">
+                        <img src="https://via.placeholder.com/40" alt="User" class="w-10 h-10 rounded-full mr-3">
+                        <div>
+                            <p class="font-medium">J.K. Rowling</p>
+                            <p class="text-sm text-gray-500 truncate">Last message snippet...</p>
+                        </div>
+                    </li>
+                    <li class="p-4 flex items-center border-b border-gray-200 cursor-pointer hover:bg-gray-100" data-user-id="user2">
+                        <img src="https://via.placeholder.com/40" alt="User" class="w-10 h-10 rounded-full mr-3">
+                        <div>
+                            <p class="font-medium">Book Reviewer 123</p>
+                            <p class="text-sm text-gray-500 truncate">Sounds great!</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="chat-window" class="chat-window hidden">
+                <div id="chat-header" class="chat-header flex items-center gap-4">
+                    <img id="chat-user-photo" src="" alt="User" class="w-12 h-12 rounded-full">
+                    <div>
+                        <p id="chat-user-name" class="font-bold text-lg text-gray-800"></p>
+                        <p class="text-sm text-gray-500">Online</p>
+                    </div>
+                </div>
+                <div id="chat-messages" class="chat-messages">
+                    </div>
+                <form id="message-form" class="chat-input">
+                    <input type="text" id="message-input" placeholder="Type a message..." class="flex-grow p-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="bg-blue-900 text-white p-3 rounded-full hover:bg-blue-800 transition-colors">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-gray-800 text-white py-6 mt-12">
+    <div class="container text-center text-sm">
+        &copy; 2024 LitWire. All rights reserved.
+    </div>
+</footer>
+
+<div id="login-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Login</h2>
+        <form id="login-form" class="space-y-4">
+            <input type="email" id="login-email" placeholder="Email" required class="w-full p-3 border rounded-lg">
+            <input type="password" id="login-password" placeholder="Password" required class="w-full p-3 border rounded-lg">
+            <button type="submit" class="w-full py-3 bg-blue-900 text-white rounded-lg">Login</button>
+            <p id="login-message" class="text-sm text-center mt-2"></p>
+        </form>
+    </div>
+</div>
+
+<div id="signup-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Sign Up</h2>
+        <form id="signup-form" class="space-y-4">
+            <input type="text" id="signup-name" placeholder="Full Name" required class="w-full p-3 border rounded-lg">
+            <input type="email" id="signup-email" placeholder="Email" required class="w-full p-3 border rounded-lg">
+            <select id="signup-role" required class="w-full p-3 border rounded-lg">
+                <option value="">I am a...</option>
+                <option value="author">Author</option>
+                <option value="influencer">Influencer</option>
+            </select>
+            <textarea id="signup-bio" placeholder="Short bio" class="w-full p-3 border rounded-lg"></textarea>
+            <input type="text" id="signup-photo" placeholder="Photo URL (optional)" class="w-full p-3 border rounded-lg">
+            <input type="password" id="signup-password" placeholder="Password" required class="w-full p-3 border rounded-lg">
+            <button type="submit" class="w-full py-3 bg-blue-900 text-white rounded-lg">Sign Up</button>
+            <p id="signup-message" class="text-sm text-center mt-2"></p>
+        </form>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, collection, query, orderBy, onSnapshot, addDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+    authDomain: "litwire-97956.firebaseapp.com",
+    projectId: "litwire-97956",
+    storageBucket: "litwire-97956.firebasestorage.app",
+    messagingSenderId: "263009111921",
+    appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const mainContentView = document.getElementById("main-content-view");
+const navContainer = document.getElementById("nav-container");
+const loginModal = document.getElementById("login-modal");
+const signupModal = document.getElementById("signup-modal");
+const loginForm = document.getElementById("login-form");
+const signupForm = document.getElementById("signup-form");
+const loginMessage = document.getElementById("login-message");
+const signupMessage = document.getElementById("signup-message");
+
+const conversationsSidebar = document.getElementById("conversations-sidebar");
+const chatWindow = document.getElementById("chat-window");
+const conversationList = document.getElementById("conversation-list");
+const chatHeader = document.getElementById("chat-header");
+const chatUserName = document.getElementById("chat-user-name");
+const chatUserPhoto = document.getElementById("chat-user-photo");
+const chatMessages = document.getElementById("chat-messages");
+const messageForm = document.getElementById("message-form");
+const messageInput = document.getElementById("message-input");
+
+let currentUser;
+let currentChatPartnerId;
+
+// Modal functions
+function showModal(modal) { modal.classList.add("show"); }
+function hideModal(modal) {
+    modal.classList.remove("show");
+    loginMessage.textContent = "";
+    signupMessage.textContent = "";
+}
+
+// Navbar rendering with Dashboard button
+function renderNavbar(user){
+    navContainer.innerHTML = "";
+    if(user){
+        navContainer.innerHTML = `
+            <div class="flex items-center space-x-6">
+                <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
+                <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
+                <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
+                <a href="messages.html" class="text-gray-800 hover:text-blue-900 font-medium">Messages</a>
+                <a href="matches.html" class="text-gray-800 hover:text-blue-900 font-medium">Matches</a>
+                <a href="bookDash.html" class="text-gray-800 hover:text-green-600 font-medium">Dashboard</a>
+                <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
+            </div>
+        `;
+        document.getElementById("logout-btn").addEventListener("click", async()=>{await signOut(auth)});
+    } else {
+        navContainer.innerHTML = `
+            <div class="flex items-center space-x-6">
+                <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
+                <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
+            </div>
+        `;
+        document.getElementById("nav-login").addEventListener("click",()=>showModal(loginModal));
+        document.getElementById("nav-signup").addEventListener("click",()=>showModal(signupModal));
+    }
+}
+
+// Render conversations
+async function renderConversations(userId) {
+    const q = query(collection(db, "users", userId, "conversations"), orderBy("lastMessageTime", "desc"));
+    
+    onSnapshot(q, (snapshot) => {
+        conversationList.innerHTML = "";
+        snapshot.forEach(async (doc) => {
+            const data = doc.data();
+            const partnerId = data.partnerId;
+
+            // Fetch partner's profile to get name and photo
+            const partnerProfileDoc = await getDoc(doc(db, "artifacts/users", partnerId, "profile"));
+            const partnerProfile = partnerProfileDoc.data();
+
+            const li = document.createElement("li");
+            li.className = "p-4 flex items-center border-b border-gray-200 cursor-pointer hover:bg-gray-100";
+            li.dataset.userId = partnerId;
+            li.innerHTML = `
+                <img src="${partnerProfile.photo || 'https://via.placeholder.com/40'}" alt="${partnerProfile.name}" class="w-10 h-10 rounded-full mr-3">
+                <div>
+                    <p class="font-medium">${partnerProfile.name}</p>
+                    <p class="text-sm text-gray-500 truncate">${data.lastMessage || 'Start a new conversation!'}</p>
+                </div>
+            `;
+            li.addEventListener("click", () => {
+                currentChatPartnerId = partnerId;
+                openChat(partnerProfile);
+            });
+            conversationList.appendChild(li);
+        });
+    });
+}
+
+// Open and display a specific chat
+function openChat(partnerProfile) {
+    chatWindow.classList.remove("hidden");
+    chatUserName.textContent = partnerProfile.name;
+    chatUserPhoto.src = partnerProfile.photo || 'https://via.placeholder.com/40';
+    chatMessages.innerHTML = ""; // Clear previous messages
+    
+    const messagesCollection = collection(db, "conversations", getConversationId(currentUser.uid, currentChatPartnerId), "messages");
+    const q = query(messagesCollection, orderBy("timestamp"));
+
+    onSnapshot(q, (snapshot) => {
+        chatMessages.innerHTML = ""; // Clear messages before rendering
+        snapshot.forEach((doc) => {
+            const msg = doc.data();
+            const messageElement = document.createElement("div");
+            messageElement.className = `message-bubble ${msg.senderId === currentUser.uid ? 'sent' : 'received'}`;
+            messageElement.textContent = msg.text;
+            chatMessages.appendChild(messageElement);
+        });
+        // Auto-scroll to the bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+}
+
+// Send a message
+async function sendMessage(e) {
+    e.preventDefault();
+    const text = messageInput.value.trim();
+    if (text === "" || !currentChatPartnerId) return;
+
+    const conversationId = getConversationId(currentUser.uid, currentChatPartnerId);
+    
+    // Add message to the conversation
+    const messagesCollection = collection(db, "conversations", conversationId, "messages");
+    await addDoc(messagesCollection, {
+        senderId: currentUser.uid,
+        text,
+        timestamp: new Date()
+    });
+
+    // Update last message in the conversation doc
+    await setDoc(doc(db, "users", currentUser.uid, "conversations", currentChatPartnerId), {
+        partnerId: currentChatPartnerId,
+        lastMessage: text,
+        lastMessageTime: new Date()
+    }, { merge: true });
+
+    await setDoc(doc(db, "users", currentChatPartnerId, "conversations", currentUser.uid), {
+        partnerId: currentUser.uid,
+        lastMessage: text,
+        lastMessageTime: new Date()
+    }, { merge: true });
+
+    messageInput.value = "";
+}
+
+// Generate a consistent conversation ID
+function getConversationId(userId1, userId2) {
+    return [userId1, userId2].sort().join('-');
+}
+
+// Auth listener
+onAuthStateChanged(auth, user => {
+    mainContentView.classList.remove("hidden");
+    renderNavbar(user);
+    if(user){
+        currentUser = user;
+        renderConversations(user.uid);
+        messageForm.addEventListener("submit", sendMessage);
+    } else {
+        showModal(signupModal);
+    }
+});
+
+// Login
+loginForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+    const email = loginForm["login-email"].value;
+    const password = loginForm["login-password"].value;
+    try{
+        await signInWithEmailAndPassword(auth,email,password);
+        hideModal(loginModal);
+    }catch(err){
+        loginMessage.textContent = err.message;
+        loginMessage.style.color = "red";
+    }
+});
+
+// Signup
+signupForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+    const email = signupForm["signup-email"].value;
+    const password = signupForm["signup-password"].value;
+    const name = signupForm["signup-name"].value;
+    const role = signupForm["signup-role"].value;
+    const bio = signupForm["signup-bio"].value;
+    const photo = signupForm["signup-photo"].value || null;
+
+    try{
+        const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+        const user = userCredential.user;
+        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {
+            name,
+            email,
+            role,
+            bio,
+            photo
+        });
+        hideModal(signupModal);
+    }catch(err){
+        signupMessage.textContent = err.message;
+        signupMessage.style.color = "red";
+    }
+});
+
+// Close modals
+document.querySelectorAll(".close-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const modal = btn.closest(".modal");
+        hideModal(modal);
+    });
+});
+document.querySelectorAll(".modal").forEach(modal => {
+    modal.addEventListener("click", e => {
+        if(e.target === modal) hideModal(modal);
+    });
+});
+</script>
+</body>
+</html>
