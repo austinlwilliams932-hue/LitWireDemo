@@ -28,7 +28,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-<!-- Full LitWire Header -->
 <header class="header-top">
 <nav>
 <div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
@@ -93,9 +92,7 @@ function hide(el){ el.classList.add('hidden'); }
 function renderMatch(profile, matchPercentage, blurb){
     const el = document.createElement('div');
     el.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col mb-6';
-
-    const interestsHtml = (profile.Type ? `<span class="tag">${profile.Type}</span>` : '');
-
+    const interestsHtml = (profile.marketingPlan || []).map(p => `<span class="tag">${p.Type || 'Unknown'}</span>`).join(' ');
     el.innerHTML = `
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center space-x-4">
@@ -112,44 +109,28 @@ function renderMatch(profile, matchPercentage, blurb){
         </div>
         <div class="space-y-2 mt-2">
             <p class="text-sm text-gray-600 font-medium">Marketing Info:</p>
-            <div class="flex flex-wrap gap-2">${interestsHtml || '<p class="text-gray-500 text-sm">No info available</p>'}</div>
+            <div class="flex flex-wrap gap-2">${interestsHtml.length ? interestsHtml : '<p class="text-gray-500 text-sm">No info available</p>'}</div>
             ${blurb ? `<p class="mt-2 text-gray-700 italic">${blurb}</p>` : ''}
         </div>
     `;
     matchesContainer.appendChild(el);
 }
 
-async function getMatchData(userProfile, influencer){
-    // Build structured payload for Cloud Run
-    const payload = {
-        user_id: userProfile.uid || 'anonymous',
-        book_title: userProfile.bookTitle,
-        book_description: userProfile.bookDescription,
-        book_genre: userProfile.bookGenre || 'Unknown',
-        campaign_length: userProfile.campaignLength || '2025-01-01 to 2025-01-07',
-        budget: userProfile.budget || 0,
-        desired_audience_type: userProfile.desiredAudienceType || 'General',
-        influencer_profile: influencer
-    };
-
-    const response = await fetch(CLOUD_RUN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-        const text = await response.text();
-        console.error('Cloud Run error:', response.status, text);
-        return { matchPercentage: 0, blurb: 'Error fetching data.' };
+// Single CF call for all marketing plan entries
+async function callCloudRun(payload){
+    try{
+        const response = await fetch(CLOUD_RUN_URL, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if(!response.ok) throw new Error(data.error || 'Cloud Function error');
+        return data;
+    } catch(err){
+        console.error('Cloud Run fetch error:', err);
+        return { error: err.message || 'Unknown error' };
     }
-
-    const data = await response.json();
-    // Expecting CF to return { matchPercentage: number, blurb: string }
-    return {
-        matchPercentage: data.matchPercentage || 80,
-        blurb: data.blurb || ''
-    };
 }
 
 onAuthStateChanged(auth, async user => {
@@ -161,7 +142,7 @@ onAuthStateChanged(auth, async user => {
     show(loadingEl);
     matchesContainer.innerHTML = '';
 
-    try{
+    try {
         const userId = user.uid;
         const docRef = doc(db, `users/${userId}/profiles/author`);
         const docSnap = await getDoc(docRef);
@@ -179,31 +160,45 @@ onAuthStateChanged(auth, async user => {
         if(marketingPlan.length === 0){
             matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
         } else {
-            // Call Cloud Run for each influencer concurrently
+            // Call CF once per influencer concurrently
             const results = await Promise.all(
                 marketingPlan.map(async influencer => {
-                    const { matchPercentage, blurb } = await getMatchData(userProfile, influencer);
+                    const payload = {
+                        book_title: userProfile.bookTitle,
+                        book_description: userProfile.bookDescription,
+                        book_genre: userProfile.bookGenre || 'Unknown',
+                        campaign_length: '2025-01-01 to 2025-01-07',
+                        budget: 0,
+                        desired_audience_type: 'beginner',
+                        user_id: userId
+                    };
+                    const cfData = await callCloudRun(payload);
+                    let matchPercentage = 80;
+                    let blurb = '';
+                    if(cfData.marketingPlan?.length){
+                        matchPercentage = parseInt(cfData.marketingPlan[0]?.Match || '80', 10);
+                        blurb = cfData.marketingPlan[0]?.Notes || '';
+                    }
                     return { influencer, matchPercentage, blurb };
                 })
             );
-
             results.forEach(r => renderMatch(r.influencer, r.matchPercentage, r.blurb));
         }
-
     } catch(err){
         console.error(err);
         matchesContainer.innerHTML = `<p class="text-red-500 text-center">Error loading matches.</p>`;
-    } finally{
+    } finally {
         hide(loadingEl);
         show(matchesContainer);
     }
 });
 
 // Sign out
-signOutBtn?.addEventListener('click', async ()=> {
+signOutBtn?.addEventListener('click', async ()=>{
     await signOut(auth);
     window.location.href = 'index.html';
 });
 </script>
+
 </body>
 </html>
