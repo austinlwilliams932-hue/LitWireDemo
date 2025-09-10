@@ -21,11 +21,9 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 .step-container.active { display: block; }
 .aesthetic-option img { border-radius: 0.75rem; border: 3px solid transparent; transition: all 0.2s ease; }
 .aesthetic-option.selected img { border-color: #2e598b; box-shadow: 0 0 0 3px rgba(46, 89, 139, 0.5); }
-
 .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; color:#fff; text-align:center; }
 .spinner { border:4px solid rgba(255,255,255,0.3); border-top:4px solid #fff; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
 #error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(255,0,0,0.85); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:60; text-align:center; padding:1rem; font-family:monospace; overflow:auto; }
 #error-overlay.hidden { display:none; }
 </style>
@@ -41,7 +39,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 </header>
 
 <form id="onboarding-form">
-<!-- Step 1-4 here remain unchanged -->
+<!-- Steps 1-4 placeholder -->
 <div id="step-1" class="step-container active"> ... </div>
 <div id="step-2" class="step-container"> ... </div>
 <div id="step-3" class="step-container"> ... </div>
@@ -59,7 +57,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 </div>
 
 <!-- Live Preview Sidebar -->
-<div class="card w-full lg:w-96 p-6 sticky top-8 h-fit hidden lg:block" id="preview-sidebar"> ... </div>
+<div class="card w-full lg:w-96 p-6 sticky top-8 h-fit hidden lg:block" id="preview-sidebar"> </div>
 </main>
 
 <div id="loading-overlay" class="loading-overlay hidden">
@@ -112,7 +110,6 @@ onAuthStateChanged(auth, async (user) => {
   }
   currentUser = user;
 
-  // Pre-fill if profile exists
   const docRef = doc(db, `users/${user.uid}/profiles/influencer`);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
@@ -134,15 +131,53 @@ function prefillForm(data) {
       if (cb) cb.checked = true;
     });
   }
-  // Similarly prefill genres, tropes, visibility, aesthetic, image preview
+  // Prefill genres, tropes, visibility, aesthetic
   updatePreview();
 }
 
-// Function to save profile
+// --- NEW: Live Preview Function ---
+function updatePreview() {
+  const sidebar = document.getElementById('preview-sidebar');
+  if (!sidebar) return;
+  sidebar.innerHTML = '';
+
+  // Handle
+  const handle = document.getElementById('handle')?.value || 'Your handle';
+  const handleEl = document.createElement('p');
+  handleEl.className = 'text-xl font-bold mb-2';
+  handleEl.textContent = handle;
+  sidebar.appendChild(handleEl);
+
+  // Genres
+  const genres = Array.from(document.querySelectorAll('.bg-blue-100[data-genre]')).map(el => el.dataset.genre);
+  if (genres.length) {
+    const genreEl = document.createElement('p');
+    genreEl.textContent = `Genres: ${genres.join(', ')}`;
+    sidebar.appendChild(genreEl);
+  }
+
+  // Platforms
+  const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
+  if (platforms.length) {
+    const platformEl = document.createElement('p');
+    platformEl.textContent = `Platforms: ${platforms.join(', ')}`;
+    sidebar.appendChild(platformEl);
+  }
+
+  // Aesthetic
+  const selectedAesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic;
+  if (selectedAesthetic) {
+    const aestheticEl = document.createElement('p');
+    aestheticEl.textContent = `Aesthetic: ${selectedAesthetic}`;
+    sidebar.appendChild(aestheticEl);
+  }
+
+  sidebar.classList.remove('hidden');
+}
+
+// Save profile
 async function saveProfile() {
   if (!currentUser) return;
-
-  // Gather current form data
   profileData.handle = document.getElementById('handle').value.trim();
   profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
   profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
@@ -156,7 +191,7 @@ async function saveProfile() {
   loadingOverlay.classList.remove('hidden');
   try {
     await setDoc(doc(db, `users/${currentUser.uid}/profiles/influencer`), profileData, { merge: true });
-    redirectToLanding();
+    window.location.href = 'matches.html';
   } catch (err) {
     debugOutput.textContent = JSON.stringify(err, null, 2);
     errorOverlay.classList.remove('hidden');
@@ -165,7 +200,7 @@ async function saveProfile() {
   }
 }
 
-// Navigation & multi-step logic (unchanged)
+// Multi-step logic
 let currentStep = 1;
 const totalSteps = 4;
 function updateView() {
@@ -176,8 +211,8 @@ function updateView() {
   finalCtas.style.display = currentStep === totalSteps ? 'block' : 'none';
 }
 
-nextBtn.addEventListener('click', () => { if (currentStep < totalSteps) { currentStep++; updateView(); }});
-backBtn.addEventListener('click', () => { if (currentStep > 1) { currentStep--; updateView(); }});
+nextBtn.addEventListener('click', () => { if (currentStep < totalSteps) { currentStep++; updateView(); updatePreview(); }});
+backBtn.addEventListener('click', () => { if (currentStep > 1) { currentStep--; updateView(); updatePreview(); }});
 
 document.getElementById('preview-matches-btn').addEventListener('click', saveProfile);
 document.getElementById('save-finish-btn').addEventListener('click', saveProfile);
