@@ -96,12 +96,12 @@ import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/fi
 import { getFirestore, collectionGroup, collection, getDocs, query, where, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-    authDomain: "litwire-97956.firebaseapp.com",
-    projectId: "litwire-97956",
-    storageBucket: "litwire-97956.appspot.com",
-    messagingSenderId: "263009111921",
-    appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
+  apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+  authDomain: "litwire-97956.firebaseapp.com",
+  projectId: "litwire-97956",
+  storageBucket: "litwire-97956.appspot.com",
+  messagingSenderId: "263009111921",
+  appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -111,7 +111,11 @@ const db = getFirestore(app);
 const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
 
+// --- Debugging lines added here ---
 const userSearchInput = document.getElementById("user-search");
+console.log("userSearchInput element:", userSearchInput);
+// ----------------------------------
+
 const searchResults = document.getElementById("search-results");
 
 const newChatBtn = document.getElementById("new-chat-btn");
@@ -136,110 +140,139 @@ function hideModal(modal){ modal.classList.remove("show"); }
 
 // ------------------ Navbar ------------------
 function renderNavbar(user){
-    navContainer.innerHTML = user ? `
-        <div class="flex items-center space-x-6">
-            <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
-            <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
-            <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
-            <a href="matches.html" class="text-gray-800 hover:text-blue-900 font-medium">Matches</a>
-            <a href="messages.html" class="text-gray-800 hover:text-blue-900 font-medium">Messages</a>
-            <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
-        </div>
-    ` : `
-        <div class="flex items-center space-x-6">
-            <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
-            <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
-        </div>
-    `;
+  navContainer.innerHTML = user ? `
+    <div class="flex items-center space-x-6">
+      <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
+      <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
+      <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
+      <a href="matches.html" class="text-gray-800 hover:text-blue-900 font-medium">Matches</a>
+      <a href="messages.html" class="text-gray-800 hover:text-blue-900 font-medium">Messages</a>
+      <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
+    </div>
+  ` : `
+    <div class="flex items-center space-x-6">
+      <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
+      <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
+    </div>
+  `;
 
-    if(user){
-        document.getElementById("logout-btn").addEventListener("click",()=>signOut(auth));
-    }
+  if(user){
+    document.getElementById("logout-btn").addEventListener("click",()=>signOut(auth));
+  }
 }
 
 // ------------------ Auth Listener ------------------
 onAuthStateChanged(auth, async user=>{
-    currentUser = user;
-    mainContentView.classList.remove("hidden");
-    renderNavbar(user);
+  currentUser = user;
+  mainContentView.classList.remove("hidden");
+  renderNavbar(user);
 });
 
-// ------------------ User Search Function (Original) ------------------
-async function searchUsers(queryText){
-    if(!queryText) return [];
-    try {
-        const usersRef = collectionGroup(db, 'profile');
-        const q = query(
-            usersRef,
-            where('name', '>=', queryText),
-            where('name', '<=', queryText + '\uf8ff')
-        );
-        const snapshot = await getDocs(q);
-        return snapshot.docs
-            .filter(doc => doc.ref.parent.id !== currentUser.uid)
-            .map(doc => ({ uid: doc.ref.parent.id, ...doc.data() }));
-    } catch (err) {
-        console.error("Search failed:", err);
-        return [];
+// ------------------ User Search Function (Updated for Debugging) ------------------
+async function searchUsers(queryText) {
+  console.log("Starting user search for:", queryText);
+  if (!queryText) {
+    console.log("Query text is empty, returning.");
+    return [];
+  }
+  try {
+    const usersRef = collectionGroup(db, 'profile');
+    console.log("Created collectionGroup reference for 'profile'.");
+
+    const q = query(
+      usersRef,
+      where('name', '>=', queryText),
+      where('name', '<=', queryText + '\uf8ff')
+    );
+    console.log("Created query:", q);
+
+    const snapshot = await getDocs(q);
+    console.log("Received snapshot from getDocs. Number of documents:", snapshot.size);
+
+    if (snapshot.empty) {
+      console.log("Snapshot is empty. No users found with this query.");
     }
+
+    const users = snapshot.docs
+      .filter(doc => {
+        const docId = doc.ref.parent.id;
+        const isSelf = docId === currentUser.uid;
+        if (isSelf) {
+          console.log("Filtering out current user:", doc.data().name);
+        }
+        return !isSelf;
+      })
+      .map(doc => ({ uid: doc.ref.parent.id, ...doc.data() }));
+
+    console.log("Found and mapped users:", users);
+    return users;
+
+  } catch (err) {
+    console.error("Search failed with an error:", err);
+    return [];
+  }
 }
 
 // ------------------ Sidebar Search ------------------
+// --- Debugging line added here ---
 userSearchInput.addEventListener("input", async ()=>{
-    const queryText = userSearchInput.value.trim();
-    if(!queryText){ searchResults.innerHTML=""; return; }
-    const users = await searchUsers(queryText);
-    if(users.length===0){ searchResults.innerHTML='<li class="p-2 text-gray-500 italic">No users found</li>'; return; }
+    console.log("Input event fired.");
+    // -----------------------------
+  const queryText = userSearchInput.value.trim();
+  if(!queryText){ searchResults.innerHTML=""; return; }
+  const users = await searchUsers(queryText);
+  if(users.length===0){ searchResults.innerHTML='<li class="p-2 text-gray-500 italic">No users found</li>'; return; }
 
-    searchResults.innerHTML = users.map(u=>`
-        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100 cursor-pointer">
-            ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
-            <span>${u.name}</span>
-        </li>
-    `).join("");
-    document.querySelectorAll("#search-results li").forEach(li=>{
-        li.addEventListener("click", ()=>openChat(li.dataset.uid, li.dataset.name, li.dataset.photo));
-    });
+  searchResults.innerHTML = users.map(u=>`
+    <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100 cursor-pointer">
+      ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
+      <span>${u.name}</span>
+    </li>
+  `).join("");
+  document.querySelectorAll("#search-results li").forEach(li=>{
+    li.addEventListener("click", ()=>openChat(li.dataset.uid, li.dataset.name, li.dataset.photo));
+  });
 });
 
 // ------------------ New Chat Modal ------------------
 newChatBtn.addEventListener("click", async () => {
-    newChatSearch.value = "";
-    newChatResults.innerHTML = '<li class="p-2 text-gray-500 italic">Loading users...</li>';
-    showModal(newChatModal);
+  newChatSearch.value = "";
+  newChatResults.innerHTML = '<li class="p-2 text-gray-500 italic">Loading users...</li>';
+  showModal(newChatModal);
 
-    // Fetch ALL users and store them for local filtering
-    const usersRef = collectionGroup(db, 'profile');
-    const snapshot = await getDocs(usersRef);
+  // Fetch ALL users and store them for local filtering
+  const usersRef = collectionGroup(db, 'profile');
+  const snapshot = await getDocs(usersRef);
+  console.log("Fetched all users for modal. Number of documents:", snapshot.size);
 
-    allUsers = snapshot.docs
-        .filter(doc => doc.ref.parent.id !== currentUser.uid)
-        .map(doc => ({ uid: doc.ref.parent.id, ...doc.data() }));
+  allUsers = snapshot.docs
+    .filter(doc => doc.ref.parent.id !== currentUser.uid)
+    .map(doc => ({ uid: doc.ref.parent.id, ...doc.data() }));
 
-    // Initial render of the full list
-    renderNewChatList(allUsers);
+  // Initial render of the full list
+  renderNewChatList(allUsers);
 });
 
 // Helper function to render the user list in the modal
 function renderNewChatList(usersToRender) {
-    if (usersToRender.length === 0) {
-        newChatResults.innerHTML = '<li class="p-2 text-gray-500 italic">No users found.</li>';
-        return;
-    }
+  if (usersToRender.length === 0) {
+    newChatResults.innerHTML = '<li class="p-2 text-gray-500 italic">No users found.</li>';
+    return;
+  }
 
-    newChatResults.innerHTML = usersToRender.map(u => `
-        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo || ''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100 cursor-pointer">
-            ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
-            <span>${u.name}</span>
-        </li>
-    `).join("");
+  newChatResults.innerHTML = usersToRender.map(u => `
+    <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo || ''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100 cursor-pointer">
+      ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
+      <span>${u.name}</span>
+    </li>
+  `).join("");
 
-    newChatResults.querySelectorAll("li").forEach(li => {
-        li.addEventListener("click", () => {
-            openChat(li.dataset.uid, li.dataset.name, li.dataset.photo);
-            hideModal(newChatModal);
-        });
+  newChatResults.querySelectorAll("li").forEach(li => {
+    li.addEventListener("click", () => {
+      openChat(li.dataset.uid, li.dataset.name, li.dataset.photo);
+      hideModal(newChatModal);
     });
+  });
 }
 
 // Close modal buttons
@@ -248,43 +281,43 @@ newChatModal.addEventListener("click", e=>{ if(e.target===newChatModal) hideModa
 
 // Filter the locally stored user list
 newChatSearch.addEventListener("input", () => {
-    const queryText = newChatSearch.value.trim().toLowerCase();
-    const filteredUsers = allUsers.filter(user => user.name.toLowerCase().includes(queryText));
-    renderNewChatList(filteredUsers);
+  const queryText = newChatSearch.value.trim().toLowerCase();
+  const filteredUsers = allUsers.filter(user => user.name.toLowerCase().includes(queryText));
+  renderNewChatList(filteredUsers);
 });
 
 
 // ------------------ Chat ------------------
 function openChat(uid, name, photo){
-    currentChatPartnerId = uid;
-    chatUserName.textContent = name;
-    chatUserPhoto.src = photo || "https://via.placeholder.com/40";
-    chatWindow.classList.remove("hidden");
-    chatMessages.innerHTML = "";
+  currentChatPartnerId = uid;
+  chatUserName.textContent = name;
+  chatUserPhoto.src = photo || "https://via.placeholder.com/40";
+  chatWindow.classList.remove("hidden");
+  chatMessages.innerHTML = "";
 
-    const messagesRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
-    onSnapshot(messagesRef, snapshot=>{
-        chatMessages.innerHTML = snapshot.docs.map(doc=>{
-            const msg = doc.data();
-            return `<div class="message-bubble ${msg.sender===currentUser.uid?'sent':'received'}">${msg.text}</div>`;
-        }).join("");
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    });
+  const messagesRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
+  onSnapshot(messagesRef, snapshot=>{
+    chatMessages.innerHTML = snapshot.docs.map(doc=>{
+      const msg = doc.data();
+      return `<div class="message-bubble ${msg.sender===currentUser.uid?'sent':'received'}">${msg.text}</div>`;
+    }).join("");
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
 }
 
 // Send message
 messageForm.addEventListener("submit", async e=>{
-    e.preventDefault();
-    const text = messageInput.value.trim();
-    if(!text || !currentChatPartnerId) return;
+  e.preventDefault();
+  const text = messageInput.value.trim();
+  if(!text || !currentChatPartnerId) return;
 
-    const senderRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
-    const receiverRef = collection(db, "artifacts/users", currentChatPartnerId, "chats", currentUser.uid, "messages");
+  const senderRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
+  const receiverRef = collection(db, "artifacts/users", currentChatPartnerId, "chats", currentUser.uid, "messages");
 
-    await addDoc(senderRef, { sender: currentUser.uid, text, timestamp: Date.now() });
-    await addDoc(receiverRef, { sender: currentUser.uid, text, timestamp: Date.now() });
+  await addDoc(senderRef, { sender: currentUser.uid, text, timestamp: Date.now() });
+  await addDoc(receiverRef, { sender: currentUser.uid, text, timestamp: Date.now() });
 
-    messageInput.value = "";
+  messageInput.value = "";
 });
 </script>
 </body>
