@@ -81,9 +81,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Gemini API key
-const GEMINI_API_KEY = 'AIzaSyDilqhXEQLrxPK5U_00agugCA5_0Fc_04c';
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta2/models/gemini-2.5:generate';
+const CLOUD_RUN_URL = 'https://geminicall-737284668725.us-east4.run.app';
 
 const loadingEl = document.getElementById('loading');
 const matchesContainer = document.getElementById('matches-container');
@@ -121,7 +119,16 @@ function renderMatch(profile, matchPercentage, blurb){
     matchesContainer.appendChild(el);
 }
 
-// Gemini API: get match percentage
+// Call Cloud Run proxy for Gemini
+async function callCloudRun(prompt, temperature=0.7, max_output_tokens=150){
+    const response = await fetch(CLOUD_RUN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, temperature, max_output_tokens })
+    });
+    return await response.json();
+}
+
 async function getGeminiMatchPercentage(userBook, influencer){
     const prompt = `
 Compare the following book to this influencer profile.
@@ -130,27 +137,12 @@ Book Description: ${userBook.bookDescription}
 Influencer Profile: ${JSON.stringify(influencer)}
 Respond with only a number between 0 and 100 indicating similarity.
 `;
-
-    const response = await fetch(GEMINI_ENDPOINT, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${GEMINI_API_KEY}`
-        },
-        body: JSON.stringify({
-            prompt,
-            temperature: 0,
-            max_output_tokens: 20
-        })
-    });
-
-    const data = await response.json();
+    const data = await callCloudRun(prompt, 0, 20);
     const output = data?.candidates?.[0]?.content?.trim();
     const percentage = parseInt(output.replace(/\D/g,''), 10);
     return isNaN(percentage) ? 80 : percentage;
 }
 
-// Gemini API: generate influencer blurb
 async function getGeminiBlurb(userBook, influencer){
     const prompt = `
 Write a 2-3 sentence marketing blurb explaining why this influencer is a great match for the book.
@@ -158,21 +150,7 @@ Book Title: ${userBook.bookTitle}
 Book Description: ${userBook.bookDescription}
 Influencer Profile: ${JSON.stringify(influencer)}
 `;
-
-    const response = await fetch(GEMINI_ENDPOINT, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${GEMINI_API_KEY}`
-        },
-        body: JSON.stringify({
-            prompt,
-            temperature: 0.7,
-            max_output_tokens: 150
-        })
-    });
-
-    const data = await response.json();
+    const data = await callCloudRun(prompt, 0.7, 150);
     return data?.candidates?.[0]?.content?.trim() || '';
 }
 
@@ -203,7 +181,7 @@ onAuthStateChanged(auth, async user => {
         if(marketingPlan.length === 0){
             matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
         } else {
-            // Run all Gemini calls concurrently for speed
+            // Run all Gemini calls concurrently
             const results = await Promise.all(
                 marketingPlan.map(async influencer => {
                     const [matchPercentage, blurb] = await Promise.all([
