@@ -77,8 +77,8 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, collectionGroup, doc, setDoc, addDoc, query, where, orderBy, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, collection, collectionGroup, getDocs, query, where, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -93,10 +93,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
-const userSearchInput = document.getElementById("user-search-input");
+const loginModal = document.getElementById("login-modal");
+const signupModal = document.getElementById("signup-modal");
+const loginForm = document.getElementById("login-form");
+const signupForm = document.getElementById("signup-form");
+const loginMessage = document.getElementById("login-message");
+const signupMessage = document.getElementById("signup-message");
+
+const userSearchInput = document.getElementById("user-search");
 const searchResults = document.getElementById("search-results");
-const recentChats = document.getElementById("recent-chats");
 
 const chatWindow = document.getElementById("chat-window");
 const chatUserName = document.getElementById("chat-user-name");
@@ -104,51 +111,103 @@ const chatUserPhoto = document.getElementById("chat-user-photo");
 const chatMessages = document.getElementById("chat-messages");
 const messageForm = document.getElementById("message-form");
 const messageInput = document.getElementById("message-input");
-const btnNewMessage = document.getElementById("btn-new-message");
 
-let currentUser;
-let currentChatPartnerId;
+let currentUser = null;
+let currentChatPartnerId = null;
 
-// ---------- Auth Listener ----------
-onAuthStateChanged(auth, async user=>{
-    if(!user) return;
-    currentUser = user;
-    renderNavbar();
-    loadRecentChats();
-});
+// Modal helpers
+function showModal(modal){ modal.classList.add("show"); }
+function hideModal(modal){ modal.classList.remove("show"); loginMessage.textContent=""; signupMessage.textContent=""; }
 
-// ---------- Navbar ----------
-function renderNavbar(){
-    navContainer.innerHTML = `
-        <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
-        <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
-        <a href="messages.html" class="text-gray-800 hover:text-blue-900 font-medium">Messages</a>
-        <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
-    `;
+// Navbar rendering
+async function renderNavbar(user){
+    navContainer.innerHTML = "";
+    if(user){
+        navContainer.innerHTML = `
+            <div class="flex items-center space-x-6">
+                <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
+                <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
+                <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
+                <a href="matches.html" class="text-gray-800 hover:text-blue-900 font-medium">Matches</a>
+                <a href="messages.html" class="text-gray-800 hover:text-blue-900 font-medium">Messages</a>
+                <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
+            </div>
+        `;
+        document.getElementById("logout-btn").addEventListener("click", async()=>{await signOut(auth)});
+    } else {
+        navContainer.innerHTML = `
+            <div class="flex items-center space-x-6">
+                <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
+                <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
+            </div>
+        `;
+        document.getElementById("nav-login").addEventListener("click",()=>showModal(loginModal));
+        document.getElementById("nav-signup").addEventListener("click",()=>showModal(signupModal));
+    }
 }
 
-// ---------- Search Users ----------
+// Auth listener
+onAuthStateChanged(auth, async user=>{
+    currentUser = user;
+    mainContentView.classList.remove("hidden");
+    await renderNavbar(user);
+    if(!user) showModal(signupModal);
+});
+
+// Login
+loginForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+    try{
+        await signInWithEmailAndPassword(auth, loginForm["login-email"].value, loginForm["login-password"].value);
+        hideModal(loginModal);
+    } catch(err){ loginMessage.textContent=err.message; loginMessage.style.color="red"; }
+});
+
+// Signup
+signupForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+    const name = signupForm["signup-name"].value;
+    const email = signupForm["signup-email"].value;
+    const password = signupForm["signup-password"].value;
+    const role = signupForm["signup-role"].value;
+    const bio = signupForm["signup-bio"].value;
+    const photo = signupForm["signup-photo"].value || null;
+
+    try{
+        const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+        const user = userCredential.user;
+        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {
+            name,email,role,bio,photo,onboardingComplete:false
+        });
+        hideModal(signupModal);
+        await renderNavbar(user);
+    } catch(err){ signupMessage.textContent=err.message; signupMessage.style.color="red"; }
+});
+
+// Close modals
+document.querySelectorAll(".close-btn").forEach(btn => { btn.addEventListener("click",()=>hideModal(btn.closest(".modal"))); });
+document.querySelectorAll(".modal").forEach(modal => { modal.addEventListener("click",e=>{ if(e.target===modal) hideModal(modal); }); });
+
+// ---------- User Search ----------
 async function searchUsers(queryText){
     if(!queryText) return [];
     const usersRef = collectionGroup(db,'profile');
-    const qLower = queryText.toLowerCase();
-    const qSnap = await getDocs(
-        query(usersRef,
-            where('nameLower', '>=', qLower),
-            where('nameLower', '<=', qLower + '\uf8ff')
-        )
+    const q = query(usersRef,
+        where('name', '>=', queryText),
+        where('name', '<=', queryText + '\uf8ff')
     );
-    return qSnap.docs
-        .filter(doc => doc.ref.parent.id !== currentUser.uid)
-        .map(doc => ({ uid: doc.ref.parent.id, ...doc.data() }));
+    const snapshot = await getDocs(q);
+    return snapshot.docs
+        .filter(doc=>doc.ref.parent.id !== currentUser.uid)
+        .map(doc=>({ uid: doc.ref.parent.id, ...doc.data() }));
 }
 
 userSearchInput.addEventListener("input", async ()=>{
-    const val = userSearchInput.value.trim();
-    if(!val){ searchResults.innerHTML=""; return; }
-    const users = await searchUsers(val);
+    const queryText = userSearchInput.value.trim();
+    if(!queryText){ searchResults.innerHTML=""; return; }
+    const users = await searchUsers(queryText);
     searchResults.innerHTML = users.map(u=>`
-        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}">
+        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}" class="p-2 rounded cursor-pointer flex items-center gap-2">
             ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
             <span>${u.name}</span>
         </li>
@@ -161,25 +220,6 @@ userSearchInput.addEventListener("input", async ()=>{
     });
 });
 
-// ---------- Recent Chats ----------
-async function loadRecentChats(){
-    const chatsRef = collection(db, "artifacts/users", currentUser.uid, "chats");
-    onSnapshot(chatsRef, snapshot=>{
-        recentChats.innerHTML = snapshot.docs.map(doc=>{
-            const data = doc.data();
-            return `<li data-uid="${doc.id}" data-name="${data.name}" data-photo="${data.photo||''}" class="p-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2">
-                ${data.photo ? `<img src="${data.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
-                <span>${data.name}</span>
-            </li>`;
-        }).join("");
-        document.querySelectorAll("#recent-chats li").forEach(li=>{
-            li.addEventListener("click", ()=>{
-                openChat(li.dataset.uid, li.dataset.name, li.dataset.photo);
-            });
-        });
-    });
-}
-
 // ---------- Chat ----------
 function openChat(uid, name, photo){
     currentChatPartnerId = uid;
@@ -190,9 +230,12 @@ function openChat(uid, name, photo){
     loadMessages();
 }
 
-// ---------- Load Messages ----------
+// Load messages in real-time
 function loadMessages(){
-    const messagesRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
+    if(!currentChatPartnerId) return;
+    const chatDocRef = doc(db, "artifacts", "users", currentUser.uid, "chats", currentChatPartnerId);
+    const messagesRef = collection(chatDocRef, "messages");
+
     onSnapshot(messagesRef, snapshot=>{
         chatMessages.innerHTML = snapshot.docs.map(doc=>{
             const msg = doc.data();
@@ -202,39 +245,25 @@ function loadMessages(){
     });
 }
 
-// ---------- Send Message ----------
+// Send message
 messageForm.addEventListener("submit", async e=>{
     e.preventDefault();
     const text = messageInput.value.trim();
     if(!text || !currentChatPartnerId) return;
+    const senderId = currentUser.uid;
+    const receiverId = currentChatPartnerId;
 
-    const senderRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
-    const receiverRef = collection(db, "artifacts/users", currentChatPartnerId, "chats", currentUser.uid, "messages");
+    // Sender
+    const senderChatDoc = doc(db, "artifacts", "users", senderId, "chats", receiverId);
+    const senderRef = collection(senderChatDoc, "messages");
+    // Receiver
+    const receiverChatDoc = doc(db, "artifacts", "users", receiverId, "chats", senderId);
+    const receiverRef = collection(receiverChatDoc, "messages");
 
-    await addDoc(senderRef, { sender: currentUser.uid, text, timestamp: Date.now() });
-    await addDoc(receiverRef, { sender: currentUser.uid, text, timestamp: Date.now() });
-
-    // Update recent chat info
-    await setDoc(doc(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId), {
-        name: chatUserName.textContent,
-        photo: chatUserPhoto.src,
-        lastMessage: text,
-        lastMessageTime: Date.now()
-    }, { merge: true });
-    await setDoc(doc(db, "artifacts/users", currentChatPartnerId, "chats", currentUser.uid), {
-        name: (await getDoc(doc(db,"artifacts/users",currentUser.uid,"profile"))).data().name,
-        photo: chatUserPhoto.src,
-        lastMessage: text,
-        lastMessageTime: Date.now()
-    }, { merge: true });
+    await addDoc(senderRef, { sender: senderId, text, timestamp: Date.now() });
+    await addDoc(receiverRef, { sender: senderId, text, timestamp: Date.now() });
 
     messageInput.value = "";
-});
-
-// ---------- New Message ----------
-btnNewMessage.addEventListener("click", ()=>{
-    chatWindow.classList.add("hidden");
-    userSearchInput.focus();
 });
 </script>
 </body>
