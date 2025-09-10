@@ -88,8 +88,8 @@ input, textarea, select, button { font-family: 'Inter', sans-serif; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, collection, query, orderBy, onSnapshot, addDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, setDoc, getDoc, getDocs, collectionGroup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -106,10 +106,8 @@ const db = getFirestore(app);
 
 const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
-
-const conversationsSidebar = document.getElementById("conversations-sidebar");
-const chatWindow = document.getElementById("chat-window");
 const conversationList = document.getElementById("conversation-list");
+const chatWindow = document.getElementById("chat-window");
 const chatUserName = document.getElementById("chat-user-name");
 const chatUserPhoto = document.getElementById("chat-user-photo");
 const chatMessages = document.getElementById("chat-messages");
@@ -122,9 +120,9 @@ const searchResults = document.getElementById("search-results");
 let currentUser;
 let currentChatPartnerId;
 
-// Generate consistent conversation ID
-function getConversationId(userId1, userId2){
-    return [userId1, userId2].sort().join('-');
+// Helper: Generate conversation ID
+function getConversationId(uid1, uid2){
+    return [uid1, uid2].sort().join('-');
 }
 
 // Navbar
@@ -139,38 +137,32 @@ function renderNavbar(user){
             <a href="bookDash.html" class="text-gray-800 hover:text-green-600 font-medium">Dashboard</a>
             <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
         </div>
-    ` : `
-        <div class="flex items-center space-x-6">
-            <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
-            <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
-        </div>
-    `;
-    if(user) document.getElementById("logout-btn").addEventListener("click", async()=>await signOut(auth));
+    ` : '';
+    if(user) document.getElementById("logout-btn")?.addEventListener("click", async()=>await auth.signOut());
 }
 
-// Render existing conversations
+// Render conversations
 async function renderConversations(userId){
     const q = query(collection(db, "users", userId, "conversations"), orderBy("lastMessageTime", "desc"));
-    onSnapshot(q, async snapshot => {
+    onSnapshot(q, async snapshot=>{
         conversationList.innerHTML = "";
-        snapshot.forEach(async docSnap => {
+        snapshot.forEach(async docSnap=>{
             const data = docSnap.data();
             const partnerId = data.partnerId;
-            const partnerProfileDoc = await getDoc(doc(db, "artifacts/users", partnerId, "profile"));
-            const partnerProfile = partnerProfileDoc.data();
+            const profileDoc = await getDoc(doc(db, "artifacts/users", partnerId, "profile"));
+            const profile = profileDoc.data();
             const li = document.createElement("li");
             li.className = "p-4 flex items-center border-b border-gray-200 cursor-pointer hover:bg-gray-100";
-            li.dataset.userId = partnerId;
             li.innerHTML = `
-                <img src="${partnerProfile.photo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full mr-3">
+                <img src="${profile.photo||'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full mr-3">
                 <div>
-                    <p class="font-medium">${partnerProfile.name}</p>
-                    <p class="text-sm text-gray-500 truncate">${data.lastMessage || 'Start a new conversation!'}</p>
+                    <p class="font-medium">${profile.name}</p>
+                    <p class="text-sm text-gray-500 truncate">${data.lastMessage||'Start a conversation!'}</p>
                 </div>
             `;
             li.addEventListener("click", ()=>{
                 currentChatPartnerId = partnerId;
-                openChat(partnerProfile);
+                openChat(profile);
             });
             conversationList.appendChild(li);
         });
@@ -178,15 +170,15 @@ async function renderConversations(userId){
 }
 
 // Open chat
-function openChat(partnerProfile){
+function openChat(profile){
     chatWindow.classList.remove("hidden");
-    chatUserName.textContent = partnerProfile.name;
-    chatUserPhoto.src = partnerProfile.photo || 'https://via.placeholder.com/40';
+    chatUserName.textContent = profile.name;
+    chatUserPhoto.src = profile.photo||'https://via.placeholder.com/40';
     chatMessages.innerHTML = "";
-    const messagesCollection = collection(db, "conversations", getConversationId(currentUser.uid, currentChatPartnerId), "messages");
+    const messagesCollection = collection(db,"conversations",getConversationId(currentUser.uid,currentChatPartnerId),"messages");
     const q = query(messagesCollection, orderBy("timestamp"));
     onSnapshot(q, snapshot=>{
-        chatMessages.innerHTML = "";
+        chatMessages.innerHTML="";
         snapshot.forEach(doc=>{
             const msg = doc.data();
             const div = document.createElement("div");
@@ -199,34 +191,35 @@ function openChat(partnerProfile){
 }
 
 // Send message
-async function sendMessage(e){
+messageForm.addEventListener("submit", async e=>{
     e.preventDefault();
     const text = messageInput.value.trim();
-    if(!text || !currentChatPartnerId) return;
-    const conversationId = getConversationId(currentUser.uid, currentChatPartnerId);
-    const messagesCollection = collection(db, "conversations", conversationId, "messages");
-    await addDoc(messagesCollection,{senderId:currentUser.uid,text,timestamp:new Date()});
+    if(!text||!currentChatPartnerId) return;
+    const convId = getConversationId(currentUser.uid,currentChatPartnerId);
+    await addDoc(collection(db,"conversations",convId,"messages"),{senderId:currentUser.uid,text,timestamp:new Date()});
     await setDoc(doc(db,"users",currentUser.uid,"conversations",currentChatPartnerId),{partnerId:currentChatPartnerId,lastMessage:text,lastMessageTime:new Date()},{merge:true});
     await setDoc(doc(db,"users",currentChatPartnerId,"conversations",currentUser.uid),{partnerId:currentUser.uid,lastMessage:text,lastMessageTime:new Date()},{merge:true});
-    messageInput.value = "";
-}
+    messageInput.value="";
+});
 
-// User search
+// Search users by name
 userSearchInput.addEventListener("input", async()=>{
     const queryText = userSearchInput.value.trim().toLowerCase();
     searchResults.innerHTML="";
-    if(queryText==="") return;
-    const usersSnapshot = await getDocs(collection(db, "artifacts/users"));
-    usersSnapshot.forEach(docSnap=>{
-        const profile = docSnap.data().profile;
-        if(profile && profile.name.toLowerCase().includes(queryText) && docSnap.id!==currentUser.uid){
+    if(!queryText) return;
+
+    const q = query(collectionGroup(db,"profile"));
+    const snapshot = await getDocs(q);
+    snapshot.forEach(docSnap=>{
+        const profile = docSnap.data();
+        const userId = docSnap.ref.parent.parent.id;
+        if(profile.name.toLowerCase().includes(queryText) && userId!==currentUser.uid){
             const li = document.createElement("li");
-            li.className="p-2 border rounded-lg cursor-pointer hover:bg-gray-100 flex items-center gap-2";
-            li.innerHTML=`<img src="${profile.photo||'https://via.placeholder.com/40'}" class="w-8 h-8 rounded-full"><span>${profile.name}</span>`;
+            li.className = "p-2 border rounded-lg cursor-pointer hover:bg-gray-100 flex items-center gap-2";
+            li.innerHTML = `<img src="${profile.photo||'https://via.placeholder.com/40'}" class="w-8 h-8 rounded-full"><span>${profile.name}</span>`;
             li.addEventListener("click", async()=>{
-                currentChatPartnerId = docSnap.id;
-                const conversationId = getConversationId(currentUser.uid,currentChatPartnerId);
-                await setDoc(doc(db,"conversations",conversationId),{created:true},{merge:true});
+                currentChatPartnerId = userId;
+                await setDoc(doc(db,"conversations",getConversationId(currentUser.uid,currentChatPartnerId)),{created:true},{merge:true});
                 openChat(profile);
                 searchResults.innerHTML="";
                 userSearchInput.value="";
@@ -237,14 +230,11 @@ userSearchInput.addEventListener("input", async()=>{
 });
 
 // Auth listener
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth,user=>{
     mainContentView.classList.remove("hidden");
+    currentUser=user;
     renderNavbar(user);
-    if(user){
-        currentUser = user;
-        renderConversations(user.uid);
-        messageForm.addEventListener("submit",sendMessage);
-    }
+    if(user) renderConversations(user.uid);
 });
 </script>
 </body>
