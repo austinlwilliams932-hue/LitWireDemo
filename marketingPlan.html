@@ -16,31 +16,44 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 .spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .hidden { display: none; }
+.loading-overlay, #error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; color:#fff; text-align:center; padding:1rem; }
+.loading-overlay { background-color: rgba(0,0,0,0.7); }
+#error-overlay { background-color: rgba(255,0,0,0.85); font-family: monospace; overflow:auto; }
+#error-overlay.hidden, .loading-overlay.hidden { display:none; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
+
 <header class="w-full bg-white shadow-md py-4">
 <nav class="container flex justify-between items-center px-4 md:px-8">
 <div class="text-3xl font-bold text-gray-800"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></div>
 <a href="loggedInLanding.html" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300"><i class="fas fa-home mr-2"></i>Home</a>
 </nav>
 </header>
+
 <main class="flex-grow container mt-24 mb-12 px-4 md:px-8">
 <div class="text-center mb-8">
 <h1 class="text-4xl font-bold text-gray-900 mb-2">Your Marketing Plan</h1>
 <p class="text-lg text-gray-600">Powered by Gemini AI</p>
 </div>
-<div id="loading" class="text-center py-10">
-<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>
-<p class="text-gray-600 mt-4">Fetching your personalized plan...</p>
+
+<div id="loading" class="loading-overlay">
+<div class="spinner-border" role="status"></div>
+<p class="text-xl mt-4">Fetching your personalized plan...</p>
 </div>
-<div id="plan-container" class="hidden"></div>
-<div id="error-message" class="content-card text-center text-red-500 hidden"></div>
+
+<div id="plan-container" class="w-full hidden"></div>
+
+<div id="error-overlay" class="hidden">
+<h2 class="text-2xl font-bold mb-4">Error</h2>
+<pre id="debug-output" class="whitespace-pre-wrap"></pre>
+<button onclick="document.getElementById('error-overlay').classList.add('hidden'); document.getElementById('loading').classList.add('hidden');" class="button mt-4">Close</button>
+</div>
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -58,29 +71,22 @@ const db = getFirestore(app);
 
 const loadingEl = document.getElementById('loading');
 const planContainer = document.getElementById('plan-container');
-const errorEl = document.getElementById('error-message');
+const debugOutput = document.getElementById('debug-output');
+const errorOverlay = document.getElementById('error-overlay');
 
 function show(el) { el.classList.remove('hidden'); }
 function hide(el) { el.classList.add('hidden'); }
 
 function renderPlan(planData) {
-    if (!planContainer) {
-        console.error('[DEBUG] planContainer element not found in DOM');
-        return;
-    }
-
-    console.log('[DEBUG] planData fetched:', planData);
-
     planContainer.innerHTML = '';
 
     if (!planData || !planData.length) {
-        planContainer.innerHTML = `<div class="content-card text-center text-gray-700">Nothing found in Firestore.</div>`;
+        planContainer.innerHTML = `<div class="content-card text-center text-gray-700">No marketing opportunities found.</div>`;
     } else {
         planData.forEach(item => {
             const card = document.createElement('div');
             card.className = 'content-card';
 
-            // Map Firestore fields
             const influencerName = item["Opportunity Name"] || 'Unknown';
             const platform = item["Platform "] || 'Unknown Platform';
             const type = item.Type || 'Unknown Type';
@@ -91,6 +97,7 @@ function renderPlan(planData) {
                 <p class="mb-2"><strong>Platform:</strong> ${platform}</p>
                 <p class="mb-2"><strong>Type:</strong> ${type}</p>
                 <p class="mb-2"><strong>Estimated Audience Size:</strong> ${audience}</p>
+                <button class="button mt-2" onclick="alert('Message button clicked for ${influencerName}')">Message</button>
             `;
 
             planContainer.appendChild(card);
@@ -103,12 +110,14 @@ function renderPlan(planData) {
 
 async function init() {
     try {
-        await signInAnonymously(auth);
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const userId = user.uid;
-                console.log('[DEBUG] Authenticated userId:', userId);
+            if (!user) {
+                window.location.href = 'index.html'; // redirect if not signed in
+                return;
+            }
+            const userId = user.uid;
 
+            try {
                 const docRef = doc(db, `users/${userId}/profiles/author`);
                 const docSnap = await getDoc(docRef);
 
@@ -116,20 +125,16 @@ async function init() {
                     const planData = docSnap.data().marketingPlan || [];
                     renderPlan(planData);
                 } else {
-                    console.warn('[DEBUG] No marketing plan document found');
-                    planContainer.innerHTML = `<div class="content-card text-center text-gray-700">Nothing found in Firestore.</div>`;
-                    hide(loadingEl);
-                    show(planContainer);
+                    renderPlan([]);
                 }
-            } else {
-                console.warn('[DEBUG] User not signed in yet');
+            } catch (err) {
+                debugOutput.textContent = JSON.stringify(err, null, 2);
+                show(errorOverlay);
             }
         });
     } catch (err) {
-        console.error(err);
-        hide(loadingEl);
-        errorEl.textContent = err.message;
-        show(errorEl);
+        debugOutput.textContent = JSON.stringify(err, null, 2);
+        show(errorOverlay);
     }
 }
 
