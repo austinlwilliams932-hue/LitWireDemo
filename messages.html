@@ -33,8 +33,8 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 .modal.show .modal-content { transform: translateY(0); }
 .close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
 
-#search-results li { display:flex; align-items:center; gap:0.5rem; }
-#search-results li:hover { background-color:#e5e7eb; }
+#search-results li, #new-chat-results li { display:flex; align-items:center; gap:0.5rem; }
+#search-results li:hover, #new-chat-results li:hover { background-color:#e5e7eb; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -52,7 +52,9 @@ h1, .text-3xl { letter-spacing: 0.025em; }
     <div class="bg-white rounded-lg shadow-lg chat-container">
       <!-- Sidebar -->
       <div class="sidebar">
-        <button id="new-chat-btn" class="w-full bg-blue-900 text-white py-2 px-4 rounded-lg mb-4 hover:bg-blue-800">+ New Chat</button>
+        <button id="new-chat-btn" class="w-full mb-4 bg-blue-900 text-white py-2 px-4 rounded-lg hover:bg-blue-800 transition-colors">
+          <i class="fas fa-plus"></i> New Chat
+        </button>
         <input type="text" id="user-search" placeholder="Search users..." class="w-full p-2 border rounded mb-4">
         <ul id="search-results" class="space-y-2"></ul>
       </div>
@@ -82,6 +84,7 @@ h1, .text-3xl { letter-spacing: 0.025em; }
   <div class="container text-center text-sm">&copy; 2024 LitWire. All rights reserved.</div>
 </footer>
 
+<!-- Login/Signup Modals (unchanged) -->
 <div id="login-modal" class="modal">
   <div class="modal-content">
     <span class="close-btn">&times;</span>
@@ -116,10 +119,20 @@ h1, .text-3xl { letter-spacing: 0.025em; }
   </div>
 </div>
 
+<!-- New Chat Modal -->
+<div id="new-chat-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Start New Chat</h2>
+    <input type="text" id="new-chat-search" placeholder="Search users..." class="w-full p-3 border rounded mb-4">
+    <ul id="new-chat-results" class="space-y-2 max-h-60 overflow-y-auto"></ul>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, collection, collectionGroup, getDocs, query, where, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, collectionGroup, getDocs, query, where, addDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -136,16 +149,23 @@ const db = getFirestore(app);
 
 const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
+
+// Modals
 const loginModal = document.getElementById("login-modal");
 const signupModal = document.getElementById("signup-modal");
+const newChatModal = document.getElementById("new-chat-modal");
+
+// Forms
 const loginForm = document.getElementById("login-form");
 const signupForm = document.getElementById("signup-form");
-const loginMessage = document.getElementById("login-message");
-const signupMessage = document.getElementById("signup-message");
 
+// Chat UI
 const userSearchInput = document.getElementById("user-search");
 const searchResults = document.getElementById("search-results");
+
 const newChatBtn = document.getElementById("new-chat-btn");
+const newChatSearch = document.getElementById("new-chat-search");
+const newChatResults = document.getElementById("new-chat-results");
 
 const chatWindow = document.getElementById("chat-window");
 const chatUserName = document.getElementById("chat-user-name");
@@ -157,10 +177,11 @@ const messageInput = document.getElementById("message-input");
 let currentUser = null;
 let currentChatPartnerId = null;
 
-// ---------- Helper Functions ----------
+// Modal helpers
 function showModal(modal){ modal.classList.add("show"); }
-function hideModal(modal){ modal.classList.remove("show"); loginMessage.textContent=""; signupMessage.textContent=""; }
+function hideModal(modal){ modal.classList.remove("show"); }
 
+// Navbar rendering
 async function renderNavbar(user){
     navContainer.innerHTML = "";
     if(user){
@@ -187,7 +208,7 @@ async function renderNavbar(user){
     }
 }
 
-// ---------- Auth ----------
+// Auth listener
 onAuthStateChanged(auth, async user=>{
     currentUser = user;
     mainContentView.classList.remove("hidden");
@@ -201,7 +222,7 @@ loginForm.addEventListener("submit", async e=>{
     try{
         await signInWithEmailAndPassword(auth, loginForm["login-email"].value, loginForm["login-password"].value);
         hideModal(loginModal);
-    } catch(err){ loginMessage.textContent=err.message; loginMessage.style.color="red"; }
+    } catch(err){ console.error(err); }
 });
 
 // Signup
@@ -217,17 +238,23 @@ signupForm.addEventListener("submit", async e=>{
     try{
         const userCredential = await createUserWithEmailAndPassword(auth,email,password);
         const user = userCredential.user;
-        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), { name,email,role,bio,photo,onboardingComplete:false });
+        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {
+            name,email,role,bio,photo,onboardingComplete:false
+        });
         hideModal(signupModal);
         await renderNavbar(user);
-    } catch(err){ signupMessage.textContent=err.message; signupMessage.style.color="red"; }
+    } catch(err){ console.error(err); }
 });
 
 // Close modals
-document.querySelectorAll(".close-btn").forEach(btn => { btn.addEventListener("click",()=>hideModal(btn.closest(".modal"))); });
-document.querySelectorAll(".modal").forEach(modal => { modal.addEventListener("click",e=>{ if(e.target===modal) hideModal(modal); }); });
+document.querySelectorAll(".close-btn").forEach(btn => {
+    btn.addEventListener("click",()=>hideModal(btn.closest(".modal")));
+});
+document.querySelectorAll(".modal").forEach(modal=>{
+    modal.addEventListener("click",e=>{ if(e.target===modal) hideModal(modal); });
+});
 
-// ---------- User Search ----------
+// Search users helper
 async function searchUsers(queryText){
     if(!queryText) return [];
     const usersRef = collectionGroup(db,'profile');
@@ -241,6 +268,7 @@ async function searchUsers(queryText){
         .map(doc=>({ uid: doc.ref.parent.id, ...doc.data() }));
 }
 
+// Live search in sidebar
 userSearchInput.addEventListener("input", async ()=>{
     const queryText = userSearchInput.value.trim();
     if(!queryText){ searchResults.innerHTML=""; return; }
@@ -253,23 +281,37 @@ userSearchInput.addEventListener("input", async ()=>{
     `).join("");
 
     document.querySelectorAll("#search-results li").forEach(li=>{
-        li.addEventListener("click", ()=>openChat(li.dataset.uid, li.dataset.name, li.dataset.photo));
+        li.addEventListener("click", ()=>{ openChat(li.dataset.uid, li.dataset.name, li.dataset.photo); });
     });
 });
 
-// ---------- New Chat ----------
-newChatBtn.addEventListener("click", async () => {
-    const queryText = prompt("Enter the name of the user to chat with:");
-    if (!queryText) return;
-
-    const users = await searchUsers(queryText);
-    if(users.length === 0){ alert("No users found"); return; }
-
-    const user = users[0]; // first match
-    openChat(user.uid, user.name, user.photo);
+// ---------- New Chat Modal ----------
+newChatBtn.addEventListener("click", ()=>{
+    showModal(newChatModal);
+    newChatSearch.value="";
+    newChatResults.innerHTML="";
+    newChatSearch.focus();
 });
 
-// ---------- Chat ----------
+newChatSearch.addEventListener("input", async ()=>{
+    const queryText = newChatSearch.value.trim();
+    if(!queryText){ newChatResults.innerHTML=""; return; }
+    const users = await searchUsers(queryText);
+    newChatResults.innerHTML = users.map(u=>`
+        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}" class="p-2 rounded cursor-pointer flex items-center gap-2 hover:bg-gray-200">
+            ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
+            <span>${u.name}</span>
+        </li>
+    `).join("");
+    newChatResults.querySelectorAll("li").forEach(li=>{
+        li.addEventListener("click", ()=>{
+            openChat(li.dataset.uid, li.dataset.name, li.dataset.photo);
+            hideModal(newChatModal);
+        });
+    });
+});
+
+// ---------- Chat functions ----------
 function openChat(uid, name, photo){
     currentChatPartnerId = uid;
     chatUserName.textContent = name;
@@ -280,10 +322,8 @@ function openChat(uid, name, photo){
 }
 
 function loadMessages(){
-    if(!currentChatPartnerId) return;
-    const chatDocRef = doc(db, "artifacts", "users", currentUser.uid, "chats", currentChatPartnerId);
-    const messagesRef = collection(chatDocRef, "messages");
-
+    if(!currentUser || !currentChatPartnerId) return;
+    const messagesRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
     onSnapshot(messagesRef, snapshot=>{
         chatMessages.innerHTML = snapshot.docs.map(doc=>{
             const msg = doc.data();
@@ -293,6 +333,7 @@ function loadMessages(){
     });
 }
 
+// Send message
 messageForm.addEventListener("submit", async e=>{
     e.preventDefault();
     const text = messageInput.value.trim();
@@ -300,10 +341,8 @@ messageForm.addEventListener("submit", async e=>{
     const senderId = currentUser.uid;
     const receiverId = currentChatPartnerId;
 
-    const senderChatDoc = doc(db, "artifacts", "users", senderId, "chats", receiverId);
-    const senderRef = collection(senderChatDoc, "messages");
-    const receiverChatDoc = doc(db, "artifacts", "users", receiverId, "chats", senderId);
-    const receiverRef = collection(receiverChatDoc, "messages");
+    const senderRef = collection(db, "artifacts/users", senderId, "chats", receiverId, "messages");
+    const receiverRef = collection(db, "artifacts/users", receiverId, "chats", senderId, "messages");
 
     await addDoc(senderRef, { sender: senderId, text, timestamp: Date.now() });
     await addDoc(receiverRef, { sender: senderId, text, timestamp: Date.now() });
