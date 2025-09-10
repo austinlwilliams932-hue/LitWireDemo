@@ -72,7 +72,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -104,26 +104,25 @@ function renderMatch(profile) {
     const el = document.createElement('div');
     el.className = 'content-card';
 
-    // Support either `matchPercentage` or `similarity` from CF
-    const percentage = profile.matchPercentage ?? profile.similarity ?? null;
-    const percentBadge = percentage
-        ? `<span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">${percentage}% match</span>`
-        : '';
+    const percentage = profile.similarity ?? 0;
+    const percentBadge = `<span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">${percentage}% match</span>`;
+    const blurb = profile.blurb ?? '';
+    const name = profile.name ?? 'Influencer Match';
 
     el.innerHTML = `
         <div class="flex justify-between items-center">
-            <h2 class="text-xl font-semibold mb-2">${profile["Opportunity Name"] || 'Unknown'}</h2>
+            <h2 class="text-xl font-semibold mb-2">${name}</h2>
             ${percentBadge}
         </div>
-        <p class="mb-1"><strong>Platform:</strong> ${profile["Platform "] || 'Unknown'}</p>
-        <p class="mb-1"><strong>Type:</strong> ${profile.Type || 'Unknown'}</p>
-        <p class="mb-1"><strong>Estimated Audience:</strong> ${profile["Est. Audience Size"] || 'Unknown'}</p>
-        ${profile.blurb ? `<p class="mt-2 italic text-gray-700">${profile.blurb}</p>` : ''}
-        ${profile["Source Link"] 
-            ? `<button class="button mt-2" onclick="window.open('${profile["Source Link"]}','_blank')">View Profile</button>`
-            : ''}
+        ${blurb ? `<p class="mt-2 italic text-gray-700">${blurb}</p>` : ''}
     `;
     matchesContainer.appendChild(el);
+}
+
+async function fetchInfluencers() {
+    const influencersCol = collection(db, "influencers"); // adjust path if different
+    const snapshot = await getDocs(influencersCol);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
 async function callCloudRun(userProfile, influencers) {
@@ -131,7 +130,16 @@ async function callCloudRun(userProfile, influencers) {
         const res = await fetch("https://geminicall-737284668725.us-east4.run.app/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ profile: userProfile, influencers })
+            body: JSON.stringify({ 
+                book_title: userProfile.bookTitle,
+                book_description: userProfile.bookDescription,
+                book_genre: userProfile.bookGenre,
+                campaign_length: userProfile.campaignLength,
+                budget: userProfile.budget,
+                desired_audience_type: userProfile.targetAudience?.[0] ?? '',
+                user_id: auth.currentUser.uid,
+                influencers
+            })
         });
 
         if (!res.ok) throw new Error(`CF error: ${res.status}`);
@@ -155,22 +163,30 @@ async function init() {
                 return; 
             }
 
+            // Get author profile
             const docRef = doc(db, `users/${user.uid}/profiles/author`);
             const docSnap = await getDoc(docRef);
-
             if (!docSnap.exists()) {
                 matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
                 hide(loadingEl);
                 show(matchesContainer);
                 return;
             }
-
             const userProfile = docSnap.data();
             console.log("USER PROFILE:", userProfile);
 
-            const cfResponse = await callCloudRun(userProfile, []);
+            // Fetch influencers from Firestore
+            const influencers = await fetchInfluencers();
+
+            // Call Cloud Function with author profile + influencers
+            const cfResponse = await callCloudRun(userProfile, influencers);
+
             if (cfResponse?.marketingPlan?.length) {
-                cfResponse.marketingPlan.forEach(profile => renderMatch(profile));
+                cfResponse.marketingPlan.forEach((profile, i) => {
+                    // Merge influencer name from Firestore
+                    profile.name = influencers[i]?.name ?? `Influencer ${i+1}`;
+                    renderMatch(profile);
+                });
             } else {
                 matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
             }
