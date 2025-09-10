@@ -19,8 +19,15 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 .btn-influencer:hover { background-color: #d1d5db; }
 .btn-get-started { background-color: #2e598b; color: #fff; padding: 1.25rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
 .btn-get-started:hover { background-color: #234368; }
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
-.modal-content { background-color: #fff; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; position: relative; }
+
+.modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+  z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.modal.show { opacity: 1; pointer-events: auto; }
+.modal-content { background-color: #fff; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; position: relative; transform: translateY(-20px); transition: transform 0.3s ease; }
+.modal.show .modal-content { transform: translateY(0); }
 .close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
 </style>
 </head>
@@ -79,7 +86,7 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 </footer>
 
 <!-- Login Modal -->
-<div id="login-modal" class="modal hidden">
+<div id="login-modal" class="modal">
     <div class="modal-content">
         <span class="close-btn">&times;</span>
         <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Login</h2>
@@ -93,7 +100,7 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 </div>
 
 <!-- Signup Modal -->
-<div id="signup-modal" class="modal hidden">
+<div id="signup-modal" class="modal">
     <div class="modal-content">
         <span class="close-btn">&times;</span>
         <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Sign Up</h2>
@@ -132,7 +139,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// DOM
 const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
 const loginModal = document.getElementById("login-modal");
@@ -142,14 +148,15 @@ const signupForm = document.getElementById("signup-form");
 const loginMessage = document.getElementById("login-message");
 const signupMessage = document.getElementById("signup-message");
 
-function showModal(modal) { modal.classList.remove("hidden"); }
+// Modal functions
+function showModal(modal) { modal.classList.add("show"); }
 function hideModal(modal) { 
-    modal.classList.add("hidden"); 
+    modal.classList.remove("show"); 
     loginMessage.textContent = "";
     signupMessage.textContent = "";
 }
 
-// Navbar
+// Navbar rendering
 function renderNavbar(user){
     navContainer.innerHTML = "";
     if(user){
@@ -173,9 +180,13 @@ function renderNavbar(user){
 }
 
 // Auth listener
-onAuthStateChanged(auth,user=>{
+onAuthStateChanged(auth, user => {
     mainContentView.classList.remove("hidden");
     renderNavbar(user);
+    if(!user){
+        // If user is not logged in, show login/signup modal prompt
+        showModal(signupModal);
+    }
 });
 
 // Login
@@ -213,7 +224,7 @@ signupForm.addEventListener("submit", async e=>{
     }
 });
 
-// Close modals
+// Close modals with button
 document.querySelectorAll(".close-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         const modal = btn.closest(".modal");
@@ -221,7 +232,7 @@ document.querySelectorAll(".close-btn").forEach(btn => {
     });
 });
 
-// Close modal when clicking outside content
+// Close modals by clicking outside content
 document.querySelectorAll(".modal").forEach(modal => {
     modal.addEventListener("click", e => {
         if(e.target === modal){
