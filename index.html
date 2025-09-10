@@ -1,124 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LitWire - Home</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
-<style>
-body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-h1, .text-3xl { letter-spacing: 0.025em; }
-.container { max-width: 1200px; margin: 0 auto; }
-.hidden { display: none !important; }
-.btn-author { background-color: #2e598b; color: #fff; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
-.btn-author:hover { background-color: #234368; }
-.btn-influencer { background-color: #e5e7eb; color: #1f2937; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
-.btn-influencer:hover { background-color: #d1d5db; }
-.btn-get-started { background-color: #2e598b; color: #fff; padding: 1.25rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
-.btn-get-started:hover { background-color: #234368; }
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
-.modal-content { background-color: #fff; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; position: relative; }
-.close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
-</style>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-
-<!-- Header -->
-<header class="bg-white shadow-md py-4 sticky top-0 z-50">
-    <nav class="container flex justify-between items-center px-4 md:px-8">
-        <div class="text-3xl font-bold text-gray-800"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></div>
-        <div id="nav-container"></div>
-    </nav>
-</header>
-
-<!-- Main Content -->
-<main class="flex-grow container mt-12 px-4 md:px-8">
-    <div id="main-content-view" class="hidden">
-        <!-- Onboarding / Hero -->
-        <section id="onboarding-view">
-            <div class="text-center py-20">
-                <h1 class="text-5xl font-bold text-gray-900 leading-tight tracking-wide">Where stories meet<br>their champions</h1>
-                <p class="mt-4 max-w-2xl mx-auto text-gray-600 text-lg">
-                    A curated matchmaking platform connecting authors with book influencers who actually fit their genre, style, and audience.
-                </p>
-                <div class="flex justify-center space-x-4 mt-8">
-                    <a href="author.html" class="btn-author">I'm an Author</a>
-                    <a href="influencer.html" class="btn-influencer">I'm an Influencer</a>
-                </div>
-            </div>
-
-            <!-- Hero graphics & steps -->
-            <div class="mt-20 py-12 px-8 bg-white rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-around text-center">
-                <div class="flex flex-col items-center">
-                    <i class="fas fa-list-check text-4xl text-blue-900"></i>
-                    <p class="mt-2 text-lg text-gray-700 font-semibold">Survey</p>
-                </div>
-                <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
-                <div class="flex flex-col items-center">
-                    <i class="fas fa-user-friends text-4xl text-blue-900"></i>
-                    <p class="mt-2 text-lg text-gray-700 font-semibold">Matches</p>
-                </div>
-                <div class="text-2xl font-thin text-gray-400 my-4 md:my-0">→</div>
-                <div class="flex flex-col items-center">
-                    <i class="fas fa-chart-line text-4xl text-blue-900"></i>
-                    <p class="mt-2 text-lg text-gray-700 font-semibold">Dashboard</p>
-                </div>
-            </div>
-        </section>
-    </div>
-</main>
-
-<!-- Footer -->
-<footer class="bg-gray-800 text-white py-6 mt-12">
-    <div class="container text-center text-sm">
-        &copy; 2024 LitWire. All rights reserved.
-    </div>
-</footer>
-
-<!-- Login Modal -->
-<div id="login-modal" class="modal hidden">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal('login-modal')">&times;</span>
-        <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Login</h2>
-        <form id="login-form" class="space-y-4">
-            <input type="email" id="login-email" placeholder="Email" required class="w-full p-3 border rounded-lg">
-            <input type="password" id="login-password" placeholder="Password" required class="w-full p-3 border rounded-lg">
-            <button type="submit" class="w-full py-3 bg-blue-900 text-white rounded-lg">Login</button>
-            <p id="login-message" class="text-sm text-center mt-2"></p>
-        </form>
-    </div>
-</div>
-
-<!-- Signup Modal -->
-<div id="signup-modal" class="modal hidden">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal('signup-modal')">&times;</span>
-        <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Sign Up</h2>
-        <form id="signup-form" class="space-y-4">
-            <input type="text" id="signup-name" placeholder="Full Name" required class="w-full p-3 border rounded-lg">
-            <input type="email" id="signup-email" placeholder="Email" required class="w-full p-3 border rounded-lg">
-            <select id="signup-role" required class="w-full p-3 border rounded-lg">
-                <option value="">I am a...</option>
-                <option value="author">Author</option>
-                <option value="influencer">Influencer</option>
-            </select>
-            <textarea id="signup-bio" placeholder="Short bio" class="w-full p-3 border rounded-lg"></textarea>
-            <input type="text" id="signup-photo" placeholder="Photo URL (optional)" class="w-full p-3 border rounded-lg">
-            <input type="password" id="signup-password" placeholder="Password" required class="w-full p-3 border rounded-lg">
-            <button type="submit" class="w-full py-3 bg-blue-900 text-white rounded-lg">Sign Up</button>
-            <p id="signup-message" class="text-sm text-center mt-2"></p>
-        </form>
-    </div>
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// --- Firebase config ---
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
     authDomain: "litwire-97956.firebaseapp.com",
@@ -128,11 +13,12 @@ const firebaseConfig = {
     appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
 
+// --- Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// DOM
+// --- DOM elements ---
 const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
 const loginModal = document.getElementById("login-modal");
@@ -142,9 +28,25 @@ const signupForm = document.getElementById("signup-form");
 const loginMessage = document.getElementById("login-message");
 const signupMessage = document.getElementById("signup-message");
 
-function showModal(id){ document.getElementById(id).classList.remove("hidden"); }
-function closeModal(id){ document.getElementById(id).classList.add("hidden"); loginMessage.textContent=""; signupMessage.textContent=""; }
+// --- Modal functions ---
+function showModal(modal) {
+    modal.classList.remove("hidden");
+}
+function hideModal(modal) {
+    modal.classList.add("hidden");
+    loginMessage.textContent = "";
+    signupMessage.textContent = "";
+}
 
+// Close buttons for modals
+document.querySelectorAll('.close-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const modal = btn.closest('.modal');
+        if(modal) hideModal(modal);
+    });
+});
+
+// --- Navbar rendering ---
 function renderNavbar(user){
     navContainer.innerHTML = "";
     if(user){
@@ -154,7 +56,9 @@ function renderNavbar(user){
                 <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
             </div>
         `;
-        document.getElementById("logout-btn").addEventListener("click", async()=>{await signOut(auth)});
+        document.getElementById("logout-btn").addEventListener("click", async()=>{
+            await signOut(auth);
+        });
     } else {
         navContainer.innerHTML = `
             <div class="flex items-center space-x-6">
@@ -162,32 +66,32 @@ function renderNavbar(user){
                 <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
             </div>
         `;
-        document.getElementById("nav-login").addEventListener("click",()=>showModal("login-modal"));
-        document.getElementById("nav-signup").addEventListener("click",()=>showModal("signup-modal"));
+        document.getElementById("nav-login").addEventListener("click",()=>showModal(loginModal));
+        document.getElementById("nav-signup").addEventListener("click",()=>showModal(signupModal));
     }
 }
 
-// Auth listener
+// --- Auth listener ---
 onAuthStateChanged(auth,user=>{
     mainContentView.classList.remove("hidden");
     renderNavbar(user);
 });
 
-// Login
+// --- Login ---
 loginForm.addEventListener("submit", async e=>{
     e.preventDefault();
     const email = loginForm["login-email"].value;
     const password = loginForm["login-password"].value;
     try{
         await signInWithEmailAndPassword(auth,email,password);
-        closeModal("login-modal");
+        hideModal(loginModal);
     }catch(err){
         loginMessage.textContent = err.message;
         loginMessage.style.color = "red";
     }
 });
 
-// Signup
+// --- Signup ---
 signupForm.addEventListener("submit", async e=>{
     e.preventDefault();
     const email = signupForm["signup-email"].value;
@@ -200,13 +104,26 @@ signupForm.addEventListener("submit", async e=>{
     try{
         const userCredential = await createUserWithEmailAndPassword(auth,email,password);
         const user = userCredential.user;
-        await setDoc(doc(db,`/artifacts/users/${user.uid}/profile/data`),{name,email,role,bio,photo});
-        closeModal("signup-modal");
+
+        // --- Firestore path fix ---
+        await setDoc(doc(db,`artifacts/users/${user.uid}/profile`),{name,email,role,bio,photo});
+
+        hideModal(signupModal);
     }catch(err){
         signupMessage.textContent = err.message;
         signupMessage.style.color = "red";
     }
 });
+
+// --- Hero buttons (Author / Influencer) ---
+document.querySelectorAll(".btn-author").forEach(btn => {
+    btn.addEventListener("click", () => {
+        window.location.href = "author.html";
+    });
+});
+document.querySelectorAll(".btn-influencer").forEach(btn => {
+    btn.addEventListener("click", () => {
+        window.location.href = "influencer.html";
+    });
+});
 </script>
-</body>
-</html>
