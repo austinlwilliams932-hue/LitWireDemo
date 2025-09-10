@@ -233,137 +233,85 @@
     
     function renderInfluencers(influencerData) {
         influencerGrid.innerHTML = '';
-        if (!influencerData || !influencerData.length) {
-            influencerGrid.innerHTML = `<div class="content-card text-center text-gray-700 col-span-full">No influencers found for this campaign.</div>`;
-            return;
-        }
-
-        influencerData.forEach(item => {
-            const influencerCard = document.createElement('div');
-            influencerCard.className = 'influencer-card shadow-lg';
-            
-            // Generate some dummy data for the parts not in the database
-            const platforms = item["Platform "] ? item["Platform "].split(',').map(p => p.trim()) : ['TikTok'];
-            const reach = item["Est. Audience Size"] || 'Unknown';
-            const alignmentTags = item["Opportunity Name"].includes('BookTok') ? ['YA Fantasy', 'BookTok'] : ['Bookstagram'];
-
-            influencerCard.innerHTML = `
-                <img src="https://i.pravatar.cc/150?u=${item["Opportunity Name"]}" alt="Influencer Profile">
-                <h3 class="text-xl font-semibold mb-1">${item["Opportunity Name"]}</h3>
-                <p class="text-gray-500 mb-2">@${item["Opportunity Name"].replace(/\s/g, '').toLowerCase()}</p>
-                <p class="text-gray-700 mb-4">Platforms: ${platforms.join(', ')}</p>
-                <p class="text-gray-700 font-bold mb-2">Reach: ${reach}</p>
-                <div class="flex flex-wrap gap-2">
-                    ${alignmentTags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                </div>
+        influencerData.forEach(inf => {
+            const card = document.createElement('div');
+            card.className = 'influencer-card';
+            card.innerHTML = `
+                <img src="${inf.photo || 'https://via.placeholder.com/100'}" alt="${inf.name}">
+                <p class="font-semibold text-gray-900">${inf.name}</p>
+                <p class="text-gray-600 text-sm">${inf.platform || 'Unknown Platform'}</p>
+                <span class="tag">${inf.tier || 'Unknown Tier'}</span>
             `;
-            influencerGrid.appendChild(influencerCard);
+            influencerGrid.appendChild(card);
         });
     }
 
     function renderPlan(planData) {
         planContainer.innerHTML = '';
-
-        if (!planData || !planData.length) {
-            planContainer.innerHTML = `<div class="content-card text-center text-gray-700">No marketing opportunities found.</div>`;
-            actionButtons.style.display = 'none';
-        } else {
-            planData.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'content-card';
-
-                const influencerName = item["Opportunity Name"] || 'Unknown';
-                const platform = item["Platform "] || 'Unknown Platform';
-                const type = item.Type || 'Unknown Type';
-                const audience = item["Est. Audience Size"] || 'Unknown Audience Size';
-
-                card.innerHTML = `
-                    <h2 class="text-xl font-semibold mb-2">${influencerName}</h2>
-                    <p class="mb-2"><strong>Platform:</strong> ${platform}</p>
-                    <p class="mb-2"><strong>Type:</strong> ${type}</p>
-                    <p class="mb-2"><strong>Estimated Audience Size:</strong> ${audience}</p>
-                    <button class="button mt-2" onclick="alert('Message button clicked for ${influencerName}')">Message</button>
-                `;
-
-                planContainer.appendChild(card);
-            });
-
-            actionButtons.style.display = 'flex';
-
-            importBtn.onclick = async () => {
-                if (!auth.currentUser) return;
-                const userDocRef = doc(db, `users/${auth.currentUser.uid}`);
-                try {
-                    await updateDoc(userDocRef, { onboardingComplete: true });
-                    window.location.href = 'bookDash.html';
-                } catch (err) {
-                    debugOutput.textContent = JSON.stringify(err, null, 2);
-                    show(errorOverlay);
-                }
-            };
-
-            resetBtn.onclick = async () => {
-                if (!auth.currentUser) return;
-                const userDocRef = doc(db, `users/${auth.currentUser.uid}`);
-                const authorProfileRef = doc(db, `users/${auth.currentUser.uid}/profiles/author`);
-                if (!confirm("Are you sure you want to reset your campaign? This will remove all data.")) return;
-                try {
-                    await deleteDoc(authorProfileRef);
-                    await updateDoc(userDocRef, { onboardingComplete: false });
-                    alert("Campaign has been reset.");
-                    renderPlan([]); // clear plan
-                    renderInfluencers([]); // clear influencers
-                } catch (err) {
-                    debugOutput.textContent = JSON.stringify(err, null, 2);
-                    show(errorOverlay);
-                }
-            };
-        }
-
-        hide(loadingEl);
+        planData.forEach(step => {
+            const stepEl = document.createElement('div');
+            stepEl.className = 'content-card';
+            stepEl.textContent = step.name || 'Unnamed Step';
+            planContainer.appendChild(stepEl);
+        });
     }
 
-    async function init() {
+    onAuthStateChanged(auth, async user => {
+        if (!user) { window.location.href = 'index.html'; return; }
         try {
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) { window.location.href = 'index.html'; return; }
-                const userId = user.uid;
+            // Show dashboard action buttons
+            actionButtons.classList.remove('hidden');
 
-                try {
-                    // Fetch book data
-                    const booksCollectionRef = collection(db, `artifacts/users/${userId}/books`);
-                    const booksSnapshot = await getDocs(booksCollectionRef);
-                    let bookData = {};
-                    if (!booksSnapshot.empty) {
-                        bookData = booksSnapshot.docs[0].data(); // Get the first book
-                    }
-                    renderBookData(bookData);
+            const bookDocRef = doc(db, `artifacts/users/${user.uid}/bookData/book`);
+            const bookSnap = await getDoc(bookDocRef);
+            if (bookSnap.exists()) renderBookData(bookSnap.data());
 
-                    // Fetch marketing plan data
-                    const authorDocRef = doc(db, `users/${userId}/profiles/author`);
-                    const authorDocSnap = await getDoc(authorDocRef);
+            const influencerCollRef = collection(db, `artifacts/users/${user.uid}/influencers`);
+            const influencerSnap = await getDocs(influencerCollRef);
+            const influencerData = influencerSnap.docs.map(d => d.data());
+            renderInfluencers(influencerData);
 
-                    let planData = [];
-                    if (authorDocSnap.exists()) {
-                        planData = authorDocSnap.data().marketingPlan || [];
-                    }
-                    
-                    renderInfluencers(planData);
-                    renderPlan(planData);
-                    show(document.getElementById('tab-content-plan'));
+            const planCollRef = collection(db, `artifacts/users/${user.uid}/plan`);
+            const planSnap = await getDocs(planCollRef);
+            const planData = planSnap.docs.map(d => d.data());
+            renderPlan(planData);
 
-                } catch (err) {
-                    debugOutput.textContent = JSON.stringify(err, null, 2);
-                    show(errorOverlay);
-                }
-            });
+        } catch (err) {
+            debugOutput.textContent = JSON.stringify(err, null, 2);
+            show(errorOverlay);
+        } finally {
+            hide(loadingEl);
+        }
+    });
+
+    resetBtn.onclick = async () => {
+        if (!auth.currentUser) return;
+        const userId = auth.currentUser.uid;
+        const authorProfileRef = doc(db, `users/${userId}/profiles/author`);
+        const mainProfileRef = doc(db, `artifacts/users/${userId}/profile`);
+
+        if (!confirm("Are you sure you want to reset your campaign? This will remove all data.")) return;
+
+        try {
+            // Delete author-specific campaign data
+            await deleteDoc(authorProfileRef);
+
+            // Reset onboardingComplete in the main profile so index.html sees it
+            await updateDoc(mainProfileRef, { onboardingComplete: false });
+
+            // Clear dashboard UI
+            renderPlan([]);
+            renderInfluencers([]);
+
+            alert("Campaign has been reset.");
+
+            // Redirect to index to refresh CTA buttons immediately
+            window.location.href = 'index.html';
         } catch (err) {
             debugOutput.textContent = JSON.stringify(err, null, 2);
             show(errorOverlay);
         }
-    }
-
-    init();
+    };
 </script>
 
 </body>
