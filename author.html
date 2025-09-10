@@ -54,7 +54,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     <h2 class="text-2xl font-semibold text-gray-900">Book Basics</h2>
     <div>
         <label for="book-title" class="block text-sm font-medium text-gray-700 mb-2">Book Title *</label>
-        <input type="text" id="book-title" name="bookTitle" placeholder="Enter the title" class="form-input">
+        <input type="text" id="book-title" name="bookTitle" placeholder="Enter the title" class="form-input" required>
     </div>
     <div>
         <label for="book-cover" class="block text-sm font-medium text-gray-700 mb-2">Book Cover Upload</label>
@@ -62,11 +62,11 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     </div>
     <div>
         <label for="book-description" class="block text-sm font-medium text-gray-700 mb-2">Book Synopsis *</label>
-        <textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea"></textarea>
+        <textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea" required></textarea>
     </div>
     <div>
         <label for="genre" class="block text-sm font-medium text-gray-700 mb-2">Genre & Tags *</label>
-        <select id="genre" name="genre" class="form-select">
+        <select id="genre" name="genre" class="form-select" required>
             <option value="">Select Genre</option>
             <optgroup label="Fiction">
                 <option value="romance">Romance</option>
@@ -88,12 +88,13 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         <input type="text" id="trope-tags" name="tropeTags" placeholder="e.g., enemies-to-lovers, found family, murder mystery" class="form-input mt-2">
     </div>
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Format Available</label>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Format Available *</label>
         <div class="flex flex-wrap gap-4">
             <label class="flex items-center"><input type="checkbox" name="formatAvailable" value="print" class="mr-2"> Print</label>
             <label class="flex items-center"><input type="checkbox" name="formatAvailable" value="ebook" class="mr-2"> Ebook</label>
             <label class="flex items-center"><input type="checkbox" name="formatAvailable" value="audio" class="mr-2"> Audio</label>
         </div>
+        <p id="format-error" class="text-sm text-red-500 mt-1 hidden">Please select at least one format.</p>
     </div>
     <div>
         <label for="comp-titles" class="block text-sm font-medium text-gray-700 mb-2">Comp Titles</label>
@@ -118,14 +119,15 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <div class="space-y-6">
     <h2 class="text-2xl font-semibold text-gray-900">Target Audience</h2>
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Age Group</label>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Age Group *</label>
         <div id="age-group-chips" class="chip-container">
             <span class="chip" data-value="children">Children</span>
             <span class="chip" data-value="young-adults">Young Adults</span>
             <span class="chip" data-value="new-adults">New Adults</span>
             <span class="chip" data-value="adults">Adults</span>
-            <input type="hidden" name="ageGroup" id="age-group-input">
         </div>
+        <input type="hidden" name="ageGroup" id="age-group-input" required>
+        <p id="age-group-error" class="text-sm text-red-500 mt-1 hidden">Please select an age group.</p>
     </div>
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Themes & Identity Markers</label>
@@ -159,8 +161,8 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <div class="space-y-6">
     <h2 class="text-2xl font-semibold text-gray-900">Promotion Preferences</h2>
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Channels You Want to Work With</label>
-        <select multiple id="promotion-channels" name="promotionChannels" class="form-select h-32">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Channels You Want to Work With *</label>
+        <select multiple id="promotion-channels" name="promotionChannels" class="form-select h-32" required>
             <option value="tiktok">TikTok</option>
             <option value="instagram">Instagram</option>
             <option value="podcasts">Podcasts</option>
@@ -170,6 +172,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
             <option value="libraries">Libraries</option>
             <option value="schools">Schools</option>
         </select>
+        <p id="promotion-channels-error" class="text-sm text-red-500 mt-1 hidden">Please select at least one promotion channel.</p>
     </div>
     <div>
         <label for="influencer-wishlist" class="block text-sm font-medium text-gray-700 mb-2">Influencer Wishlist (Optional)</label>
@@ -242,9 +245,13 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Dates *</label>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <input type="date" id="start-date" name="startDate" class="form-input">
-            <input type="date" id="end-date" name="endDate" class="form-input">
+            <input type="date" id="start-date" name="startDate" class="form-input" required>
+            <input type="date" id="end-date" name="endDate" class="form-input" required>
         </div>
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Budget ($) *</label>
+        <input type="number" id="budget" name="budget" placeholder="Enter budget" class="form-input" required>
     </div>
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Milestones</label>
@@ -268,13 +275,14 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         <textarea id="campaign-notes" name="campaignNotes" rows="2" placeholder="e.g., 'focus on UK bloggers'" class="form-textarea"></textarea>
     </div>
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Desired Post Type</label>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Desired Post Type *</label>
         <div class="flex flex-wrap gap-4">
             <label class="flex items-center"><input type="checkbox" name="postType" value="unboxing" class="mr-2"> Unboxing</label>
             <label class="flex items-center"><input type="checkbox" name="postType" value="review" class="mr-2"> Review</label>
             <label class="flex items-center"><input type="checkbox" name="postType" value="author-interview" class="mr-2"> Author Interview</label>
             <label class="flex items-center"><input type="checkbox" name="postType" value="giveaway" class="mr-2"> Giveaway</label>
         </div>
+        <p id="post-type-error" class="text-sm text-red-500 mt-1 hidden">Please select at least one post type.</p>
     </div>
 </div>
 
@@ -470,16 +478,17 @@ nextQuizBtn.addEventListener('click', () => {
 
 function showPersonalityTag() {
     const answers = {
-        q1: document.querySelector('input[name="q1"]:checked').value,
-        q2: document.querySelector('input[name="q2"]:checked').value,
-        q3: document.querySelector('input[name="q3"]:checked').value,
+        q1: document.querySelector('input[name="q1"]:checked')?.value,
+        q2: document.querySelector('input[name="q2"]:checked')?.value,
+        q3: document.querySelector('input[name="q3"]:checked')?.value,
     };
     
     let tag = '';
-    // A simplified logic to determine personality tag based on answers
     const scores = { a: 0, b: 0, c: 0 };
     for (const key in answers) {
-        scores[answers[key]]++;
+        if (answers[key]) {
+            scores[answers[key]]++;
+        }
     }
 
     if (scores.a > scores.b && scores.a > scores.c) {
@@ -489,7 +498,6 @@ function showPersonalityTag() {
     } else if (scores.c > scores.a && scores.c > scores.b) {
         tag = 'TikTok Friendly';
     } else {
-        // Handle ties or other combinations
         tag = 'All-Rounder';
     }
     
@@ -498,10 +506,65 @@ function showPersonalityTag() {
     quizResults.classList.remove('hidden');
 }
 
+// ** NEW: Client-side Validation Function **
+function validateForm() {
+    let isValid = true;
+    errorMessage.classList.add('hidden');
+    document.querySelectorAll('.is-error').forEach(el => el.classList.remove('is-error'));
+    document.querySelectorAll('[id$="-error"]').forEach(el => el.classList.add('hidden'));
+
+    const requiredFields = ['book-title', 'book-description', 'genre', 'start-date', 'end-date', 'budget'];
+    requiredFields.forEach(id => {
+        const input = document.getElementById(id);
+        if (input && !input.value.trim()) {
+            input.classList.add('is-error');
+            isValid = false;
+        }
+    });
+
+    const ageGroupInput = document.getElementById('age-group-input');
+    if (!ageGroupInput?.value) {
+        document.getElementById('age-group-chips').classList.add('is-error');
+        document.getElementById('age-group-error').classList.remove('hidden');
+        isValid = false;
+    }
+
+    const formatCheckboxes = document.querySelectorAll('input[name="formatAvailable"]:checked');
+    if (formatCheckboxes.length === 0) {
+        document.getElementById('format-error').classList.remove('hidden');
+        isValid = false;
+    }
+
+    const promotionChannels = document.getElementById('promotion-channels');
+    if (promotionChannels?.selectedOptions.length === 0) {
+        promotionChannels.classList.add('is-error');
+        document.getElementById('promotion-channels-error').classList.remove('hidden');
+        isValid = false;
+    }
+
+    const postTypeCheckboxes = document.querySelectorAll('input[name="postType"]:checked');
+    if (postTypeCheckboxes.length === 0) {
+        document.getElementById('post-type-error').classList.remove('hidden');
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        errorMessage.textContent = "Please fill in all required fields.";
+        errorMessage.classList.remove('hidden');
+    }
+
+    return isValid;
+}
+
+
 // Handle form submission
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    errorMessage.classList.add('hidden');
+
+    if (!validateForm()) {
+        return;
+    }
+    
     loadingOverlay.classList.remove('hidden');
 
     if (!currentUser) {
@@ -510,35 +573,35 @@ form.addEventListener('submit', async (e) => {
     }
 
     const formData = {
-        bookTitle: document.getElementById('book-title').value.trim(),
-        bookSynopsis: document.getElementById('book-description').value.trim(),
-        bookCover: document.getElementById('book-cover').files.length > 0 ? document.getElementById('book-cover').files[0].name : '',
-        genre: document.getElementById('genre').value,
-        tropeTags: document.getElementById('trope-tags').value,
+        bookTitle: document.getElementById('book-title')?.value.trim(),
+        bookSynopsis: document.getElementById('book-description')?.value.trim(),
+        bookCover: document.getElementById('book-cover')?.files.length > 0 ? document.getElementById('book-cover')?.files[0].name : '',
+        genre: document.getElementById('genre')?.value,
+        tropeTags: document.getElementById('trope-tags')?.value,
         formatAvailable: Array.from(document.querySelectorAll('input[name="formatAvailable"]:checked')).map(el => el.value),
-        compTitles: document.getElementById('comp-titles').value.trim(),
-        authorBio: document.getElementById('author-bio').value.trim(),
-        triggerWarnings: document.getElementById('trigger-warnings').value.trim(),
-        pageLength: document.getElementById('page-length').value,
-        ageGroup: document.getElementById('age-group-input').value,
+        compTitles: document.getElementById('comp-titles')?.value.trim(),
+        authorBio: document.getElementById('author-bio')?.value.trim(),
+        triggerWarnings: document.getElementById('trigger-warnings')?.value.trim(),
+        pageLength: document.getElementById('page-length')?.value,
+        ageGroup: document.getElementById('age-group-input')?.value,
         targetThemes: Array.from(document.querySelectorAll('input[name="targetThemes"]:checked')).map(el => el.value),
-        geography: document.querySelector('input[name="geography"]:checked').value,
+        geography: document.querySelector('input[name="geography"]:checked')?.value,
         readerCommunities: Array.from(document.querySelectorAll('input[name="readerCommunities"]:checked')).map(el => el.value),
-        promotionChannels: Array.from(document.getElementById('promotion-channels').options).filter(opt => opt.selected).map(opt => opt.value),
-        influencerWishlist: document.getElementById('influencer-wishlist').value.trim(),
-        collaborativeStructured: document.getElementById('collaborative-structured').value,
-        textVideo: document.getElementById('text-video').value,
-        personalityTag: document.getElementById('personality-input').value,
-        startDate: document.getElementById('start-date').value,
-        endDate: document.getElementById('end-date').value,
+        promotionChannels: Array.from(document.getElementById('promotion-channels')?.options).filter(opt => opt.selected).map(opt => opt.value),
+        influencerWishlist: document.getElementById('influencer-wishlist')?.value.trim(),
+        collaborativeStructured: document.getElementById('collaborative-structured')?.value,
+        textVideo: document.getElementById('text-video')?.value,
+        personalityTag: document.getElementById('personality-input')?.value,
+        startDate: document.getElementById('start-date')?.value,
+        endDate: document.getElementById('end-date')?.value,
         milestones: {
-            arc: document.querySelector('input[name="milestone-arc"]').value,
-            pub: document.querySelector('input[name="milestone-pub"]').value,
-            preorder: document.querySelector('input[name="milestone-preorder"]').value,
+            arc: document.querySelector('input[name="milestone-arc"]')?.value,
+            pub: document.querySelector('input[name="milestone-pub"]')?.value,
+            preorder: document.querySelector('input[name="milestone-preorder"]')?.value,
         },
-        campaignNotes: document.getElementById('campaign-notes').value.trim(),
+        campaignNotes: document.getElementById('campaign-notes')?.value.trim(),
         postType: Array.from(document.querySelectorAll('input[name="postType"]:checked')).map(el => el.value),
-        budget: document.getElementById('budget').value,
+        budget: document.getElementById('budget')?.value,
     };
 
     try {
