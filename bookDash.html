@@ -175,7 +175,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -205,7 +205,6 @@ const tabContents = document.querySelectorAll('.dashboard-tab-content');
 function show(el){ el.classList.remove('hidden'); }
 function hide(el){ el.classList.add('hidden'); }
 
-// Tab functionality
 tabs.forEach(tab => {
     tab.addEventListener('click', () => {
         tabs.forEach(t => t.classList.remove('active'));
@@ -292,23 +291,21 @@ resetBtn.onclick = async () => {
     if (!confirm("Are you sure you want to reset your campaign? This will remove all data.")) return;
 
     try {
-        // Delete author-specific campaign data, ignore not-found errors
         try {
             await deleteDoc(authorProfileRef);
         } catch(err) {
             if (err.code !== 'not-found') throw err;
         }
 
-        // Reset onboardingComplete in the main profile
-        await setDoc(mainProfileRef, { onboardingComplete: false }, { merge: true });
+        try {
+            await setDoc(mainProfileRef, { onboardingComplete: false }, { merge: true });
+        } catch(err) {
+            if (err.code !== 'not-found') throw err;
+        }
 
-        // Clear dashboard UI
         renderPlan([]);
         renderInfluencers([]);
 
-        alert("Campaign has been reset.");
-
-        // Redirect to index to refresh CTA buttons immediately
         window.location.href = 'index.html';
     } catch (err) {
         debugOutput.textContent = JSON.stringify(err, null, 2);
