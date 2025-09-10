@@ -9,19 +9,19 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
 <style>
-    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-    h1, .text-3xl { letter-spacing: 0.025em; }
-    .container { max-width: 1200px; margin: 0 auto; }
-    .hidden { display: none !important; }
-    .btn-author { background-color: #2e598b; color: #fff; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
-    .btn-author:hover { background-color: #234368; }
-    .btn-influencer { background-color: #e5e7eb; color: #1f2937; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
-    .btn-influencer:hover { background-color: #d1d5db; }
-    .btn-get-started { background-color: #2e598b; color: #fff; padding: 1.25rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
-    .btn-get-started:hover { background-color: #234368; }
-    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
-    .modal-content { background-color: #fff; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; position: relative; }
-    .close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
+body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+h1, .text-3xl { letter-spacing: 0.025em; }
+.container { max-width: 1200px; margin: 0 auto; }
+.hidden { display: none !important; }
+.btn-author { background-color: #2e598b; color: #fff; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
+.btn-author:hover { background-color: #234368; }
+.btn-influencer { background-color: #e5e7eb; color: #1f2937; padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
+.btn-influencer:hover { background-color: #d1d5db; }
+.btn-get-started { background-color: #2e598b; color: #fff; padding: 1.25rem 2rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.3s ease; }
+.btn-get-started:hover { background-color: #234368; }
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
+.modal-content { background-color: #fff; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; position: relative; }
+.close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -29,9 +29,7 @@
 <!-- Header -->
 <header class="bg-white shadow-md py-4 sticky top-0 z-50">
     <nav class="container flex justify-between items-center px-4 md:px-8">
-        <div class="text-3xl font-bold text-gray-800">
-            <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
-        </div>
+        <div class="text-3xl font-bold text-gray-800"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></div>
         <div id="nav-container"></div>
     </nav>
 </header>
@@ -39,7 +37,6 @@
 <!-- Main Content -->
 <main class="flex-grow container mt-12 px-4 md:px-8">
     <div id="main-content-view" class="hidden">
-
         <!-- Onboarding / Hero -->
         <section id="onboarding-view">
             <div class="text-center py-20">
@@ -53,6 +50,7 @@
                 </div>
             </div>
 
+            <!-- Hero graphics & steps -->
             <div class="mt-20 py-12 px-8 bg-white rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-around text-center">
                 <div class="flex flex-col items-center">
                     <i class="fas fa-list-check text-4xl text-blue-900"></i>
@@ -69,34 +67,7 @@
                     <p class="mt-2 text-lg text-gray-700 font-semibold">Dashboard</p>
                 </div>
             </div>
-
-            <!-- Testimonials -->
-            <div class="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
-                    <p class="text-gray-700 font-medium text-lg italic">
-                        "I've connected with amazing book lovers who really get my work."
-                    </p>
-                </div>
-                <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-blue-900">
-                    <p class="text-gray-700 font-medium text-lg italic">
-                        "A game-changer for finding new reads in my niche."
-                    </p>
-                </div>
-            </div>
-
-            <div class="mt-20 flex justify-center space-x-12 items-center">
-                <span class="text-gray-400 text-5xl">🌷</span>
-                <span class="text-gray-400 text-5xl">⚫</span>
-                <span class="text-gray-400 text-5xl">▶️</span>
-                <span class="text-gray-400 text-4xl">TDJ</span>
-                <span class="text-gray-400 text-4xl">wisco</span>
-            </div>
-
-            <div class="mt-20 text-center">
-                <a href="author.html" class="btn-get-started">Start your free campaign plan today →</a>
-            </div>
         </section>
-
     </div>
 </main>
 
@@ -113,16 +84,10 @@
         <span class="close-btn" onclick="closeModal('login-modal')">&times;</span>
         <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Login</h2>
         <form id="login-form" class="space-y-4">
-            <div>
-                <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="login-email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
-            </div>
-            <div>
-                <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="login-password" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
-            </div>
-            <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Login</button>
-            <p id="login-message" class="text-sm text-center mt-4"></p>
+            <input type="email" id="login-email" placeholder="Email" required class="w-full p-3 border rounded-lg">
+            <input type="password" id="login-password" placeholder="Password" required class="w-full p-3 border rounded-lg">
+            <button type="submit" class="w-full py-3 bg-blue-900 text-white rounded-lg">Login</button>
+            <p id="login-message" class="text-sm text-center mt-2"></p>
         </form>
     </div>
 </div>
@@ -133,50 +98,41 @@
         <span class="close-btn" onclick="closeModal('signup-modal')">&times;</span>
         <h2 class="text-2xl font-bold mb-4 text-center text-blue-900">Sign Up</h2>
         <form id="signup-form" class="space-y-4">
-            <div>
-                <label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="signup-email" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
-            </div>
-            <div>
-                <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="signup-password" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3">
-            </div>
-            <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Sign Up</button>
-            <p id="signup-message" class="text-sm text-center mt-4"></p>
+            <input type="text" id="signup-name" placeholder="Full Name" required class="w-full p-3 border rounded-lg">
+            <input type="email" id="signup-email" placeholder="Email" required class="w-full p-3 border rounded-lg">
+            <select id="signup-role" required class="w-full p-3 border rounded-lg">
+                <option value="">I am a...</option>
+                <option value="author">Author</option>
+                <option value="influencer">Influencer</option>
+            </select>
+            <textarea id="signup-bio" placeholder="Short bio" class="w-full p-3 border rounded-lg"></textarea>
+            <input type="text" id="signup-photo" placeholder="Photo URL (optional)" class="w-full p-3 border rounded-lg">
+            <input type="password" id="signup-password" placeholder="Password" required class="w-full p-3 border rounded-lg">
+            <button type="submit" class="w-full py-3 bg-blue-900 text-white rounded-lg">Sign Up</button>
+            <p id="signup-message" class="text-sm text-center mt-2"></p>
         </form>
     </div>
 </div>
 
-<!-- Loading Screen -->
-<div id="loading" class="fixed top-0 left-0 w-full h-full bg-gray-100 flex flex-col items-center justify-center z-50">
-    <div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full border-blue-900 border-r-transparent" role="status">
-        <span class="sr-only">Loading...</span>
-    </div>
-    <p class="text-gray-600 mt-4" id="loading-message">Connecting to the LitWire network...</p>
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
     authDomain: "litwire-97956.firebaseapp.com",
     projectId: "litwire-97956",
     storageBucket: "litwire-97956.firebasestorage.app",
     messagingSenderId: "263009111921",
-    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-    measurementId: "G-ZWVFHF5YQX"
+    appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// DOM refs
-const loadingEl = document.getElementById("loading");
+// DOM
 const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
 const loginModal = document.getElementById("login-modal");
@@ -186,95 +142,67 @@ const signupForm = document.getElementById("signup-form");
 const loginMessage = document.getElementById("login-message");
 const signupMessage = document.getElementById("signup-message");
 
-// Modals
-window.showModal = (id) => document.getElementById(id).classList.remove("hidden");
-window.closeModal = (id) => {
-    document.getElementById(id).classList.add("hidden");
-    loginMessage.textContent = "";
-    signupMessage.textContent = "";
-};
+function showModal(id){ document.getElementById(id).classList.remove("hidden"); }
+function closeModal(id){ document.getElementById(id).classList.add("hidden"); loginMessage.textContent=""; signupMessage.textContent=""; }
 
-// Navbar rendering
-const renderNavbar = (user) => {
+function renderNavbar(user){
     navContainer.innerHTML = "";
-    if (user) {
+    if(user){
         navContainer.innerHTML = `
             <div class="flex items-center space-x-6">
-                <a href="profile.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Profile</a>
-                <a href="loggedInLanding.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Feed</a>
-                <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Logout</button>
+                <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
+                <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
             </div>
         `;
-        document.getElementById("logout-btn").addEventListener("click", async () => {
-            await signOut(auth);
-            // Navbar updates automatically via onAuthStateChanged
-        });
+        document.getElementById("logout-btn").addEventListener("click", async()=>{await signOut(auth)});
     } else {
         navContainer.innerHTML = `
             <div class="flex items-center space-x-6">
-                <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300">Login</button>
-                <button id="nav-signup" class="bg-gray-800 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-900 transition duration-300">Sign Up</button>
+                <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
+                <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
             </div>
         `;
-        document.getElementById("nav-login").addEventListener("click", () => showModal("login-modal"));
-        document.getElementById("nav-signup").addEventListener("click", () => showModal("signup-modal"));
-    }
-};
-
-// Cloud Run JWT login (manual)
-async function loginWithCloudRun(uid) {
-    try {
-        const response = await fetch("https://jwt-737284668725.us-east4.run.app/getCustomToken", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ uid })
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        const data = await response.json();
-        if (!data.token) throw new Error("No token returned from backend");
-
-        return await signInWithCustomToken(auth, data.token);
-    } catch (err) {
-        console.error("Cloud Run login failed:", err);
-        alert("Cloud Run login failed: " + err.message);
+        document.getElementById("nav-login").addEventListener("click",()=>showModal("login-modal"));
+        document.getElementById("nav-signup").addEventListener("click",()=>showModal("signup-modal"));
     }
 }
 
-// Listen for auth state changes (updates navbar)
-onAuthStateChanged(auth, (user) => {
-    loadingEl.classList.add("hidden");
+// Auth listener
+onAuthStateChanged(auth,user=>{
     mainContentView.classList.remove("hidden");
     renderNavbar(user);
 });
 
-// Login form
-loginForm.addEventListener("submit", async (e) => {
+// Login
+loginForm.addEventListener("submit", async e=>{
     e.preventDefault();
     const email = loginForm["login-email"].value;
     const password = loginForm["login-password"].value;
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
+    try{
+        await signInWithEmailAndPassword(auth,email,password);
         closeModal("login-modal");
-    } catch (err) {
+    }catch(err){
         loginMessage.textContent = err.message;
         loginMessage.style.color = "red";
     }
 });
 
-// Signup form
-signupForm.addEventListener("submit", async (e) => {
+// Signup
+signupForm.addEventListener("submit", async e=>{
     e.preventDefault();
     const email = signupForm["signup-email"].value;
     const password = signupForm["signup-password"].value;
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const name = signupForm["signup-name"].value;
+    const role = signupForm["signup-role"].value;
+    const bio = signupForm["signup-bio"].value;
+    const photo = signupForm["signup-photo"].value || null;
+
+    try{
+        const userCredential = await createUserWithEmailAndPassword(auth,email,password);
         const user = userCredential.user;
-        const userProfileDocRef = doc(db, `/artifacts/users/${user.uid}/profiles/main_profile`);
-        await setDoc(userProfileDocRef, { name: user.email.split("@")[0] });
+        await setDoc(doc(db,`/artifacts/users/${user.uid}/profile/data`),{name,email,role,bio,photo});
         closeModal("signup-modal");
-    } catch (err) {
+    }catch(err){
         signupMessage.textContent = err.message;
         signupMessage.style.color = "red";
     }
