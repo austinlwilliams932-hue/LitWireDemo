@@ -11,7 +11,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 .card { background-color: #fff; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); margin-bottom: 2rem; }
 .input-field { width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db; transition: all 0.2s ease; margin-bottom: 1rem; }
 .input-field:focus { border-color: #2e598b; outline: none; box-shadow: 0 0 0 3px rgba(46, 89, 139, 0.2); }
-.btn { padding: 0.75rem 2.5rem; border-radius: 9999px; font-weight: 600; transition: all 0.3s ease; }
+.btn { padding: 0.75rem 2.5rem; border-radius: 9999px; font-weight: 600; transition: all 0.3s ease; cursor:pointer; }
 .btn-primary { background-color: #2e598b; color: #fff; }
 .btn-primary:hover { background-color: #234368; }
 .btn-secondary { background-color: transparent; border: 2px solid #2e598b; color: #2e598b; }
@@ -33,7 +33,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 </head>
 <body>
 
-<!-- Header -->
 <header class="header-top">
 <nav>
 <div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
@@ -43,7 +42,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <a href="feed.html">Feed</a>
 <a href="messages.html">Messages</a>
 <a href="matches.html">Matches</a>
-<a href="bookDash.html">Dashboard</a>
+<a href="bookDash.html" id="dashboard-link" class="hidden">Dashboard</a>
 <a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
 </div>
 </nav>
@@ -51,7 +50,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 
 <main class="main w-full max-w-7xl mx-auto lg:space-x-8">
 
-<!-- Form Card -->
 <div class="card flex-grow lg:flex-1">
 <header class="mb-6">
 <h1 class="text-3xl font-extrabold text-gray-900">Your LitWire Profile</h1>
@@ -94,7 +92,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 </form>
 </div>
 
-<!-- Preview Sidebar -->
 <div class="card w-full lg:w-96 p-6 sticky top-8 h-fit hidden lg:block" id="preview-sidebar"></div>
 
 </main>
@@ -126,8 +123,7 @@ const firebaseConfig = {
   projectId: "litwire-97956",
   storageBucket: "litwire-97956.appspot.com",
   messagingSenderId: "263009111921",
-  appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-  measurementId: "G-ZWVFHF5YQX"
+  appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -135,6 +131,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const signOutBtn = document.getElementById('sign-out-btn');
+const dashboardLink = document.getElementById('dashboard-link');
+
 signOutBtn.addEventListener('click', async () => {
   await signOut(auth);
   window.location.href = 'index.html';
@@ -151,44 +149,35 @@ authLoading.classList.remove('hidden');
 
 onAuthStateChanged(auth, async (user) => {
   authLoading.classList.add('hidden');
-  if (!user) {
-    window.location.href = 'index.html';
-    return;
-  }
+  if (!user) { window.location.href = 'index.html'; return; }
   currentUser = user;
 
-  const docRef = doc(db, `users/${user.uid}/profiles/influencer`);
+  const docRef = doc(db, `artifacts/users/${user.uid}/profile`);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
     profileData = docSnap.data();
     prefillForm(profileData);
+    if(profileData.onboardingComplete) dashboardLink.classList.remove('hidden');
   }
 });
 
 function prefillForm(data) {
-  const handleEl = document.getElementById('handle');
-  if (handleEl) handleEl.value = data.handle || '';
-
-  const dealbreakersEl = document.getElementById('dealbreakers');
-  if (dealbreakersEl) dealbreakersEl.value = data.dealbreakers || '';
-
+  document.getElementById('handle').value = data.handle || '';
+  document.getElementById('dealbreakers').value = data.dealbreakers || '';
   if (data.collabStyle) {
     const styleRadio = document.querySelector(`input[name="collabStyle"][value="${data.collabStyle}"]`);
     if (styleRadio) styleRadio.checked = true;
   }
-
   if (Array.isArray(data.platforms)) {
     data.platforms.forEach(p => {
       const cb = document.querySelector(`input[name="platform"][value="${p}"]`);
       if (cb) cb.checked = true;
     });
   }
-
   if (data.aesthetic) {
     const option = document.querySelector(`.aesthetic-option[data-aesthetic="${data.aesthetic}"]`);
-    if (option) option.classList.add('selected');
+    if(option) option.classList.add('selected');
   }
-
   updatePreview();
 }
 
@@ -196,23 +185,21 @@ function updatePreview() {
   const sidebar = document.getElementById('preview-sidebar');
   sidebar.classList.remove('hidden');
   sidebar.innerHTML = '';
-
-  const handleEl = document.getElementById('handle');
-  const handle = handleEl ? handleEl.value : 'Your handle';
+  const handle = document.getElementById('handle').value || 'Your handle';
   const handleText = document.createElement('p');
   handleText.className = 'text-xl font-bold mb-2';
   handleText.textContent = handle;
   sidebar.appendChild(handleText);
 
-  const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
-  if (platforms.length) {
+  const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
+  if(platforms.length){
     const platformsEl = document.createElement('p');
     platformsEl.textContent = `Platforms: ${platforms.join(', ')}`;
     sidebar.appendChild(platformsEl);
   }
 
   const aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic;
-  if (aesthetic) {
+  if(aesthetic){
     const aestheticEl = document.createElement('p');
     aestheticEl.textContent = `Aesthetic: ${aesthetic}`;
     sidebar.appendChild(aestheticEl);
@@ -220,47 +207,40 @@ function updatePreview() {
 }
 
 function saveProfile() {
-  if (!currentUser) return;
+  if(!currentUser) return;
 
-  const handleEl = document.getElementById('handle');
-  profileData.handle = handleEl ? handleEl.value.trim() : '';
-
-  const dealbreakersEl = document.getElementById('dealbreakers');
-  profileData.dealbreakers = dealbreakersEl ? dealbreakersEl.value.trim() : '';
-
+  profileData.handle = document.getElementById('handle').value.trim();
+  profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
   profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
-  profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
-  const aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic;
-  profileData.aesthetic = aesthetic || '';
+  profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
+  profileData.aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic || '';
+  profileData.onboardingComplete = true;
 
   loadingOverlay.classList.remove('hidden');
 
-  setDoc(doc(db, `users/${currentUser.uid}/profiles/influencer`), profileData, { merge: true })
-    .then(() => window.location.href = 'matches.html')
-    .catch(err => {
-      debugOutput.textContent = JSON.stringify(err, null, 2);
+  setDoc(doc(db, `artifacts/users/${currentUser.uid}/profile`), profileData, {merge:true})
+    .then(()=> window.location.href = 'bookDash.html')
+    .catch(err=>{
+      debugOutput.textContent = JSON.stringify(err,null,2);
       errorOverlay.classList.remove('hidden');
     })
-    .finally(() => loadingOverlay.classList.add('hidden'));
+    .finally(()=> loadingOverlay.classList.add('hidden'));
 }
 
 // Event listeners
 document.getElementById('preview-matches-btn').addEventListener('click', saveProfile);
 document.getElementById('save-finish-btn').addEventListener('click', saveProfile);
-
-// Live preview updates
 document.getElementById('handle').addEventListener('input', updatePreview);
 document.getElementById('dealbreakers').addEventListener('input', updatePreview);
-document.querySelectorAll('input[name="platform"]').forEach(cb => cb.addEventListener('change', updatePreview));
-document.querySelectorAll('input[name="collabStyle"]').forEach(rb => rb.addEventListener('change', updatePreview));
-document.querySelectorAll('.aesthetic-option').forEach(option => {
-  option.addEventListener('click', () => {
-    document.querySelectorAll('.aesthetic-option').forEach(opt => opt.classList.remove('selected'));
+document.querySelectorAll('input[name="platform"]').forEach(cb=>cb.addEventListener('change', updatePreview));
+document.querySelectorAll('input[name="collabStyle"]').forEach(rb=>rb.addEventListener('change', updatePreview));
+document.querySelectorAll('.aesthetic-option').forEach(option=>{
+  option.addEventListener('click',()=>{
+    document.querySelectorAll('.aesthetic-option').forEach(opt=>opt.classList.remove('selected'));
     option.classList.add('selected');
     updatePreview();
   });
 });
-
 </script>
 </body>
 </html>
