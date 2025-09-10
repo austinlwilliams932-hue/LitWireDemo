@@ -34,7 +34,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
 
-<!-- Header -->
 <header class="header-top">
 <nav>
 <div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
@@ -42,7 +41,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <a href="index.html">Home</a>
 <a href="profile.html">Profile</a>
 <a href="feed.html">Feed</a>
-<a href="messages.html">Messages</a>
 <a href="matches.html">Matches</a>
 <a href="bookDash.html">Dashboard</a>
 <a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
@@ -69,14 +67,13 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <button onclick="document.getElementById('error-overlay').classList.add('hidden'); document.getElementById('loading').classList.add('hidden');" class="button mt-4">Close</button>
 </div>
 
-<!-- Fixed Import Button -->
 <button id="import-dashboard-btn" class="button">Import To Dashboard</button>
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -84,8 +81,7 @@ const firebaseConfig = {
     projectId: "litwire-97956",
     storageBucket: "litwire-97956.firebasestorage.app",
     messagingSenderId: "263009111921",
-    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-    measurementId: "G-ZWVFHF5YQX"
+    appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -108,20 +104,17 @@ signOutBtn.addEventListener('click', async () => {
 
 function renderPlan(planData) {
     planContainer.innerHTML = '';
-
-    if (!planData || !planData.length) {
+    if(!planData || !planData.length){
         planContainer.innerHTML = `<div class="content-card text-center text-gray-700">No marketing opportunities found.</div>`;
         importBtn.style.display = 'none';
     } else {
-        planData.forEach(item => {
+        planData.forEach(item=>{
             const card = document.createElement('div');
             card.className = 'content-card';
-
             const influencerName = item["Opportunity Name"] || 'Unknown';
             const platform = item["Platform "] || 'Unknown Platform';
             const type = item.Type || 'Unknown Type';
             const audience = item["Est. Audience Size"] || 'Unknown Audience Size';
-
             card.innerHTML = `
                 <h2 class="text-xl font-semibold mb-2">${influencerName}</h2>
                 <p class="mb-2"><strong>Platform:</strong> ${platform}</p>
@@ -129,50 +122,50 @@ function renderPlan(planData) {
                 <p class="mb-2"><strong>Estimated Audience Size:</strong> ${audience}</p>
                 <button class="button mt-2" onclick="alert('Message button clicked for ${influencerName}')">Message</button>
             `;
-
             planContainer.appendChild(card);
         });
 
-        // Import to Dashboard button
         importBtn.style.display = 'block';
         importBtn.onclick = async () => {
-            if (!auth.currentUser) return;
-            const userDocRef = doc(db, `users/${auth.currentUser.uid}`);
+            if(!auth.currentUser) return;
+            const userDocRef = doc(db, `artifacts/users/${auth.currentUser.uid}/profile`);
             try {
-                // Use setDoc with merge to avoid not-found errors
-                await setDoc(userDocRef, { onboardingComplete: true }, { merge: true });
-                window.location.href = 'bookDash.html';
-            } catch (err) {
+                await updateDoc(userDocRef, { onboardingComplete: true });
+                // update CTA immediately on home page
+                alert('Marketing plan imported! You can now access your dashboard.');
+            } catch(err){
                 debugOutput.textContent = JSON.stringify(err, null, 2);
                 show(errorOverlay);
             }
         };
     }
-
     hide(loadingEl);
     show(planContainer);
 }
 
-async function init() {
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) { window.location.href = 'index.html'; return; }
-        const userId = user.uid;
-
-        try {
-            const docRef = doc(db, `users/${userId}/profiles/author`);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const planData = docSnap.data().marketingPlan || [];
-                renderPlan(planData);
-            } else {
-                renderPlan([]);
+async function init(){
+    try {
+        onAuthStateChanged(auth, async (user)=>{
+            if(!user){ window.location.href='index.html'; return; }
+            const userId = user.uid;
+            try {
+                const docRef = doc(db, `users/${userId}/profiles/author`);
+                const docSnap = await getDoc(docRef);
+                if(docSnap.exists()){
+                    const planData = docSnap.data().marketingPlan || [];
+                    renderPlan(planData);
+                } else {
+                    renderPlan([]);
+                }
+            } catch(err){
+                debugOutput.textContent = JSON.stringify(err,null,2);
+                show(errorOverlay);
             }
-        } catch (err) {
-            debugOutput.textContent = JSON.stringify(err, null, 2);
-            show(errorOverlay);
-        }
-    });
+        });
+    } catch(err){
+        debugOutput.textContent = JSON.stringify(err,null,2);
+        show(errorOverlay);
+    }
 }
 
 init();
