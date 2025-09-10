@@ -10,10 +10,9 @@
 <style>
 body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 .container { max-width: 900px; margin: 0 auto; }
-.content-card { background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; position: relative; }
+.content-card { background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
 .button { background-color: #2e598b; color: #fff; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; }
 .button:hover { background-color: #234368; }
-.badge { position: absolute; top: 1rem; right: 1rem; background-color: #e0f2fe; color: #0369a1; font-weight: bold; padding: 0.25rem 0.75rem; border-radius: 9999px; }
 .spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .hidden { display: none; }
@@ -21,23 +20,28 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 .loading-overlay { background-color: rgba(0,0,0,0.7); }
 #error-overlay { background-color: rgba(255,0,0,0.85); font-family: monospace; overflow:auto; }
 #error-overlay.hidden, .loading-overlay.hidden { display:none; }
+
+/* Header */
 .header-top { width:100%; background-color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.05); position:fixed; top:0; z-index:50; }
 .header-top nav { max-width: 1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:1rem; }
 .header-top a { color:#4b5563; font-weight:500; text-decoration:none; transition:color 0.2s; }
 .header-top a:hover { color:#2e598b; }
 .main { margin-top:6rem; padding:2rem; }
+.tag { display:inline-block; padding:0.25rem 0.75rem; border-radius:9999px; font-size:0.875rem; font-weight:500; background-color:#dbeafe; color:#1e3a8a; margin:0.125rem; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
 <header class="header-top">
 <nav>
-<div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
+<div class="text-3xl font-bold text-gray-800">
+<a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a>
+</div>
 <div class="flex gap-6">
 <a href="index.html">Home</a>
 <a href="profile.html">Profile</a>
 <a href="feed.html">Feed</a>
-<a href="matches.html">Matches</a>
+<a href="matches.html" class="text-blue-900 font-semibold">Matches</a>
 <a href="bookDash.html">Dashboard</a>
 <a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
 </div>
@@ -74,15 +78,13 @@ const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
     authDomain: "litwire-97956.firebaseapp.com",
     projectId: "litwire-97956",
-    storageBucket: "litwire-97956.appspot.com",
+    storageBucket: "litwire-97956.app",
     messagingSenderId: "263009111921",
     appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-const CLOUD_RUN_URL = "https://geminicall-737284668725.us-east4.run.app/";
 
 const loadingEl = document.getElementById('loading');
 const matchesContainer = document.getElementById('matches-container');
@@ -98,71 +100,85 @@ signOutBtn.addEventListener('click', async () => {
     window.location.href = 'index.html';
 });
 
-function renderMatch(profile){
+function renderMatch(profile) {
     const el = document.createElement('div');
     el.className = 'content-card';
+
+    const percentBadge = profile.matchPercentage
+        ? `<span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">${profile.matchPercentage}% match</span>`
+        : '';
+
     el.innerHTML = `
-        ${profile.matchPercent ? `<div class="badge">${profile.matchPercent}% Match</div>` : ""}
-        <h2 class="text-xl font-semibold mb-2">${profile["Opportunity Name"] || 'Unknown'}</h2>
+        <div class="flex justify-between items-center">
+            <h2 class="text-xl font-semibold mb-2">${profile["Opportunity Name"] || 'Unknown'}</h2>
+            ${percentBadge}
+        </div>
         <p class="mb-1"><strong>Platform:</strong> ${profile["Platform "] || 'Unknown'}</p>
         <p class="mb-1"><strong>Type:</strong> ${profile.Type || 'Unknown'}</p>
         <p class="mb-1"><strong>Estimated Audience:</strong> ${profile["Est. Audience Size"] || 'Unknown'}</p>
-        ${profile.blurb ? `<p class="mt-3 text-gray-700 italic">${profile.blurb}</p>` : ""}
-        ${profile["Source Link"] ? `<button class="button mt-2" onclick="window.open('${profile["Source Link"]}','_blank')">View Profile</button>` : ""}
+        ${profile.blurb ? `<p class="mt-2 text-gray-700">${profile.blurb}</p>` : ''}
+        ${profile["Source Link"] 
+            ? `<button class="button mt-2" onclick="window.open('${profile["Source Link"]}','_blank')">View Profile</button>`
+            : ''}
     `;
     matchesContainer.appendChild(el);
 }
 
-async function callCloudRun(bookProfile, influencers){
+async function callCloudRun(userProfile, influencers) {
     try {
-        const res = await fetch(CLOUD_RUN_URL, {
+        const res = await fetch("https://geminicall-737284668725.us-east4.run.app/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ profile: bookProfile, influencers })
+            body: JSON.stringify({ profile: userProfile, influencers })
         });
+
+        if (!res.ok) throw new Error(`CF error: ${res.status}`);
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Cloud Function failed");
         console.log("CF RESPONSE:", data);
-        return data.matches || [];
-    } catch(err){
-        console.error("CF ERROR:", err);
-        debugOutput.textContent = err.message || JSON.stringify(err,null,2);
-        show(errorOverlay);
-        return [];
+        return data;
+    } catch (err) {
+        console.error("Cloud Function Call Failed:", err);
+        return { marketingPlan: [] };
     }
 }
 
-async function init(){
+async function init() {
     show(loadingEl);
     matchesContainer.innerHTML = '';
+
     try {
-        onAuthStateChanged(auth, async (user)=>{
-            if(!user){ window.location.href='index.html'; return; }
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { 
+                window.location.href = 'index.html'; 
+                return; 
+            }
+
             const docRef = doc(db, `users/${user.uid}/profiles/author`);
             const docSnap = await getDoc(docRef);
-            if(!docSnap.exists()){
-                matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No profile found.</p>`;
-                hide(loadingEl); show(matchesContainer); return;
-            }
-            const userProfile = docSnap.data();
-            const influencers = userProfile.marketingPlan || [];
 
-            // Send both profile + influencers to CF to enrich
-            const enrichedMatches = await callCloudRun(userProfile, influencers);
-
-            if(enrichedMatches.length === 0){
+            if (!docSnap.exists()) {
                 matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
-            } else {
-                enrichedMatches.forEach(renderMatch);
+                hide(loadingEl);
+                show(matchesContainer);
+                return;
             }
+
+            const userProfile = docSnap.data();
+            console.log("USER PROFILE:", userProfile);
+
+            const cfResponse = await callCloudRun(userProfile, []);
+            if (cfResponse?.marketingPlan?.length) {
+                cfResponse.marketingPlan.forEach(profile => renderMatch(profile));
+            } else {
+                matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
+            }
+
             hide(loadingEl);
             show(matchesContainer);
         });
-    } catch(err){
-        console.error("INIT ERROR:", err);
-        debugOutput.textContent = err.stack || JSON.stringify(err,null,2);
+    } catch (err) {
+        debugOutput.textContent = JSON.stringify(err, null, 2);
         show(errorOverlay);
-        hide(loadingEl);
     }
 }
 
