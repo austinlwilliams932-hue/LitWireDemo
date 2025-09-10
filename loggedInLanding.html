@@ -1,200 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LitWire - Feed</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    
-    <script>
-        window.__firebase_config = JSON.stringify({
-            apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-            authDomain: "litwire-97956.firebaseapp.com",
-            projectId: "litwire-97956",
-            storageBucket: "litwire-97956.firebasestorage.app",
-            messagingSenderId: "263009111921",
-            appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-            measurementId: "G-ZWVFHF5YQX"
-        });
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LitWire - Feed</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
-        window.__app_id = "litwire-app";
-        window.__initial_auth_token = "some-auth-token"; // This will be provided by Canvas
-    </script>
-    
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-    </style>
+<style>
+body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+.container { max-width: 800px; margin: 0 auto; }
+.loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; color:#fff; text-align:center; }
+.spinner { border:4px solid rgba(255,255,255,0.3); border-top:4px solid #fff; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+#error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(255,0,0,0.85); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:60; text-align:center; padding:1rem; font-family:monospace; overflow:auto; }
+#error-overlay.hidden { display:none; }
+</style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-    <header class="bg-white shadow-md py-4 w-full sticky top-0 z-50">
-        <nav class="container flex justify-between items-center px-4 md:px-8">
-            <div class="text-3xl font-bold text-gray-800">
-                <span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span>
-            </div>
-            <div class="flex items-center space-x-6">
-                <a href="profile.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Profile</a>
-                <a href="matches.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Matches</a>
-                <button id="sign-out-btn" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Sign Out</button>
-            </div>
-        </nav>
-    </header>
 
-    <main class="flex-grow container mt-12 px-4 md:px-8">
-        <div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
-            <h1 class="text-2xl font-bold mb-4 text-gray-900">LitWire Feed</h1>
-            <form id="new-post-form" class="space-y-4">
-                <textarea id="post-content" rows="4" placeholder="What's new in the world of books?" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3"></textarea>
-                <button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Post</button>
-            </form>
+<header class="bg-white shadow-md py-4 w-full sticky top-0 z-50">
+<nav class="container flex justify-between items-center px-4 md:px-8">
+<div class="text-3xl font-bold text-gray-800"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></div>
+<div class="flex items-center space-x-6">
+<a href="profile.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Profile</a>
+<a href="matches.html" class="text-gray-800 font-medium py-2 px-4 rounded-lg hover:text-blue-900 transition duration-300">Matches</a>
+<button id="sign-out-btn" class="bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Sign Out</button>
+</div>
+</nav>
+</header>
+
+<main class="flex-grow container mt-12 px-4 md:px-8">
+<div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
+<h1 class="text-2xl font-bold mb-4 text-gray-900">LitWire Feed</h1>
+<form id="new-post-form" class="space-y-4">
+<textarea id="post-content" rows="4" placeholder="What's new in the world of books?" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3"></textarea>
+<button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Post</button>
+</form>
+</div>
+
+<div id="feed-container" class="space-y-6">
+<!-- Faux posts -->
+<div class="bg-white p-6 rounded-xl shadow-md border border-gray-200" data-is-fake="true">
+<div class="flex items-center space-x-4 mb-2">
+<i class="fas fa-user-circle text-gray-400 text-2xl"></i>
+<span class="font-semibold text-gray-800">Reading Rex</span>
+</div>
+<p class="text-gray-700">Just finished 'Dune' for the first time. The world-building is incredible! I can't believe I waited so long to read it.</p>
+<p class="text-xs text-gray-400 mt-2">1 hour ago</p>
+</div>
+<div class="bg-white p-6 rounded-xl shadow-md border border-gray-200" data-is-fake="true">
+<div class="flex items-center space-x-4 mb-2">
+<i class="fas fa-user-circle text-gray-400 text-2xl"></i>
+<span class="font-semibold text-gray-800">Bookish Betty</span>
+</div>
+<p class="text-gray-700">Looking for a good historical fiction recommendation. Something set in the roaring twenties would be great!</p>
+<p class="text-xs text-gray-400 mt-2">3 hours ago</p>
+</div>
+</div>
+</main>
+
+<footer class="bg-gray-800 text-white py-6 mt-12 w-full">
+<div class="container text-center text-sm">&copy; 2024 LitWire. All rights reserved.</div>
+</footer>
+
+<div id="loading-overlay" class="loading-overlay hidden">
+<div class="spinner mb-4"></div>
+<div class="text-xl font-medium">Loading...</div>
+</div>
+
+<div id="error-overlay" class="hidden">
+<h2 class="text-2xl font-bold mb-4">Error</h2>
+<pre id="debug-output" class="whitespace-pre-wrap"></pre>
+<button onclick="document.getElementById('error-overlay').classList.add('hidden'); document.getElementById('loading-overlay').classList.add('hidden');" class="btn btn-primary mt-4">Close</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+const firebaseConfig = JSON.parse(window.__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const signOutBtn = document.getElementById('sign-out-btn');
+const newPostForm = document.getElementById('new-post-form');
+const postContentInput = document.getElementById('post-content');
+const feedContainer = document.getElementById('feed-container');
+const loadingOverlay = document.getElementById('loading-overlay');
+const errorOverlay = document.getElementById('error-overlay');
+const debugOutput = document.getElementById('debug-output');
+
+let userId = null;
+let userProfile = null;
+
+// Require sign-in
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = 'index.html'; // redirect if not logged in
+    return;
+  }
+  userId = user.uid;
+
+  try {
+    const userDoc = await getDoc(doc(db, `users/${userId}/profile`));
+    if (userDoc.exists()) {
+      userProfile = userDoc.data();
+    } else {
+      userProfile = { name: 'User' };
+    }
+    setupFeedListener();
+  } catch (err) {
+    debugOutput.textContent = JSON.stringify(err, null, 2);
+    errorOverlay.classList.remove('hidden');
+  }
+});
+
+// Sign out
+signOutBtn.addEventListener('click', async () => {
+  await signOut(auth);
+  window.location.href = 'index.html';
+});
+
+// Real-time feed listener
+function setupFeedListener() {
+  const feedCollectionRef = collection(db, 'feed');
+  const q = query(feedCollectionRef, orderBy('createdAt', 'desc'));
+
+  onSnapshot(q, (snapshot) => {
+    // Remove previous real posts
+    Array.from(feedContainer.children)
+      .filter(el => !el.dataset.isFake)
+      .forEach(el => el.remove());
+
+    snapshot.forEach(docSnap => {
+      const post = docSnap.data();
+      const postElement = document.createElement('div');
+      postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
+      postElement.innerHTML = `
+        <div class="flex items-center space-x-4 mb-2">
+          <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
+          <span class="font-semibold text-gray-800">${post.authorName || 'User'}</span>
         </div>
-        
-        <div id="feed-container" class="space-y-6">
-            <!-- Faux posts to show off the way that the page would look -->
-            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                <div class="flex items-center space-x-4 mb-2">
-                    <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
-                    <span class="font-semibold text-gray-800">Reading Rex</span>
-                </div>
-                <p class="text-gray-700">Just finished 'Dune' for the first time. The world-building is incredible! I can't believe I waited so long to read it.</p>
-                <p class="text-xs text-gray-400 mt-2">1 hour ago</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-                <div class="flex items-center space-x-4 mb-2">
-                    <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
-                    <span class="font-semibold text-gray-800">Bookish Betty</span>
-                </div>
-                <p class="text-gray-700">Looking for a good historical fiction recommendation. Something set in the roaring twenties would be great!</p>
-                <p class="text-xs text-gray-400 mt-2">3 hours ago</p>
-            </div>
-            <!-- Real-time feed posts will be dynamically added here -->
-        </div>
-    </main>
+        <p class="text-gray-700">${post.content}</p>
+        <p class="text-xs text-gray-400 mt-2">${post.createdAt?.toDate ? post.createdAt.toDate().toLocaleString() : ''}</p>
+      `;
+      feedContainer.appendChild(postElement);
+    });
+  });
+}
 
-    <footer class="bg-gray-800 text-white py-6 mt-12 w-full">
-        <div class="container text-center text-sm">
-            &copy; 2024 LitWire. All rights reserved.
-        </div>
-    </footer>
+// Handle post submission
+newPostForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const content = postContentInput.value.trim();
+  if (!content || !userId) return;
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Firebase Configuration
-        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(window.__firebase_config);
-        const app = initializeApp(firebaseConfig, appId);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        // Ensure anonymous sign-in
-        if (!auth.currentUser) {
-          signInAnonymously(auth);
-        }
-
-        // DOM Elements
-        const signOutBtn = document.getElementById('sign-out-btn');
-        const newPostForm = document.getElementById('new-post-form');
-        const postContentInput = document.getElementById('post-content');
-        const feedContainer = document.getElementById('feed-container');
-
-        // User Data
-        let userId = null;
-        let userProfile = null;
-
-        // Firebase Authentication Listener
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                // Fetch user profile
-                try {
-                    const userDoc = await getDoc(doc(db, `artifacts/${appId}/users/${userId}/profile/data`));
-                    if (userDoc.exists()) {
-                        userProfile = userDoc.data();
-                    } else {
-                        // User is logged in but has no profile
-                        // We will allow them to post anonymously
-                        userProfile = { name: "Anonymous" };
-                    }
-                } catch (error) {
-                    console.error("Error fetching user profile:", error);
-                    userProfile = { name: "Anonymous" };
-                }
-                
-                // Set up real-time feed listener
-                setupFeedListener();
-
-            } else {
-                // User is not signed in, sign in anonymously
-                await signInAnonymously(auth);
-            }
-        });
-
-        // Sign Out
-        signOutBtn.addEventListener('click', async () => {
-            await signOut(auth);
-            // After signing out, sign back in anonymously to keep the user on the page.
-            await signInAnonymously(auth);
-        });
-
-        // Set up Real-time Feed Listener
-        function setupFeedListener() {
-            const feedCollectionRef = collection(db, `artifacts/${appId}/public/data/feed`);
-            const q = query(feedCollectionRef, orderBy('createdAt', 'desc'));
-
-            onSnapshot(q, (snapshot) => {
-                // Clear only the dynamically added real-time posts
-                // We'll leave the faux posts at the top
-                const existingPosts = Array.from(feedContainer.children).filter(child => child.dataset.isFake !== 'true');
-                existingPosts.forEach(post => post.remove());
-
-                snapshot.forEach((doc) => {
-                    const post = doc.data();
-                    const postElement = document.createElement('div');
-                    postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
-                    postElement.innerHTML = `
-                        <div class="flex items-center space-x-4 mb-2">
-                            <i class="fas fa-user-circle text-gray-400 text-2xl"></i>
-                            <span class="font-semibold text-gray-800">${post.authorName || 'Anonymous'}</span>
-                        </div>
-                        <p class="text-gray-700">${post.content}</p>
-                        <p class="text-xs text-gray-400 mt-2">${new Date(post.createdAt.toDate()).toLocaleString()}</p>
-                    `;
-                    feedContainer.appendChild(postElement);
-                });
-            });
-        }
-
-        // Handle New Post Submission
-        newPostForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const content = postContentInput.value.trim();
-            if (content && userId) {
-                const authorName = userProfile ? userProfile.name : 'Anonymous';
-                const feedCollectionRef = collection(db, `artifacts/${appId}/public/data/feed`);
-                try {
-                    await addDoc(feedCollectionRef, {
-                        content: content,
-                        authorId: userId,
-                        authorName: authorName,
-                        createdAt: serverTimestamp()
-                    });
-                    postContentInput.value = ''; // Clear input after post
-                } catch (error) {
-                    console.error("Error adding post:", error);
-                }
-            }
-        });
-    </script>
+  try {
+    await addDoc(collection(db, 'feed'), {
+      content,
+      authorId: userId,
+      authorName: userProfile?.name || 'User',
+      createdAt: serverTimestamp()
+    });
+    postContentInput.value = '';
+  } catch (err) {
+    debugOutput.textContent = JSON.stringify(err, null, 2);
+    errorOverlay.classList.remove('hidden');
+  }
+});
+</script>
 </body>
 </html>
+``
