@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- DOM elements ---
+// --- DOM Elements ---
 const mainContentView = document.getElementById("main-content-view");
 const navContainer = document.getElementById("nav-container");
 const loginModal = document.getElementById("login-modal");
@@ -28,7 +28,7 @@ const signupForm = document.getElementById("signup-form");
 const loginMessage = document.getElementById("login-message");
 const signupMessage = document.getElementById("signup-message");
 
-// --- Modal functions ---
+// --- Modal helpers ---
 function showModal(modal) {
     modal.classList.remove("hidden");
 }
@@ -38,7 +38,7 @@ function hideModal(modal) {
     signupMessage.textContent = "";
 }
 
-// Close buttons for modals
+// Close buttons
 document.querySelectorAll('.close-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const modal = btn.closest('.modal');
@@ -46,7 +46,7 @@ document.querySelectorAll('.close-btn').forEach(btn => {
     });
 });
 
-// --- Navbar rendering ---
+// --- Navbar Rendering ---
 function renderNavbar(user){
     navContainer.innerHTML = "";
     if(user){
@@ -71,28 +71,29 @@ function renderNavbar(user){
     }
 }
 
-// --- Auth listener ---
-onAuthStateChanged(auth,user=>{
-    mainContentView.classList.remove("hidden");
+// --- Auth State Listener ---
+onAuthStateChanged(auth, user => {
+    mainContentView.classList.remove("hidden"); // show onboarding/main content
     renderNavbar(user);
 });
 
 // --- Login ---
-loginForm.addEventListener("submit", async e=>{
+loginForm.addEventListener("submit", async e => {
     e.preventDefault();
     const email = loginForm["login-email"].value;
     const password = loginForm["login-password"].value;
-    try{
-        await signInWithEmailAndPassword(auth,email,password);
+
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
         hideModal(loginModal);
-    }catch(err){
+    } catch (err) {
         loginMessage.textContent = err.message;
         loginMessage.style.color = "red";
     }
 });
 
 // --- Signup ---
-signupForm.addEventListener("submit", async e=>{
+signupForm.addEventListener("submit", async e => {
     e.preventDefault();
     const email = signupForm["signup-email"].value;
     const password = signupForm["signup-password"].value;
@@ -101,29 +102,35 @@ signupForm.addEventListener("submit", async e=>{
     const bio = signupForm["signup-bio"].value;
     const photo = signupForm["signup-photo"].value || null;
 
-    try{
-        const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // --- Firestore path fix ---
-        await setDoc(doc(db,`artifacts/users/${user.uid}/profile`),{name,email,role,bio,photo});
+        // Store profile in Firestore (fixed path)
+        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {name, email, role, bio, photo});
 
         hideModal(signupModal);
-    }catch(err){
+    } catch (err) {
         signupMessage.textContent = err.message;
         signupMessage.style.color = "red";
     }
 });
 
-// --- Hero buttons (Author / Influencer) ---
+// --- Hero / Onboarding Buttons ---
 document.querySelectorAll(".btn-author").forEach(btn => {
-    btn.addEventListener("click", () => {
-        window.location.href = "author.html";
-    });
+    btn.addEventListener("click", () => window.location.href = "author.html");
 });
 document.querySelectorAll(".btn-influencer").forEach(btn => {
-    btn.addEventListener("click", () => {
-        window.location.href = "influencer.html";
-    });
+    btn.addEventListener("click", () => window.location.href = "influencer.html");
+});
+
+// --- Optional: Show onboarding steps only if not logged in ---
+onAuthStateChanged(auth, user => {
+    const onboarding = document.getElementById("onboarding-view");
+    if(user) {
+        onboarding?.classList.add("hidden"); // hide onboarding if logged in
+    } else {
+        onboarding?.classList.remove("hidden"); // show onboarding if not logged in
+    }
 });
 </script>
