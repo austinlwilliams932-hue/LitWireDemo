@@ -74,6 +74,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
     authDomain: "litwire-97956.firebaseapp.com",
@@ -86,6 +87,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// DOM elements
 const loadingEl = document.getElementById('loading');
 const matchesContainer = document.getElementById('matches-container');
 const debugOutput = document.getElementById('debug-output');
@@ -95,11 +97,13 @@ const signOutBtn = document.getElementById('sign-out-btn');
 function show(el){ el.classList.remove('hidden'); }
 function hide(el){ el.classList.add('hidden'); }
 
+// Sign out
 signOutBtn.addEventListener('click', async () => {
     await signOut(auth);
     window.location.href = 'index.html';
 });
 
+// Render a single influencer card
 function renderMatch(profile) {
     const el = document.createElement('div');
     el.className = 'content-card';
@@ -122,6 +126,19 @@ function renderMatch(profile) {
     matchesContainer.appendChild(el);
 }
 
+// Fetch influencers from Firestore
+async function fetchInfluencers() {
+    try {
+        const influencersCol = collection(db, "influencers"); // adjust path if needed
+        const snapshot = await getDocs(influencersCol);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (err) {
+        console.error("Failed to fetch influencers:", err);
+        return [];
+    }
+}
+
+// Call Cloud Function with author profile + influencer list
 async function callCloudRun(userProfile, influencers) {
     try {
         const res = await fetch("https://geminicall-737284668725.us-east4.run.app/", {
@@ -149,6 +166,7 @@ async function callCloudRun(userProfile, influencers) {
     }
 }
 
+// Initialize page
 async function init() {
     show(loadingEl);
     matchesContainer.innerHTML = '';
@@ -175,13 +193,11 @@ async function init() {
             // Fetch influencers from Firestore
             const influencers = await fetchInfluencers();
 
-            // Call Cloud Function with author profile + influencers
+            // Call CF with author profile + influencers
             const cfResponse = await callCloudRun(userProfile, influencers);
 
             if (cfResponse?.marketingPlan?.length) {
-                cfResponse.marketingPlan.forEach((profile, i) => {
-                    // Merge influencer name from Firestore
-                    profile.name = influencers[i]?.name ?? `Influencer ${i+1}`;
+                cfResponse.marketingPlan.forEach(profile => {
                     renderMatch(profile);
                 });
             } else {
