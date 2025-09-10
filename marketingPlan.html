@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 <style>
-body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 .container { max-width: 900px; margin: 0 auto; }
 .content-card { background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
 .button { background-color: #2e598b; color: #fff; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; }
@@ -21,26 +21,36 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 #error-overlay { background-color: rgba(255,0,0,0.85); font-family: monospace; overflow:auto; }
 #error-overlay.hidden, .loading-overlay.hidden { display:none; }
 
+/* Header */
+.header-top { width:100%; background-color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.05); position:fixed; top:0; z-index:50; }
+.header-top nav { max-width: 1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:1rem; }
+.header-top a { color:#4b5563; font-weight:500; text-decoration:none; transition:color 0.2s; }
+.header-top a:hover { color:#2e598b; }
+.main { margin-top:6rem; padding:2rem; }
+
 /* Fixed Import Button */
-#import-dashboard-btn {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    z-index: 100;
-    display: none;
-}
+#import-dashboard-btn { position: fixed; bottom: 2rem; right: 2rem; z-index: 100; display: none; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
 
-<header class="w-full bg-white shadow-md py-4">
-<nav class="container flex justify-between items-center px-4 md:px-8">
-<div class="text-3xl font-bold text-gray-800"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></div>
-<a href="loggedInLanding.html" class="text-gray-600 hover:text-blue-900 font-medium transition duration-300"><i class="fas fa-home mr-2"></i>Home</a>
+<!-- Header -->
+<header class="header-top">
+<nav>
+<div class="text-3xl font-bold text-gray-800"><a href="loggedInLanding.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
+<div class="flex gap-6">
+<a href="loggedInLanding.html">Home</a>
+<a href="profile.html">Profile</a>
+<a href="feed.html">Feed</a>
+<a href="messages.html">Messages</a>
+<a href="matches.html">Matches</a>
+<a href="bookDash.html">Dashboard</a>
+<a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
+</div>
 </nav>
 </header>
 
-<main class="flex-grow container mt-24 mb-12 px-4 md:px-8">
+<main class="main container">
 <div class="text-center mb-8">
 <h1 class="text-4xl font-bold text-gray-900 mb-2">Your Marketing Plan</h1>
 <p class="text-lg text-gray-600">Powered by Gemini AI</p>
@@ -65,7 +75,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -86,9 +96,15 @@ const planContainer = document.getElementById('plan-container');
 const debugOutput = document.getElementById('debug-output');
 const errorOverlay = document.getElementById('error-overlay');
 const importBtn = document.getElementById('import-dashboard-btn');
+const signOutBtn = document.getElementById('sign-out-btn');
 
 function show(el) { el.classList.remove('hidden'); }
 function hide(el) { el.classList.add('hidden'); }
+
+signOutBtn.addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = 'index.html';
+});
 
 function renderPlan(planData) {
     planContainer.innerHTML = '';
@@ -117,11 +133,8 @@ function renderPlan(planData) {
             planContainer.appendChild(card);
         });
 
-        // Show Import button when plan exists
         importBtn.style.display = 'block';
-        importBtn.onclick = () => {
-            window.location.href = 'bookDash.html';
-        };
+        importBtn.onclick = () => { window.location.href = 'bookDash.html'; };
     }
 
     hide(loadingEl);
@@ -131,10 +144,7 @@ function renderPlan(planData) {
 async function init() {
     try {
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.href = 'index.html'; // redirect if not signed in
-                return;
-            }
+            if (!user) { window.location.href = 'index.html'; return; }
             const userId = user.uid;
 
             try {
