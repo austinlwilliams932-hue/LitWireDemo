@@ -21,11 +21,19 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 #error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(255,0,0,0.85); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:60; text-align:center; padding:1rem; font-family:monospace; overflow:auto; }
 #error-overlay.hidden { display:none; }
+
+.chip-container { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip { display: inline-flex; align-items: center; background-color: #e5e7eb; border-radius: 9999px; padding: 0.25rem 0.75rem; font-size: 0.875rem; font-weight: 500; color: #4b5563; cursor: pointer; }
+.chip.active { background-color: #2e598b; color: #fff; }
+
+.slider-labels { display: flex; justify-content: space-between; font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; }
+
+.quiz-question { display: none; }
+.quiz-question.active { display: block; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
 
-<!-- Header -->
 <header class="bg-white shadow-md py-4 sticky top-0 z-50 w-full">
     <nav class="container flex justify-between items-center px-4 md:px-8">
         <div class="text-3xl font-bold text-gray-800"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></div>
@@ -41,64 +49,236 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 
 <div class="form-card">
 <form id="author-form" class="space-y-6" novalidate>
-<div>
-<label for="book-title" class="block text-sm font-medium text-gray-700 mb-2">Book Title *</label>
-<input type="text" id="book-title" name="bookTitle" placeholder="Enter the title" class="form-input">
+
+<div class="space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Book Basics</h2>
+    <div>
+        <label for="book-title" class="block text-sm font-medium text-gray-700 mb-2">Book Title *</label>
+        <input type="text" id="book-title" name="bookTitle" placeholder="Enter the title" class="form-input">
+    </div>
+    <div>
+        <label for="book-cover" class="block text-sm font-medium text-gray-700 mb-2">Book Cover Upload</label>
+        <input type="file" id="book-cover" name="bookCover" class="form-input p-2" accept="image/*">
+    </div>
+    <div>
+        <label for="book-description" class="block text-sm font-medium text-gray-700 mb-2">Book Synopsis *</label>
+        <textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea"></textarea>
+    </div>
+    <div>
+        <label for="genre" class="block text-sm font-medium text-gray-700 mb-2">Genre & Tags *</label>
+        <select id="genre" name="genre" class="form-select">
+            <option value="">Select Genre</option>
+            <optgroup label="Fiction">
+                <option value="romance">Romance</option>
+                <option value="fantasy">Fantasy</option>
+                <option value="sci-fi">Science Fiction</option>
+                <option value="thriller">Thriller</option>
+                <option value="mystery">Mystery</option>
+                <option value="historical-fiction">Historical Fiction</option>
+                <option value="literary-fiction">Literary Fiction</option>
+            </optgroup>
+            <optgroup label="Non-Fiction">
+                <option value="memoir">Memoir</option>
+                <option value="biography">Biography</option>
+                <option value="self-help">Self-Help</option>
+                <option value="cookbooks">Cookbooks</option>
+                <option value="history">History</option>
+            </optgroup>
+        </select>
+        <input type="text" id="trope-tags" name="tropeTags" placeholder="e.g., enemies-to-lovers, found family, murder mystery" class="form-input mt-2">
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Format Available</label>
+        <div class="flex flex-wrap gap-4">
+            <label class="flex items-center"><input type="checkbox" name="formatAvailable" value="print" class="mr-2"> Print</label>
+            <label class="flex items-center"><input type="checkbox" name="formatAvailable" value="ebook" class="mr-2"> Ebook</label>
+            <label class="flex items-center"><input type="checkbox" name="formatAvailable" value="audio" class="mr-2"> Audio</label>
+        </div>
+    </div>
+    <div>
+        <label for="comp-titles" class="block text-sm font-medium text-gray-700 mb-2">Comp Titles</label>
+        <textarea id="comp-titles" name="compTitles" rows="2" placeholder="List 2-3 books similar to yours (e.g., 'The Last Thing He Told Me' meets 'Gone Girl')" class="form-textarea"></textarea>
+    </div>
+    <div>
+        <label for="author-bio" class="block text-sm font-medium text-gray-700 mb-2">Author Bio</label>
+        <textarea id="author-bio" name="authorBio" rows="3" placeholder="Write a short bio about yourself..." class="form-textarea"></textarea>
+    </div>
+    <div>
+        <label for="trigger-warnings" class="block text-sm font-medium text-gray-700 mb-2">Trigger Warnings</label>
+        <input type="text" id="trigger-warnings" name="triggerWarnings" placeholder="e.g., violence, substance abuse, graphic content" class="form-input">
+    </div>
+    <div>
+        <label for="page-length" class="block text-sm font-medium text-gray-700 mb-2">Page Length</label>
+        <input type="number" id="page-length" name="pageLength" placeholder="e.g., 320" class="form-input">
+    </div>
 </div>
-<div>
-<label for="book-description" class="block text-sm font-medium text-gray-700 mb-2">Book Description *</label>
-<textarea id="book-description" name="bookDescription" rows="4" placeholder="Briefly describe your book..." class="form-textarea"></textarea>
+
+---
+
+<div class="space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Target Audience</h2>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Age Group</label>
+        <div id="age-group-chips" class="chip-container">
+            <span class="chip" data-value="children">Children</span>
+            <span class="chip" data-value="young-adults">Young Adults</span>
+            <span class="chip" data-value="new-adults">New Adults</span>
+            <span class="chip" data-value="adults">Adults</span>
+            <input type="hidden" name="ageGroup" id="age-group-input">
+        </div>
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Themes & Identity Markers</label>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <label class="flex items-center"><input type="checkbox" name="targetThemes" value="queer" class="mr-2"> Queer</label>
+            <label class="flex items-center"><input type="checkbox" name="targetThemes" value="bipoc" class="mr-2"> BIPOC</label>
+            <label class="flex items-center"><input type="checkbox" name="targetThemes" value="mental-health" class="mr-2"> Mental Health</label>
+            <label class="flex items-center"><input type="checkbox" name="targetThemes" value="disability" class="mr-2"> Disability</label>
+            <label class="flex items-center"><input type="checkbox" name="targetThemes" value="historical" class="mr-2"> Historical</label>
+        </div>
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Geography</label>
+        <div class="flex items-center gap-4">
+            <label class="flex items-center"><input type="radio" name="geography" value="domestic" checked class="mr-2"> Domestic</label>
+            <label class="flex items-center"><input type="radio" name="geography" value="international" class="mr-2"> International</label>
+        </div>
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Reader Communities</label>
+        <div class="flex flex-wrap gap-4">
+            <label class="flex items-center"><input type="checkbox" name="readerCommunities" value="book-clubs" class="mr-2"> Book Clubs</label>
+            <label class="flex items-center"><input type="checkbox" name="readerCommunities" value="schools" class="mr-2"> Schools</label>
+            <label class="flex items-center"><input type="checkbox" name="readerCommunities" value="libraries" class="mr-2"> Libraries</label>
+        </div>
+    </div>
 </div>
-<div>
-<label for="subgenre" class="block text-sm font-medium text-gray-700 mb-2">Subgenre *</label>
-<select id="subgenre" name="subgenre" class="form-select">
-<option value="">Select subgenre</option>
-<option value="fantasy">Fantasy</option>
-<option value="sci-fi">Science Fiction</option>
-<option value="thriller">Thriller</option>
-<option value="romance">Romance</option>
-<option value="mystery">Mystery</option>
-</select>
+
+---
+
+<div class="space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Promotion Preferences</h2>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Channels You Want to Work With</label>
+        <select multiple id="promotion-channels" name="promotionChannels" class="form-select h-32">
+            <option value="tiktok">TikTok</option>
+            <option value="instagram">Instagram</option>
+            <option value="podcasts">Podcasts</option>
+            <option value="book-tours">Book Tours</option>
+            <option value="book-clubs">Book Clubs</option>
+            <option value="street-teams">Street Teams</option>
+            <option value="libraries">Libraries</option>
+            <option value="schools">Schools</option>
+        </select>
+    </div>
+    <div>
+        <label for="influencer-wishlist" class="block text-sm font-medium text-gray-700 mb-2">Influencer Wishlist (Optional)</label>
+        <textarea id="influencer-wishlist" name="influencerWishlist" rows="2" placeholder="Any influencers you'd love to work with?" class="form-textarea"></textarea>
+    </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<div id="target-audience-field">
-<label class="block text-sm font-medium text-gray-700 mb-2">Target Audience *</label>
-<div class="space-y-2">
-<div><input type="checkbox" name="targetAudience" value="Adults"> Adults</div>
-<div><input type="checkbox" name="targetAudience" value="Young Adults"> Young Adults</div>
-<div><input type="checkbox" name="targetAudience" value="Teens"> Teens</div>
-<div><input type="checkbox" name="targetAudience" value="Children"> Children</div>
+
+---
+
+<div class="space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Author Personality & Comfort</h2>
+    <div>
+        <label for="collaborative-structured" class="block text-sm font-medium text-gray-700 mb-2">Collaborative vs. Structured</label>
+        <input type="range" id="collaborative-structured" name="collaborativeStructured" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2e598b]">
+        <div class="slider-labels">
+            <span>Collaborative</span>
+            <span>Structured</span>
+        </div>
+    </div>
+    <div>
+        <label for="text-video" class="block text-sm font-medium text-gray-700 mb-2">Text vs. Video</label>
+        <input type="range" id="text-video" name="textVideo" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2e598b]">
+        <div class="slider-labels">
+            <span>Text</span>
+            <span>Video</span>
+        </div>
+    </div>
+    
+    <div class="bg-gray-50 p-6 rounded-xl">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Find your author personality type</h3>
+        <p class="text-sm text-gray-600 mb-4">Answer three quick questions to get a personality tag that helps us find the best fit for you.</p>
+        <div id="mini-quiz">
+            <div class="quiz-question active" data-q="1">
+                <p class="font-medium mb-2">What is your favorite way to interact with your readers?</p>
+                <div class="space-y-2">
+                    <label class="block"><input type="radio" name="q1" value="a" class="mr-2"> In-person at events</label>
+                    <label class="block"><input type="radio" name="q1" value="b" class="mr-2"> Online through written Q&A sessions</label>
+                    <label class="block"><input type="radio" name="q1" value="c" class="mr-2"> Through short, fun videos</label>
+                </div>
+            </div>
+            <div class="quiz-question" data-q="2">
+                <p class="font-medium mb-2">How do you prefer to share news about your book?</p>
+                <div class="space-y-2">
+                    <label class="block"><input type="radio" name="q2" value="a" class="mr-2"> Through a well-crafted blog post or newsletter</label>
+                    <label class="block"><input type="radio" name="q2" value="b" class="mr-2"> Live on a podcast or radio show</label>
+                    <label class="block"><input type="radio" name="q2" value="c" class="mr-2"> With a quick video announcement</label>
+                </div>
+            </div>
+            <div class="quiz-question" data-q="3">
+                <p class="font-medium mb-2">What kind of content are you most comfortable creating?</p>
+                <div class="space-y-2">
+                    <label class="block"><input type="radio" name="q3" value="a" class="mr-2"> Detailed unboxings and visual content</label>
+                    <label class="block"><input type="radio" name="q3" value="b" class="mr-2"> Short, witty captions and quick updates</label>
+                    <label class="block"><input type="radio" name="q3" value="c" class="mr-2"> Long-form interviews and discussions</label>
+                </div>
+            </div>
+            <div id="quiz-results" class="hidden text-center mt-4">
+                <p class="text-gray-700">Your personality tag is: <span id="personality-tag" class="font-bold text-blue-800"></span></p>
+                <input type="hidden" id="personality-input" name="personalityTag">
+            </div>
+            <button type="button" id="next-quiz-btn" class="btn-continue mt-4">Next Question</button>
+        </div>
+    </div>
 </div>
+
+---
+
+<div class="space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Campaign Window</h2>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Dates *</label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <input type="date" id="start-date" name="startDate" class="form-input">
+            <input type="date" id="end-date" name="endDate" class="form-input">
+        </div>
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Milestones</label>
+        <div class="space-y-2">
+            <div class="flex items-center gap-2">
+                <input type="date" name="milestone-arc" class="form-input" placeholder="ARC Release">
+                <span class="text-sm text-gray-500">ARC Release</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="date" name="milestone-pub" class="form-input" placeholder="Publication Date">
+                <span class="text-sm text-gray-500">Publication Date</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="date" name="milestone-preorder" class="form-input" placeholder="Preorder Window">
+                <span class="text-sm text-gray-500">Preorder Window</span>
+            </div>
+        </div>
+    </div>
+    <div>
+        <label for="campaign-notes" class="block text-sm font-medium text-gray-700 mb-2">Optional Notes</label>
+        <textarea id="campaign-notes" name="campaignNotes" rows="2" placeholder="e.g., 'focus on UK bloggers'" class="form-textarea"></textarea>
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Desired Post Type</label>
+        <div class="flex flex-wrap gap-4">
+            <label class="flex items-center"><input type="checkbox" name="postType" value="unboxing" class="mr-2"> Unboxing</label>
+            <label class="flex items-center"><input type="checkbox" name="postType" value="review" class="mr-2"> Review</label>
+            <label class="flex items-center"><input type="checkbox" name="postType" value="author-interview" class="mr-2"> Author Interview</label>
+            <label class="flex items-center"><input type="checkbox" name="postType" value="giveaway" class="mr-2"> Giveaway</label>
+        </div>
+    </div>
 </div>
-<div id="promotion-channels-field">
-<label class="block text-sm font-medium text-gray-700 mb-2">Promotion Channels *</label>
-<div class="space-y-2">
-<div><input type="checkbox" name="promotionChannels" value="Instagram"> Instagram</div>
-<div><input type="checkbox" name="promotionChannels" value="BookTok"> BookTok</div>
-<div><input type="checkbox" name="promotionChannels" value="Podcasts"> Podcasts</div>
-<div><input type="checkbox" name="promotionChannels" value="Book Tours"> Book Tours</div>
-<div><input type="checkbox" name="promotionChannels" value="Book Clubs"> Book Clubs</div>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Campaign Dates *</label>
-<div class="grid grid-cols-2 gap-4">
-<input type="date" id="start-date" name="startDate" class="form-input">
-<input type="date" id="end-date" name="endDate" class="form-input">
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Budget ($) *</label>
-<input type="number" id="budget" name="budget" placeholder="Enter budget" class="form-input">
-</div>
-</div>
-<div>
-<label for="promotion-comfort" class="block text-sm font-medium text-gray-700 mb-2">Promotion Comfort</label>
-<input type="range" id="promotion-comfort" name="promotionComfort" min="1" max="5" value="3" class="w-full">
-</div>
-<div class="text-center">
+
+<div class="text-center mt-6">
 <button type="submit" id="continue-btn" class="btn-continue">Continue</button>
 <p id="error-message" class="text-red-500 text-sm mt-2 hidden"></p>
 </div>
@@ -123,13 +303,13 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-  authDomain: "litwire-97956.firebaseapp.com",
-  projectId: "litwire-97956",
-  storageBucket: "litwire-97956.appspot.com",
-  messagingSenderId: "263009111921",
-  appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-  measurementId: "G-ZWVFHF5YQX"
+    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+    authDomain: "litwire-97956.firebaseapp.com",
+    projectId: "litwire-97956",
+    storageBucket: "litwire-97956.appspot.com",
+    messagingSenderId: "263009111921",
+    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+    measurementId: "G-ZWVFHF5YQX"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -142,8 +322,16 @@ const errorMessage = document.getElementById('error-message');
 const loadingOverlay = document.getElementById('loading-overlay');
 const errorOverlay = document.getElementById('error-overlay');
 const debugOutput = document.getElementById('debug-output');
+const ageGroupChips = document.getElementById('age-group-chips');
+const quizContainer = document.getElementById('mini-quiz');
+const nextQuizBtn = document.getElementById('next-quiz-btn');
+const quizQuestions = document.querySelectorAll('.quiz-question');
+const quizResults = document.getElementById('quiz-results');
+const personalityTagSpan = document.getElementById('personality-tag');
+const personalityInput = document.getElementById('personality-input');
 
 let currentUser = null;
+let currentQuestionIndex = 0;
 
 // Navbar rendering
 function renderNavbar(user){
@@ -164,95 +352,226 @@ function renderNavbar(user){
 
 // Ensure user is logged in and pre-fill form if data exists
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = 'index.html';
-    return;
-  }
-  currentUser = user;
-  renderNavbar(user);
-
-  const docRef = doc(db, `users/${user.uid}/profiles/author`);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    document.getElementById('book-title').value = data.bookTitle || '';
-    document.getElementById('book-description').value = data.bookDescription || '';
-    document.getElementById('subgenre').value = data.subgenre || '';
-    document.getElementById('start-date').value = data.startDate || '';
-    document.getElementById('end-date').value = data.endDate || '';
-    document.getElementById('budget').value = data.budget || '';
-    document.getElementById('promotion-comfort').value = data.promotionComfort || '3';
-
-    if (Array.isArray(data.targetAudience)) {
-      data.targetAudience.forEach(val => {
-        const checkbox = document.querySelector(`input[name="targetAudience"][value="${val}"]`);
-        if (checkbox) checkbox.checked = true;
-      });
+    if (!user) {
+        window.location.href = 'index.html';
+        return;
     }
+    currentUser = user;
+    renderNavbar(user);
 
-    if (Array.isArray(data.promotionChannels)) {
-      data.promotionChannels.forEach(val => {
-        const checkbox = document.querySelector(`input[name="promotionChannels"][value="${val}"]`);
-        if (checkbox) checkbox.checked = true;
-      });
+    const docRef = doc(db, `users/${user.uid}/profiles/author`);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        document.getElementById('book-title').value = data.bookTitle || '';
+        document.getElementById('book-description').value = data.bookSynopsis || '';
+        document.getElementById('genre').value = data.genre || '';
+        document.getElementById('trope-tags').value = data.tropeTags || '';
+        document.getElementById('comp-titles').value = data.compTitles || '';
+        document.getElementById('author-bio').value = data.authorBio || '';
+        document.getElementById('trigger-warnings').value = data.triggerWarnings || '';
+        document.getElementById('page-length').value = data.pageLength || '';
+        document.getElementById('influencer-wishlist').value = data.influencerWishlist || '';
+        document.getElementById('campaign-notes').value = data.campaignNotes || '';
+        document.getElementById('start-date').value = data.startDate || '';
+        document.getElementById('end-date').value = data.endDate || '';
+        document.getElementById('budget').value = data.budget || '';
+
+        // Handle checkbox and multi-select values
+        ['formatAvailable', 'targetThemes', 'readerCommunities', 'postType'].forEach(name => {
+            if (Array.isArray(data[name])) {
+                data[name].forEach(val => {
+                    const checkbox = document.querySelector(`input[name="${name}"][value="${val}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+        });
+
+        // Handle multi-select dropdown
+        if (Array.isArray(data.promotionChannels)) {
+            const select = document.getElementById('promotion-channels');
+            for (let i = 0; i < select.options.length; i++) {
+                if (data.promotionChannels.includes(select.options[i].value)) {
+                    select.options[i].selected = true;
+                }
+            }
+        }
+        
+        // Handle radio buttons
+        if (data.geography) {
+            const radio = document.querySelector(`input[name="geography"][value="${data.geography}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        // Handle chips
+        if (data.ageGroup) {
+            const chips = ageGroupChips.querySelectorAll('.chip');
+            chips.forEach(chip => {
+                if (chip.dataset.value === data.ageGroup) {
+                    chip.classList.add('active');
+                }
+            });
+            document.getElementById('age-group-input').value = data.ageGroup;
+        }
+
+        // Handle sliders
+        document.getElementById('collaborative-structured').value = data.collaborativeStructured || '50';
+        document.getElementById('text-video').value = data.textVideo || '50';
+
+        // Handle milestones
+        if (data.milestones) {
+            Object.keys(data.milestones).forEach(key => {
+                const input = document.querySelector(`input[name="milestone-${key}"]`);
+                if (input) input.value = data.milestones[key];
+            });
+        }
+
+        // Handle personality tag
+        if (data.personalityTag) {
+            personalityTagSpan.textContent = data.personalityTag;
+            personalityInput.value = data.personalityTag;
+            quizQuestions.forEach(q => q.classList.remove('active'));
+            quizResults.classList.remove('hidden');
+            nextQuizBtn.classList.add('hidden');
+        }
     }
-  }
 });
+
+// Logic for chips (age group)
+ageGroupChips.addEventListener('click', (e) => {
+    const target = e.target;
+    if (target.classList.contains('chip')) {
+        ageGroupChips.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+        target.classList.add('active');
+        document.getElementById('age-group-input').value = target.dataset.value;
+    }
+});
+
+// Logic for mini quiz
+nextQuizBtn.addEventListener('click', () => {
+    const currentQuestion = quizQuestions[currentQuestionIndex];
+    const selectedAnswer = document.querySelector(`input[name="q${currentQuestionIndex + 1}"]:checked`);
+    
+    if (!selectedAnswer) {
+        alert("Please select an answer to continue.");
+        return;
+    }
+
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizQuestions.length) {
+        currentQuestion.classList.remove('active');
+        quizQuestions[currentQuestionIndex].classList.add('active');
+    } else {
+        currentQuestion.classList.remove('active');
+        nextQuizBtn.classList.add('hidden');
+        showPersonalityTag();
+    }
+});
+
+function showPersonalityTag() {
+    const answers = {
+        q1: document.querySelector('input[name="q1"]:checked').value,
+        q2: document.querySelector('input[name="q2"]:checked').value,
+        q3: document.querySelector('input[name="q3"]:checked').value,
+    };
+    
+    let tag = '';
+    // A simplified logic to determine personality tag based on answers
+    const scores = { a: 0, b: 0, c: 0 };
+    for (const key in answers) {
+        scores[answers[key]]++;
+    }
+
+    if (scores.a > scores.b && scores.a > scores.c) {
+        tag = 'Low-Key Networker';
+    } else if (scores.b > scores.a && scores.b > scores.c) {
+        tag = 'Podcast Natural';
+    } else if (scores.c > scores.a && scores.c > scores.b) {
+        tag = 'TikTok Friendly';
+    } else {
+        // Handle ties or other combinations
+        tag = 'All-Rounder';
+    }
+    
+    personalityTagSpan.textContent = tag;
+    personalityInput.value = tag;
+    quizResults.classList.remove('hidden');
+}
 
 // Handle form submission
 form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  errorMessage.classList.add('hidden');
-  loadingOverlay.classList.remove('hidden');
+    e.preventDefault();
+    errorMessage.classList.add('hidden');
+    loadingOverlay.classList.remove('hidden');
 
-  if (!currentUser) {
-    window.location.href = 'index.html';
-    return;
-  }
+    if (!currentUser) {
+        window.location.href = 'index.html';
+        return;
+    }
 
-  const formData = {
-    bookTitle: document.getElementById('book-title').value.trim(),
-    bookDescription: document.getElementById('book-description').value.trim(),
-    subgenre: document.getElementById('subgenre').value,
-    startDate: document.getElementById('start-date').value,
-    endDate: document.getElementById('end-date').value,
-    budget: document.getElementById('budget').value,
-    promotionComfort: document.getElementById('promotion-comfort').value,
-    targetAudience: Array.from(document.querySelectorAll('input[name="targetAudience"]:checked')).map(el => el.value),
-    promotionChannels: Array.from(document.querySelectorAll('input[name="promotionChannels"]:checked')).map(el => el.value)
-  };
+    const formData = {
+        bookTitle: document.getElementById('book-title').value.trim(),
+        bookSynopsis: document.getElementById('book-description').value.trim(),
+        bookCover: document.getElementById('book-cover').files.length > 0 ? document.getElementById('book-cover').files[0].name : '',
+        genre: document.getElementById('genre').value,
+        tropeTags: document.getElementById('trope-tags').value,
+        formatAvailable: Array.from(document.querySelectorAll('input[name="formatAvailable"]:checked')).map(el => el.value),
+        compTitles: document.getElementById('comp-titles').value.trim(),
+        authorBio: document.getElementById('author-bio').value.trim(),
+        triggerWarnings: document.getElementById('trigger-warnings').value.trim(),
+        pageLength: document.getElementById('page-length').value,
+        ageGroup: document.getElementById('age-group-input').value,
+        targetThemes: Array.from(document.querySelectorAll('input[name="targetThemes"]:checked')).map(el => el.value),
+        geography: document.querySelector('input[name="geography"]:checked').value,
+        readerCommunities: Array.from(document.querySelectorAll('input[name="readerCommunities"]:checked')).map(el => el.value),
+        promotionChannels: Array.from(document.getElementById('promotion-channels').options).filter(opt => opt.selected).map(opt => opt.value),
+        influencerWishlist: document.getElementById('influencer-wishlist').value.trim(),
+        collaborativeStructured: document.getElementById('collaborative-structured').value,
+        textVideo: document.getElementById('text-video').value,
+        personalityTag: document.getElementById('personality-input').value,
+        startDate: document.getElementById('start-date').value,
+        endDate: document.getElementById('end-date').value,
+        milestones: {
+            arc: document.querySelector('input[name="milestone-arc"]').value,
+            pub: document.querySelector('input[name="milestone-pub"]').value,
+            preorder: document.querySelector('input[name="milestone-preorder"]').value,
+        },
+        campaignNotes: document.getElementById('campaign-notes').value.trim(),
+        postType: Array.from(document.querySelectorAll('input[name="postType"]:checked')).map(el => el.value),
+        budget: document.getElementById('budget').value,
+    };
 
-  try {
-    // Call Cloud Function
-    const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        book_title: formData.bookTitle || "Untitled",
-        book_description: formData.bookDescription || "No description",
-        book_genre: formData.subgenre || "Unknown",
-        campaign_length: `${formData.startDate || "2025-01-01"} to ${formData.endDate || "2025-01-07"}`,
-        budget: Number(formData.budget) || 0,
-        desired_audience_type: String(formData.promotionComfort || "beginner")
-      })
-    });
+    try {
+        // Call Cloud Function
+        const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                book_title: formData.bookTitle || "Untitled",
+                book_description: formData.bookSynopsis || "No description",
+                book_genre: formData.genre || "Unknown",
+                campaign_length: `${formData.startDate || "2025-01-01"} to ${formData.endDate || "2025-01-07"}`,
+                budget: Number(formData.budget) || 0,
+                desired_audience_type: String(formData.promotionComfort || "beginner")
+            })
+        });
 
-    const data = await response.json();
-    if (!response.ok) throw data;
+        const data = await response.json();
+        if (!response.ok) throw data;
 
-    // Merge response into Firestore
-    formData.marketingPlan = data.marketingPlan || [];
-    formData.onboardingComplete = true;
+        // Merge response into Firestore
+        formData.marketingPlan = data.marketingPlan || [];
+        formData.onboardingComplete = true;
 
-    await setDoc(doc(db, `users/${currentUser.uid}/profiles/author`), formData, { merge: true });
+        await setDoc(doc(db, `users/${currentUser.uid}/profiles/author`), formData, { merge: true });
 
-    window.location.href = 'marketingPlan.html';
-  } catch (err) {
-    debugOutput.textContent = JSON.stringify(err, null, 2);
-    errorOverlay.classList.remove('hidden');
-  } finally {
-    loadingOverlay.classList.add('hidden');
-  }
+        window.location.href = 'marketingPlan.html';
+    } catch (err) {
+        debugOutput.textContent = JSON.stringify(err, null, 2);
+        errorOverlay.classList.remove('hidden');
+    } finally {
+        loadingOverlay.classList.add('hidden');
+    }
 });
 </script>
 </body>
