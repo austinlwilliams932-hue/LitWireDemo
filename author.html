@@ -573,35 +573,35 @@ form.addEventListener('submit', async (e) => {
     }
 
     const formData = {
-        bookTitle: document.getElementById('book-title')?.value.trim(),
-        bookSynopsis: document.getElementById('book-description')?.value.trim(),
-        bookCover: document.getElementById('book-cover')?.files.length > 0 ? document.getElementById('book-cover')?.files[0].name : '',
-        genre: document.getElementById('genre')?.value,
-        tropeTags: document.getElementById('trope-tags')?.value,
+        bookTitle: document.getElementById('book-title')?.value.trim() ?? '',
+        bookSynopsis: document.getElementById('book-description')?.value.trim() ?? '',
+        bookCover: document.getElementById('book-cover')?.files?.[0]?.name ?? '',
+        genre: document.getElementById('genre')?.value ?? '',
+        tropeTags: document.getElementById('trope-tags')?.value ?? '',
         formatAvailable: Array.from(document.querySelectorAll('input[name="formatAvailable"]:checked')).map(el => el.value),
-        compTitles: document.getElementById('comp-titles')?.value.trim(),
-        authorBio: document.getElementById('author-bio')?.value.trim(),
-        triggerWarnings: document.getElementById('trigger-warnings')?.value.trim(),
-        pageLength: document.getElementById('page-length')?.value,
-        ageGroup: document.getElementById('age-group-input')?.value,
+        compTitles: document.getElementById('comp-titles')?.value.trim() ?? '',
+        authorBio: document.getElementById('author-bio')?.value.trim() ?? '',
+        triggerWarnings: document.getElementById('trigger-warnings')?.value.trim() ?? '',
+        pageLength: document.getElementById('page-length')?.value ?? '',
+        ageGroup: document.getElementById('age-group-input')?.value ?? '',
         targetThemes: Array.from(document.querySelectorAll('input[name="targetThemes"]:checked')).map(el => el.value),
-        geography: document.querySelector('input[name="geography"]:checked')?.value,
+        geography: document.querySelector('input[name="geography"]:checked')?.value ?? '',
         readerCommunities: Array.from(document.querySelectorAll('input[name="readerCommunities"]:checked')).map(el => el.value),
-        promotionChannels: Array.from(document.getElementById('promotion-channels')?.options).filter(opt => opt.selected).map(opt => opt.value),
-        influencerWishlist: document.getElementById('influencer-wishlist')?.value.trim(),
-        collaborativeStructured: document.getElementById('collaborative-structured')?.value,
-        textVideo: document.getElementById('text-video')?.value,
-        personalityTag: document.getElementById('personality-input')?.value,
-        startDate: document.getElementById('start-date')?.value,
-        endDate: document.getElementById('end-date')?.value,
+        promotionChannels: Array.from(document.getElementById('promotion-channels')?.options ?? []).filter(opt => opt.selected).map(opt => opt.value),
+        influencerWishlist: document.getElementById('influencer-wishlist')?.value.trim() ?? '',
+        collaborativeStructured: document.getElementById('collaborative-structured')?.value ?? '50',
+        textVideo: document.getElementById('text-video')?.value ?? '50',
+        personalityTag: document.getElementById('personality-input')?.value ?? 'All-Rounder',
+        startDate: document.getElementById('start-date')?.value ?? '',
+        endDate: document.getElementById('end-date')?.value ?? '',
         milestones: {
-            arc: document.querySelector('input[name="milestone-arc"]')?.value,
-            pub: document.querySelector('input[name="milestone-pub"]')?.value,
-            preorder: document.querySelector('input[name="milestone-preorder"]')?.value,
+            arc: document.querySelector('input[name="milestone-arc"]')?.value ?? '',
+            pub: document.querySelector('input[name="milestone-pub"]')?.value ?? '',
+            preorder: document.querySelector('input[name="milestone-preorder"]')?.value ?? '',
         },
-        campaignNotes: document.getElementById('campaign-notes')?.value.trim(),
+        campaignNotes: document.getElementById('campaign-notes')?.value.trim() ?? '',
         postType: Array.from(document.querySelectorAll('input[name="postType"]:checked')).map(el => el.value),
-        budget: document.getElementById('budget')?.value,
+        budget: document.getElementById('budget')?.value ?? '0',
     };
 
     try {
@@ -615,7 +615,7 @@ form.addEventListener('submit', async (e) => {
                 book_genre: formData.genre || "Unknown",
                 campaign_length: `${formData.startDate || "2025-01-01"} to ${formData.endDate || "2025-01-07"}`,
                 budget: Number(formData.budget) || 0,
-                desired_audience_type: String(formData.promotionComfort || "beginner")
+                desired_audience_type: String(formData.personalityTag || "All-Rounder")
             })
         });
 
