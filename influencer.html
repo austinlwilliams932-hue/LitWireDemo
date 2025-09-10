@@ -59,11 +59,11 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 </header>
 
 <form id="onboarding-form">
-<!-- Steps 1-4 placeholder -->
-<div id="step-1" class="step-container active"> ... </div>
-<div id="step-2" class="step-container"> ... </div>
-<div id="step-3" class="step-container"> ... </div>
-<div id="step-4" class="step-container"> ... </div>
+<!-- Steps 1-4 empty placeholders -->
+<div id="step-1" class="step-container active"></div>
+<div id="step-2" class="step-container"></div>
+<div id="step-3" class="step-container"></div>
+<div id="step-4" class="step-container"></div>
 
 <div class="flex justify-between mt-8">
 <button type="button" id="back-btn" class="btn btn-secondary disabled:opacity-50" disabled>Back</button>
@@ -83,6 +83,11 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <div id="loading-overlay" class="loading-overlay hidden">
 <div class="spinner mb-4"></div>
 <div class="text-xl font-medium">Saving your profile...</div>
+</div>
+
+<div id="auth-loading" class="loading-overlay hidden">
+<div class="spinner mb-4"></div>
+<div class="text-xl font-medium">Checking authentication...</div>
 </div>
 
 <div id="error-overlay" class="hidden">
@@ -124,10 +129,14 @@ const backBtn = document.getElementById('back-btn');
 const nextBtn = document.getElementById('next-btn');
 const finalCtas = document.getElementById('final-ctas');
 const loadingOverlay = document.getElementById('loading-overlay');
+const authLoading = document.getElementById('auth-loading');
 const errorOverlay = document.getElementById('error-overlay');
 const debugOutput = document.getElementById('debug-output');
 
+authLoading.classList.remove('hidden');
+
 onAuthStateChanged(auth, async (user) => {
+  authLoading.classList.add('hidden');
   if (!user) {
     window.location.href = 'index.html';
     return;
@@ -167,38 +176,14 @@ function updatePreview() {
   handleEl.className = 'text-xl font-bold mb-2';
   handleEl.textContent = handle;
   sidebar.appendChild(handleEl);
-  const genres = Array.from(document.querySelectorAll('.bg-blue-100[data-genre]')).map(el => el.dataset.genre);
-  if (genres.length) {
-    const genreEl = document.createElement('p');
-    genreEl.textContent = `Genres: ${genres.join(', ')}`;
-    sidebar.appendChild(genreEl);
-  }
-  const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
-  if (platforms.length) {
-    const platformEl = document.createElement('p');
-    platformEl.textContent = `Platforms: ${platforms.join(', ')}`;
-    sidebar.appendChild(platformEl);
-  }
-  const selectedAesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic;
-  if (selectedAesthetic) {
-    const aestheticEl = document.createElement('p');
-    aestheticEl.textContent = `Aesthetic: ${selectedAesthetic}`;
-    sidebar.appendChild(aestheticEl);
-  }
-  sidebar.classList.remove('hidden');
 }
 
 async function saveProfile() {
   if (!currentUser) return;
-  profileData.handle = document.getElementById('handle').value.trim();
-  profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
+  profileData.handle = document.getElementById('handle')?.value.trim() || '';
+  profileData.dealbreakers = document.getElementById('dealbreakers')?.value.trim() || '';
   profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
   profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
-  profileData.genres = Array.from(document.querySelectorAll('.bg-blue-100[data-genre]')).map(el => el.dataset.genre);
-  profileData.tropes = Array.from(document.querySelectorAll('.bg-blue-100[data-trope]')).map(el => el.dataset.trope);
-  profileData.visibility = Array.from(document.querySelectorAll('.bg-blue-100[data-visibility]')).map(el => el.dataset.visibility);
-  const selectedAesthetic = document.querySelector('.aesthetic-option.selected');
-  profileData.aesthetic = selectedAesthetic ? selectedAesthetic.dataset.aesthetic : '';
   loadingOverlay.classList.remove('hidden');
   try {
     await setDoc(doc(db, `users/${currentUser.uid}/profiles/influencer`), profileData, { merge: true });
@@ -221,10 +206,12 @@ function updateView() {
   nextBtn.style.display = currentStep === totalSteps ? 'none' : 'inline-block';
   finalCtas.style.display = currentStep === totalSteps ? 'block' : 'none';
 }
+
 nextBtn.addEventListener('click', () => { if (currentStep < totalSteps) { currentStep++; updateView(); updatePreview(); }});
 backBtn.addEventListener('click', () => { if (currentStep > 1) { currentStep--; updateView(); updatePreview(); }});
 document.getElementById('preview-matches-btn').addEventListener('click', saveProfile);
 document.getElementById('save-finish-btn').addEventListener('click', saveProfile);
+
 document.addEventListener('DOMContentLoaded', () => { updateView(); updatePreview(); });
 </script>
 </body>
