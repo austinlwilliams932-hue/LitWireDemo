@@ -10,24 +10,21 @@
 <style>
 body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 .container { max-width: 900px; margin: 0 auto; }
-.content-card { background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
-.button { background-color: #2e598b; color: #fff; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; }
-.button:hover { background-color: #234368; }
-.spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.hidden { display: none; }
-.loading-overlay, #error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; color:#fff; text-align:center; padding:1rem; }
-.loading-overlay { background-color: rgba(0,0,0,0.7); }
-#error-overlay { background-color: rgba(255,0,0,0.85); font-family: monospace; overflow:auto; }
-#error-overlay.hidden, .loading-overlay.hidden { display:none; }
-
-/* Header */
 .header-top { width:100%; background-color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.05); position:fixed; top:0; z-index:50; }
 .header-top nav { max-width: 1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:1rem; }
 .header-top a { color:#4b5563; font-weight:500; text-decoration:none; transition:color 0.2s; }
 .header-top a:hover { color:#2e598b; }
 .main { margin-top:6rem; padding:2rem; }
-.tag { display:inline-block; padding:0.25rem 0.75rem; border-radius:9999px; font-size:0.875rem; font-weight:500; background-color:#dbeafe; color:#1e3a8a; margin:0.125rem; }
+.content-card { background-color: #fff; padding:1.5rem; border-radius:1rem; box-shadow:0 5px 10px rgba(0,0,0,0.05); margin-bottom:1.5rem; }
+.tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; background-color: #dbeafe; color: #1e3a8a; margin-right: 0.25rem; margin-bottom: 0.25rem; }
+.button { background-color: #2e598b; color: #fff; padding:0.5rem 1rem; border-radius:0.5rem; cursor:pointer; transition:all 0.3s ease; }
+.button:hover { background-color:#234368; }
+.spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width:3rem; height:3rem; animation: spin 1s linear infinite; margin:auto; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.loading-overlay, #error-overlay { position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; text-align:center; padding:1rem; }
+.loading-overlay { background-color: rgba(0,0,0,0.7); color:#fff; }
+#error-overlay { background-color: rgba(255,0,0,0.85); color:#fff; font-family:monospace; overflow:auto; }
+.hidden { display:none; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -48,46 +45,47 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 
 <main class="main container">
 <div class="text-center mb-8">
-<h1 class="text-4xl font-bold text-gray-900 mb-2">Your Matches</h1>
-<p class="text-lg text-gray-600">Matched with influencers based on your book profile</p>
+<h1 class="text-4xl font-bold text-gray-900 mb-2">Find Your Book Matches</h1>
+<p class="text-lg text-gray-600">Powered by Gemini AI</p>
 </div>
 
 <div id="loading" class="loading-overlay">
-<div class="spinner-border"></div>
-<p class="text-xl mt-4">Loading matches...</p>
+    <div class="spinner-border"></div>
+    <p class="mt-2 text-xl">Loading matches...</p>
 </div>
 
-<div id="matches-container" class="w-full hidden"></div>
+<div id="matches-container" class="hidden space-y-6 w-full"></div>
 
 <div id="error-overlay" class="hidden">
 <h2 class="text-2xl font-bold mb-4">Error</h2>
 <pre id="debug-output" class="whitespace-pre-wrap"></pre>
 <button onclick="document.getElementById('error-overlay').classList.add('hidden'); document.getElementById('loading').classList.add('hidden');" class="button mt-4">Close</button>
 </div>
-
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-    authDomain: "litwire-97956.firebaseapp.com",
-    projectId: "litwire-97956",
-    storageBucket: "litwire-97956.app",
-    messagingSenderId: "263009111921",
-    appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
+  apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+  authDomain: "litwire-97956.firebaseapp.com",
+  projectId: "litwire-97956",
+  storageBucket: "litwire-97956.appspot.com",
+  messagingSenderId: "263009111921",
+  appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const CLOUD_RUN_URL = 'https://geminicall-737284668725.us-east4.run.app';
 const loadingEl = document.getElementById('loading');
 const matchesContainer = document.getElementById('matches-container');
-const debugOutput = document.getElementById('debug-output');
 const errorOverlay = document.getElementById('error-overlay');
+const debugOutput = document.getElementById('debug-output');
 const signOutBtn = document.getElementById('sign-out-btn');
 
 function show(el){ el.classList.remove('hidden'); }
@@ -98,51 +96,99 @@ signOutBtn.addEventListener('click', async () => {
     window.location.href = 'index.html';
 });
 
-function renderMatch(profile){
+function renderMatch(profile, matchPercentage, blurb){
     const el = document.createElement('div');
     el.className = 'content-card';
+
+    const badgeColor = matchPercentage >= 80 ? 'bg-green-500' :
+                       matchPercentage >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+
     const interestsHtml = (profile.marketingPlan || []).map(p => `<span class="tag">${p.Type || 'Unknown'}</span>`).join(' ');
+
     el.innerHTML = `
-        <h2 class="text-xl font-semibold mb-2">${profile["Opportunity Name"] || 'Unknown'}</h2>
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="text-xl font-semibold">${profile["Opportunity Name"] || 'Unknown'}</h2>
+            <span class="text-white ${badgeColor} px-3 py-1 rounded-full font-bold">${matchPercentage}% Match</span>
+        </div>
         <p class="mb-1"><strong>Platform:</strong> ${profile["Platform "] || 'Unknown'}</p>
         <p class="mb-1"><strong>Type:</strong> ${profile.Type || 'Unknown'}</p>
         <p class="mb-1"><strong>Estimated Audience:</strong> ${profile["Est. Audience Size"] || 'Unknown'}</p>
         ${interestsHtml ? `<div class="mt-2">${interestsHtml}</div>` : ''}
-        ${profile.Notes ? `<p class="mt-2 italic text-gray-700">${profile.Notes}</p>` : ''}
+        <p class="mt-2 italic text-gray-700">${blurb}</p>
         ${profile["Source Link"] ? `<button class="button mt-2" onclick="window.open('${profile["Source Link"]}','_blank')">View Profile</button>` : ''}
     `;
     matchesContainer.appendChild(el);
 }
 
-async function init(){
+async function callCloudRun(payload){
+    try{
+        const res = await fetch(CLOUD_RUN_URL, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.error || 'Cloud Function error');
+        return data;
+    } catch(err){
+        console.error('Cloud Run fetch error:', err);
+        return { error: err.message || 'Unknown error' };
+    }
+}
+
+onAuthStateChanged(auth, async user => {
+    if(!user){
+        await signInAnonymously(auth);
+        return;
+    }
+
     show(loadingEl);
     matchesContainer.innerHTML = '';
-    try {
-        onAuthStateChanged(auth, async (user)=>{
-            if(!user){ window.location.href='index.html'; return; }
-            const docRef = doc(db, `users/${user.uid}/profiles/author`);
-            const docSnap = await getDoc(docRef);
-            if(docSnap.exists()){
-                const marketingPlan = docSnap.data().marketingPlan || [];
-                if(marketingPlan.length === 0){
-                    matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
-                } else {
-                    marketingPlan.forEach(profile => renderMatch(profile));
-                }
-            } else {
-                matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
-            }
-        });
+
+    try{
+        const userId = user.uid;
+        const docRef = doc(db, `users/${userId}/profiles/author`);
+        const docSnap = await getDoc(docRef);
+        if(!docSnap.exists()){
+            matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
+            hide(loadingEl);
+            show(matchesContainer);
+            return;
+        }
+
+        const userProfile = docSnap.data();
+        const marketingPlan = userProfile.marketingPlan || [];
+
+        if(marketingPlan.length === 0){
+            matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
+        } else {
+            // Call CF for each influencer concurrently to get match% and blurb
+            const results = await Promise.all(marketingPlan.map(async influencer => {
+                const payload = {
+                    book_title: userProfile.bookTitle,
+                    book_description: userProfile.bookDescription,
+                    book_genre: userProfile.subgenre || 'Unknown',
+                    campaign_length: `${userProfile.startDate || "2025-01-01"} to ${userProfile.endDate || "2025-01-07"}`,
+                    budget: Number(userProfile.budget) || 0,
+                    desired_audience_type: String(userProfile.promotionComfort || "beginner"),
+                    user_id: userId
+                };
+                const cfData = await callCloudRun(payload);
+                const matchPercentage = parseInt(cfData.marketingPlan?.[0]?.Match || '80', 10);
+                const blurb = cfData.marketingPlan?.[0]?.Notes || '';
+                return { influencer, matchPercentage, blurb };
+            }));
+
+            results.forEach(r => renderMatch(r.influencer, r.matchPercentage, r.blurb));
+        }
     } catch(err){
-        debugOutput.textContent = JSON.stringify(err,null,2);
+        debugOutput.textContent = JSON.stringify(err, null, 2);
         show(errorOverlay);
     } finally {
         hide(loadingEl);
         show(matchesContainer);
     }
-}
-
-init();
+});
 </script>
 </body>
 </html>
