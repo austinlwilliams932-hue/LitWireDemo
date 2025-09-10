@@ -28,7 +28,6 @@ const signupForm = document.getElementById("signup-form");
 const loginMessage = document.getElementById("login-message");
 const signupMessage = document.getElementById("signup-message");
 
-// --- Modal helpers ---
 function showModal(modal) {
     modal.classList.remove("hidden");
 }
@@ -38,15 +37,7 @@ function hideModal(modal) {
     signupMessage.textContent = "";
 }
 
-// Close buttons
-document.querySelectorAll('.close-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const modal = btn.closest('.modal');
-        if(modal) hideModal(modal);
-    });
-});
-
-// --- Navbar Rendering ---
+// --- Navbar rendering ---
 function renderNavbar(user){
     navContainer.innerHTML = "";
     if(user){
@@ -71,66 +62,74 @@ function renderNavbar(user){
     }
 }
 
-// --- Auth State Listener ---
+// --- Auth state listener ---
 onAuthStateChanged(auth, user => {
-    mainContentView.classList.remove("hidden"); // show onboarding/main content
+    mainContentView.classList.remove("hidden");
     renderNavbar(user);
 });
 
-// --- Login ---
-loginForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const email = loginForm["login-email"].value;
-    const password = loginForm["login-password"].value;
+// --- All DOM-dependent code ---
+document.addEventListener("DOMContentLoaded", () => {
 
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        hideModal(loginModal);
-    } catch (err) {
-        loginMessage.textContent = err.message;
-        loginMessage.style.color = "red";
-    }
-});
+    // --- Modal close buttons ---
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modal = btn.closest('.modal');
+            if(modal) hideModal(modal);
+        });
+    });
 
-// --- Signup ---
-signupForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const email = signupForm["signup-email"].value;
-    const password = signupForm["signup-password"].value;
-    const name = signupForm["signup-name"].value;
-    const role = signupForm["signup-role"].value;
-    const bio = signupForm["signup-bio"].value;
-    const photo = signupForm["signup-photo"].value || null;
+    // --- Login ---
+    loginForm.addEventListener("submit", async e => {
+        e.preventDefault();
+        const email = loginForm["login-email"].value;
+        const password = loginForm["login-password"].value;
+        try{
+            await signInWithEmailAndPassword(auth,email,password);
+            hideModal(loginModal);
+        } catch(err){
+            loginMessage.textContent = err.message;
+            loginMessage.style.color = "red";
+        }
+    });
 
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+    // --- Signup ---
+    signupForm.addEventListener("submit", async e => {
+        e.preventDefault();
+        const email = signupForm["signup-email"].value;
+        const password = signupForm["signup-password"].value;
+        const name = signupForm["signup-name"].value;
+        const role = signupForm["signup-role"].value;
+        const bio = signupForm["signup-bio"].value;
+        const photo = signupForm["signup-photo"].value || null;
 
-        // Store profile in Firestore (fixed path)
-        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {name, email, role, bio, photo});
+        try{
+            const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+            const user = userCredential.user;
+            // Save profile to Firestore
+            await setDoc(doc(db,`artifacts/users/${user.uid}/profile`),{name,email,role,bio,photo});
+            hideModal(signupModal);
+        } catch(err){
+            signupMessage.textContent = err.message;
+            signupMessage.style.color = "red";
+        }
+    });
 
-        hideModal(signupModal);
-    } catch (err) {
-        signupMessage.textContent = err.message;
-        signupMessage.style.color = "red";
-    }
-});
+    // --- Hero / Onboarding buttons ---
+    document.querySelectorAll(".btn-author").forEach(btn => {
+        btn.addEventListener("click", () => window.location.href = "author.html");
+    });
+    document.querySelectorAll(".btn-influencer").forEach(btn => {
+        btn.addEventListener("click", () => window.location.href = "influencer.html");
+    });
 
-// --- Hero / Onboarding Buttons ---
-document.querySelectorAll(".btn-author").forEach(btn => {
-    btn.addEventListener("click", () => window.location.href = "author.html");
-});
-document.querySelectorAll(".btn-influencer").forEach(btn => {
-    btn.addEventListener("click", () => window.location.href = "influencer.html");
-});
-
-// --- Optional: Show onboarding steps only if not logged in ---
-onAuthStateChanged(auth, user => {
-    const onboarding = document.getElementById("onboarding-view");
-    if(user) {
-        onboarding?.classList.add("hidden"); // hide onboarding if logged in
-    } else {
-        onboarding?.classList.remove("hidden"); // show onboarding if not logged in
-    }
+    // --- Show/hide onboarding based on auth ---
+    onAuthStateChanged(auth, user => {
+        const onboarding = document.getElementById("onboarding-view");
+        if(onboarding){
+            if(user) onboarding.classList.add("hidden");
+            else onboarding.classList.remove("hidden");
+        }
+    });
 });
 </script>
