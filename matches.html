@@ -104,25 +104,22 @@ function renderMatch(profile) {
     const el = document.createElement('div');
     el.className = 'content-card';
 
+    const name = profile.name ?? "Unknown Influencer";
+    const audienceSize = profile.audience_size ?? "Unknown";
     const percentage = profile.similarity ?? 0;
+    const blurb = profile.blurb ?? "";
+
     const percentBadge = `<span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">${percentage}% match</span>`;
-    const blurb = profile.blurb ?? '';
-    const name = profile.name ?? 'Influencer Match';
 
     el.innerHTML = `
         <div class="flex justify-between items-center">
             <h2 class="text-xl font-semibold mb-2">${name}</h2>
             ${percentBadge}
         </div>
+        <p class="mb-1"><strong>Estimated Audience:</strong> ${audienceSize}</p>
         ${blurb ? `<p class="mt-2 italic text-gray-700">${blurb}</p>` : ''}
     `;
     matchesContainer.appendChild(el);
-}
-
-async function fetchInfluencers() {
-    const influencersCol = collection(db, "influencers"); // adjust path if different
-    const snapshot = await getDocs(influencersCol);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
 async function callCloudRun(userProfile, influencers) {
