@@ -184,7 +184,7 @@ onAuthStateChanged(auth, user => {
     mainContentView.classList.remove("hidden");
     renderNavbar(user);
     if(!user){
-        // If user is not logged in, show login/signup modal prompt
+        // Show signup modal by default if not logged in
         showModal(signupModal);
     }
 });
@@ -216,7 +216,14 @@ signupForm.addEventListener("submit", async e=>{
     try{
         const userCredential = await createUserWithEmailAndPassword(auth,email,password);
         const user = userCredential.user;
-        await setDoc(doc(db,`/artifacts/users/${user.uid}/profile/data`),{name,email,role,bio,photo});
+        // ✅ FIX: Store profile as single document
+        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {
+            name,
+            email,
+            role,
+            bio,
+            photo
+        });
         hideModal(signupModal);
     }catch(err){
         signupMessage.textContent = err.message;
