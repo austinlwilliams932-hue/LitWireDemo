@@ -66,8 +66,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+import { getFirestore, collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -75,52 +74,52 @@ const firebaseConfig = {
   projectId: "litwire-97956",
   storageBucket: "litwire-97956.firebasestorage.app",
   messagingSenderId: "263009111921",
-  appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-  measurementId: "G-ZWVFHF5YQX"
+  appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 const loadingEl = document.getElementById('loading');
-const matchesContainer = document.getElementById('matches-container');
+const matchesContainer = document.getElementById('matches-container') || document.createElement('div'); // for page with matches
 const signOutBtn = document.getElementById('sign-out-btn');
 
-function show(el){ el.classList.remove('hidden'); }
-function hide(el){ el.classList.add('hidden'); }
+function show(el) { el.classList.remove('hidden'); }
+function hide(el) { el.classList.add('hidden'); }
 
-function renderMatch(profile){
+// Render one match card
+function renderMatch(profile, matchPercentage){
     const el = document.createElement('div');
-    el.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col';
-
-    // Use marketingPlan as interests
+    el.className = 'content-card';
     const interestsHtml = (profile.marketingPlan || []).map(p => `<span class="tag">${p.Type || 'Unknown'}</span>`).join(' ');
-
     el.innerHTML = `
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center space-x-4">
-                <i class="fas fa-user-circle text-gray-400 text-3xl"></i>
-                <div>
-                    <p class="text-xl font-semibold text-gray-900">${profile.bookTitle || 'Untitled Book'}</p>
-                    <p class="text-sm text-gray-500">${profile.bookDescription || 'No description available.'}</p>
-                </div>
+        <div class="flex justify-between items-start mb-2">
+            <div>
+                <h2 class="text-xl font-semibold">${profile.bookTitle || 'Untitled Book'}</h2>
+                <p class="text-gray-500">${profile.bookDescription || 'No description available.'}</p>
             </div>
-            <div class="flex flex-col items-end space-y-2">
-                <button class="button" onclick="window.open('${profile.marketingPlan?.[0]?.SourceLink || '#'}','_blank')">View Profile</button>
+            <div class="text-right">
+                <span class="text-blue-900 font-bold">${matchPercentage}% Match</span><br/>
+                <button class="button mt-2" onclick="window.open('${profile.marketingPlan?.[0]?.SourceLink || '#'}','_blank')">View Profile</button>
             </div>
         </div>
-        <div class="space-y-2 mt-2">
-            <p class="text-sm text-gray-600 font-medium">Marketing Plan:</p>
-            <div class="flex flex-wrap gap-2">${interestsHtml.length ? interestsHtml : '<p class="text-gray-500 text-sm">No marketing info</p>'}</div>
+        <div class="mt-2 flex flex-wrap gap-2">
+            ${interestsHtml.length ? interestsHtml : '<span class="text-gray-500">No marketing info</span>'}
         </div>
     `;
     matchesContainer.appendChild(el);
 }
 
-// Auth logic
-onAuthStateChanged(auth, async user=>{
+// Placeholder Gemini Flash 2.5 function
+async function getMatchPercentage(userBook, profile){
+    // TODO: Replace with real Gemini API call
+    // Compare userBook.bookTitle, bookDescription vs profile.marketingPlan, targetAudience, etc.
+    // For now, random 60-100%
+    return Math.floor(Math.random()*41)+60;
+}
+
+onAuthStateChanged(auth, async user => {
     if(!user){
         await signInAnonymously(auth);
         return;
@@ -129,30 +128,37 @@ onAuthStateChanged(auth, async user=>{
     matchesContainer.innerHTML = '';
 
     try{
+        const userId = user.uid;
+
+        // Get current user's book info
+        const userProfileSnap = await getDoc(doc(db, `users/${userId}/profiles/author`));
+        const userProfile = userProfileSnap.exists() ? userProfileSnap.data() : {};
+
+        // Get all other users
         const usersCol = collection(db, 'users');
         const userDocs = await getDocs(usersCol);
-        const matches = [];
 
-        userDocs.forEach(docSnap=>{
-            const profileDocRef = doc(db, `users/${docSnap.id}/profiles/author`);
-            matches.push(profileDocRef);
-        });
-
-        for(const profileRef of matches){
+        const otherProfiles = [];
+        for(const docSnap of userDocs.docs){
+            if(docSnap.id === userId) continue; // skip yourself
+            const profileRef = doc(db, `users/${docSnap.id}/profiles/author`);
             const profileSnap = await getDoc(profileRef);
             if(profileSnap.exists()){
-                const data = profileSnap.data();
-                renderMatch(data);
+                otherProfiles.push(profileSnap.data());
             }
         }
 
-        if(matchesContainer.childElementCount === 0){
-            matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
+        if(otherProfiles.length === 0){
+            matchesContainer.innerHTML = `<div class="content-card text-center text-gray-500">No matches found.</div>`;
+        } else {
+            for(const profile of otherProfiles){
+                const matchPercentage = await getMatchPercentage(userProfile, profile);
+                renderMatch(profile, matchPercentage);
+            }
         }
-
-    } catch(e){
-        console.error(e);
-        matchesContainer.innerHTML = `<p class="text-red-500 text-center">Error loading matches.</p>`;
+    } catch(err){
+        console.error(err);
+        matchesContainer.innerHTML = `<div class="content-card text-center text-red-500">Error loading matches.</div>`;
     } finally{
         hide(loadingEl);
         show(matchesContainer);
@@ -160,7 +166,7 @@ onAuthStateChanged(auth, async user=>{
 });
 
 // Sign out
-signOutBtn.addEventListener('click', async ()=>{
+signOutBtn?.addEventListener('click', async ()=>{
     await signOut(auth);
     await signInAnonymously(auth);
 });
