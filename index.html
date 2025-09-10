@@ -143,8 +143,7 @@ function hideModal(modal) { modal.classList.remove("show"); loginMessage.textCon
 async function renderNavbar(user){
     navContainer.innerHTML = "";
     if(user){
-        // Corrected doc path
-        const profileRef = doc(db, "artifacts", "users", user.uid, "profile", "myProfileDoc");
+        const profileRef = doc(db, `artifacts/users/${user.uid}/profile`);
         const profileSnap = await getDoc(profileRef, { source: "server" });
         const hasDashboard = profileSnap.exists() && profileSnap.data().onboardingComplete;
 
@@ -175,8 +174,7 @@ async function renderNavbar(user){
 // Update CTA buttons depending on profile completion
 async function updateCTAs(user){
     if(!user) return;
-    // Corrected doc path
-    const profileRef = doc(db, "artifacts", "users", user.uid, "profile", "myProfileDoc");
+    const profileRef = doc(db, `artifacts/users/${user.uid}/profile`);
     const profileSnap = await getDoc(profileRef, { source: "server" }); // fresh read
     const onboardingComplete = profileSnap.exists() ? profileSnap.data().onboardingComplete : false;
 
@@ -223,8 +221,7 @@ signupForm.addEventListener("submit", async e=>{
     try{
         const userCredential = await createUserWithEmailAndPassword(auth,email,password);
         const user = userCredential.user;
-        // CORRECTED LINE: Saves the profile as a document within a 'profile' subcollection
-        await setDoc(doc(db, "artifacts", "users", user.uid, "profile", "myProfileDoc"), {
+        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {
             name,email,role,bio,photo,onboardingComplete:false
         });
         hideModal(signupModal);
