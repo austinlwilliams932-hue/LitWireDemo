@@ -20,6 +20,15 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 .loading-overlay { background-color: rgba(0,0,0,0.7); }
 #error-overlay { background-color: rgba(255,0,0,0.85); font-family: monospace; overflow:auto; }
 #error-overlay.hidden, .loading-overlay.hidden { display:none; }
+
+/* Fixed Import Button */
+#import-dashboard-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 100;
+    display: none;
+}
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
@@ -49,6 +58,9 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <pre id="debug-output" class="whitespace-pre-wrap"></pre>
 <button onclick="document.getElementById('error-overlay').classList.add('hidden'); document.getElementById('loading').classList.add('hidden');" class="button mt-4">Close</button>
 </div>
+
+<!-- Fixed Import Button -->
+<button id="import-dashboard-btn" class="button">Import To Dashboard</button>
 </main>
 
 <script type="module">
@@ -73,6 +85,7 @@ const loadingEl = document.getElementById('loading');
 const planContainer = document.getElementById('plan-container');
 const debugOutput = document.getElementById('debug-output');
 const errorOverlay = document.getElementById('error-overlay');
+const importBtn = document.getElementById('import-dashboard-btn');
 
 function show(el) { el.classList.remove('hidden'); }
 function hide(el) { el.classList.add('hidden'); }
@@ -82,6 +95,7 @@ function renderPlan(planData) {
 
     if (!planData || !planData.length) {
         planContainer.innerHTML = `<div class="content-card text-center text-gray-700">No marketing opportunities found.</div>`;
+        importBtn.style.display = 'none';
     } else {
         planData.forEach(item => {
             const card = document.createElement('div');
@@ -102,6 +116,12 @@ function renderPlan(planData) {
 
             planContainer.appendChild(card);
         });
+
+        // Show Import button when plan exists
+        importBtn.style.display = 'block';
+        importBtn.onclick = () => {
+            window.location.href = 'bookDash.html';
+        };
     }
 
     hide(loadingEl);
