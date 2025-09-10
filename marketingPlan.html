@@ -131,7 +131,6 @@ function renderPlan(planData) {
             const userDocRef = doc(db, `artifacts/users/${auth.currentUser.uid}/profile`);
             try {
                 await updateDoc(userDocRef, { onboardingComplete: true });
-                // update CTA immediately on home page
                 alert('Marketing plan imported! You can now access your dashboard.');
             } catch(err){
                 debugOutput.textContent = JSON.stringify(err, null, 2);
@@ -149,7 +148,8 @@ async function init(){
             if(!user){ window.location.href='index.html'; return; }
             const userId = user.uid;
             try {
-                const docRef = doc(db, `users/${userId}/profiles/author`);
+                // ✅ Correct document path
+                const docRef = doc(db, `artifacts/users/${userId}/profile`);
                 const docSnap = await getDoc(docRef);
                 if(docSnap.exists()){
                     const planData = docSnap.data().marketingPlan || [];
