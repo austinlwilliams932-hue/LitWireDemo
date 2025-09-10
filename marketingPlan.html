@@ -149,7 +149,7 @@ async function init(){
             const userId = user.uid;
             try {
                 // ✅ Correct document path
-                const docRef = doc(db, `artifacts/users/${userId}/profile`);
+                const docRef = doc(db, `users/${userId}/profiles/author`);
                 const docSnap = await getDoc(docRef);
                 if(docSnap.exists()){
                     const planData = docSnap.data().marketingPlan || [];
