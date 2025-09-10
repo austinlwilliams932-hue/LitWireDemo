@@ -60,14 +60,14 @@
 
 <main class="main container">
     <div class="dashboard-header">
-        <img src="https://images.unsplash.com/photo-1543002588-edb4104c7811?q=80&w=1974&auto=format&fit=crop" alt="Book Cover" class="w-24 h-32 object-cover rounded-lg mr-6 shadow-md" />
+        <img id="book-cover" src="" alt="Book Cover" class="w-24 h-32 object-cover rounded-lg mr-6 shadow-md" />
         <div>
             <div class="flex items-center mb-2">
-                <h1 class="text-3xl font-bold text-gray-900 mr-4">The Ember Thief</h1>
+                <h1 id="book-title" class="text-3xl font-bold text-gray-900 mr-4">Your Book</h1>
                 <span class="bg-green-100 text-green-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">Live</span>
             </div>
-            <p class="text-lg text-gray-600 mb-2">Campaign Dates: Oct 1, 2025 - Nov 30, 2025</p>
-            <p class="text-sm text-gray-500">A high-fantasy YA novel by author Elara Vance, targeting the BookTok community.</p>
+            <p id="campaign-dates" class="text-lg text-gray-600 mb-2">Campaign Dates: N/A</p>
+            <p id="book-description" class="text-sm text-gray-500">Loading description...</p>
         </div>
     </div>
 
@@ -82,19 +82,19 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Metrics Summary</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="metric-card">
-                <p class="text-4xl font-bold text-blue-900">58</p>
+                <p id="metric-matches" class="text-4xl font-bold text-blue-900">0</p>
                 <p class="text-gray-600">Matches</p>
             </div>
             <div class="metric-card">
-                <p class="text-4xl font-bold text-blue-900">32</p>
+                <p id="metric-contacted" class="text-4xl font-bold text-blue-900">0</p>
                 <p class="text-gray-600">Influencers Contacted</p>
             </div>
             <div class="metric-card">
-                <p class="text-4xl font-bold text-blue-900">14</p>
+                <p id="metric-confirmed" class="text-4xl font-bold text-blue-900">0</p>
                 <p class="text-gray-600">Confirmed</p>
             </div>
             <div class="metric-card">
-                <p class="text-4xl font-bold text-blue-900">8</p>
+                <p id="metric-posts" class="text-4xl font-bold text-blue-900">0</p>
                 <p class="text-gray-600">Posts Live</p>
             </div>
         </div>
@@ -131,43 +131,8 @@
                 </select>
             </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="influencer-card shadow-lg">
-                <img src="https://images.unsplash.com/photo-1595152772835-219677b10224?q=80&w=1780&auto=format&fit=crop" alt="Influencer Profile">
-                <h3 class="text-xl font-semibold mb-1">BookishBeth</h3>
-                <p class="text-gray-500 mb-2">@BookishBeth</p>
-                <p class="text-gray-700 mb-4">Platforms: TikTok, Instagram</p>
-                <p class="text-gray-700 font-bold mb-2">Reach: 150k</p>
-                <div class="flex flex-wrap gap-2">
-                    <span class="tag">YA Fantasy</span>
-                    <span class="tag">BookTok</span>
-                    <span class="tag">Cozy Vibes</span>
-                </div>
+        <div id="influencer-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             </div>
-            <div class="influencer-card shadow-lg">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format&fit=crop" alt="Influencer Profile">
-                <h3 class="text-xl font-semibold mb-1">ReadsWithRhett</h3>
-                <p class="text-gray-500 mb-2">@RhettReads</p>
-                <p class="text-gray-700 mb-4">Platforms: YouTube</p>
-                <p class="text-gray-700 font-bold mb-2">Reach: 50k</p>
-                <div class="flex flex-wrap gap-2">
-                    <span class="tag">Sci-Fi</span>
-                    <span class="tag">Literary Fiction</span>
-                </div>
-            </div>
-            <div class="influencer-card shadow-lg">
-                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1888&auto=format&fit=crop" alt="Influencer Profile">
-                <h3 class="text-xl font-semibold mb-1">MagicMila</h3>
-                <p class="text-gray-500 mb-2">@MagicMila</p>
-                <p class="text-gray-700 mb-4">Platforms: TikTok</p>
-                <p class="text-gray-700 font-bold mb-2">Reach: 250k</p>
-                <div class="flex flex-wrap gap-2">
-                    <span class="tag">Fantasy</span>
-                    <span class="tag">BookTok</span>
-                    <span class="tag">Thriller</span>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div id="tab-content-analytics" class="dashboard-tab-content">
@@ -193,7 +158,7 @@
         <div id="plan-container" class="w-full"></div>
     </div>
 
-    <div id="loading" class="loading-overlay hidden">
+    <div id="loading" class="loading-overlay">
         <div class="spinner-border" role="status"></div>
         <p class="text-xl mt-4">Loading your dashboard...</p>
     </div>
@@ -214,7 +179,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -231,6 +196,7 @@
 
     const loadingEl = document.getElementById('loading');
     const planContainer = document.getElementById('plan-container');
+    const influencerGrid = document.getElementById('influencer-grid');
     const debugOutput = document.getElementById('debug-output');
     const errorOverlay = document.getElementById('error-overlay');
     const importBtn = document.getElementById('import-dashboard-btn');
@@ -257,6 +223,43 @@
         await signOut(auth);
         window.location.href = 'index.html';
     });
+
+    function renderBookData(bookData) {
+        document.getElementById('book-cover').src = bookData.coverPhoto || 'https://via.placeholder.com/100x150.png?text=No+Cover';
+        document.getElementById('book-title').textContent = bookData.title || 'Untitled Book';
+        document.getElementById('book-description').textContent = bookData.description || 'No description available.';
+        document.getElementById('campaign-dates').textContent = `Published: ${bookData.publishedYear || 'N/A'}`;
+    }
+    
+    function renderInfluencers(influencerData) {
+        influencerGrid.innerHTML = '';
+        if (!influencerData || !influencerData.length) {
+            influencerGrid.innerHTML = `<div class="content-card text-center text-gray-700 col-span-full">No influencers found for this campaign.</div>`;
+            return;
+        }
+
+        influencerData.forEach(item => {
+            const influencerCard = document.createElement('div');
+            influencerCard.className = 'influencer-card shadow-lg';
+            
+            // Generate some dummy data for the parts not in the database
+            const platforms = item["Platform "] ? item["Platform "].split(',').map(p => p.trim()) : ['TikTok'];
+            const reach = item["Est. Audience Size"] || 'Unknown';
+            const alignmentTags = item["Opportunity Name"].includes('BookTok') ? ['YA Fantasy', 'BookTok'] : ['Bookstagram'];
+
+            influencerCard.innerHTML = `
+                <img src="https://i.pravatar.cc/150?u=${item["Opportunity Name"]}" alt="Influencer Profile">
+                <h3 class="text-xl font-semibold mb-1">${item["Opportunity Name"]}</h3>
+                <p class="text-gray-500 mb-2">@${item["Opportunity Name"].replace(/\s/g, '').toLowerCase()}</p>
+                <p class="text-gray-700 mb-4">Platforms: ${platforms.join(', ')}</p>
+                <p class="text-gray-700 font-bold mb-2">Reach: ${reach}</p>
+                <div class="flex flex-wrap gap-2">
+                    ${alignmentTags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                </div>
+            `;
+            influencerGrid.appendChild(influencerCard);
+        });
+    }
 
     function renderPlan(planData) {
         planContainer.innerHTML = '';
@@ -309,6 +312,7 @@
                     await updateDoc(userDocRef, { onboardingComplete: false });
                     alert("Campaign has been reset.");
                     renderPlan([]); // clear plan
+                    renderInfluencers([]); // clear influencers
                 } catch (err) {
                     debugOutput.textContent = JSON.stringify(err, null, 2);
                     show(errorOverlay);
@@ -317,7 +321,6 @@
         }
 
         hide(loadingEl);
-        show(planContainer); // This is needed to make the container visible once data is rendered
     }
 
     async function init() {
@@ -327,15 +330,28 @@
                 const userId = user.uid;
 
                 try {
-                    const docRef = doc(db, `users/${userId}/profiles/author`);
-                    const docSnap = await getDoc(docRef);
-
-                    if (docSnap.exists()) {
-                        const planData = docSnap.data().marketingPlan || [];
-                        renderPlan(planData);
-                    } else {
-                        renderPlan([]);
+                    // Fetch book data
+                    const booksCollectionRef = collection(db, `artifacts/users/${userId}/books`);
+                    const booksSnapshot = await getDocs(booksCollectionRef);
+                    let bookData = {};
+                    if (!booksSnapshot.empty) {
+                        bookData = booksSnapshot.docs[0].data(); // Get the first book
                     }
+                    renderBookData(bookData);
+
+                    // Fetch marketing plan data
+                    const authorDocRef = doc(db, `users/${userId}/profiles/author`);
+                    const authorDocSnap = await getDoc(authorDocRef);
+
+                    let planData = [];
+                    if (authorDocSnap.exists()) {
+                        planData = authorDocSnap.data().marketingPlan || [];
+                    }
+                    
+                    renderInfluencers(planData);
+                    renderPlan(planData);
+                    show(document.getElementById('tab-content-plan'));
+
                 } catch (err) {
                     debugOutput.textContent = JSON.stringify(err, null, 2);
                     show(errorOverlay);
