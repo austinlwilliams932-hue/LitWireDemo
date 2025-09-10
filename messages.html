@@ -34,7 +34,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 
 #search-results li, #new-chat-results li { display:flex; align-items:center; gap:0.5rem; cursor: pointer; }
 #search-results li:hover, #new-chat-results li:hover { background-color:#e5e7eb; }
-
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -53,13 +52,11 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
       <button id="new-chat-btn" class="bg-blue-900 text-white px-3 py-1 rounded hover:bg-blue-800">+ New</button>
     </h1>
     <div class="bg-white rounded-lg shadow-lg chat-container">
-      <!-- Sidebar -->
       <div class="sidebar">
         <input type="text" id="user-search" placeholder="Search users..." class="w-full p-2 border rounded mb-4">
         <ul id="search-results" class="space-y-2"></ul>
       </div>
 
-      <!-- Chat window -->
       <div id="chat-window" class="chat-window hidden">
         <div class="chat-header">
           <img id="chat-user-photo" src="" alt="User" class="w-12 h-12 rounded-full">
@@ -84,7 +81,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
   <div class="container text-center text-sm">&copy; 2024 LitWire. All rights reserved.</div>
 </footer>
 
-<!-- New Chat Modal -->
 <div id="new-chat-modal" class="modal">
   <div class="modal-content">
     <span class="close-btn">&times;</span>
@@ -97,7 +93,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collectionGroup, collection, getDocs, query, where, addDoc, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collectionGroup, collection, getDocs, query, where, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -132,6 +128,7 @@ const messageInput = document.getElementById("message-input");
 
 let currentUser = null;
 let currentChatPartnerId = null;
+let allUsers = [];
 
 // ------------------ Modals ------------------
 function showModal(modal){ modal.classList.add("show"); }
@@ -167,7 +164,7 @@ onAuthStateChanged(auth, async user=>{
     renderNavbar(user);
 });
 
-// ------------------ User Search Function ------------------
+// ------------------ User Search Function (Original) ------------------
 async function searchUsers(queryText){
     if(!queryText) return [];
     try {
@@ -195,7 +192,7 @@ userSearchInput.addEventListener("input", async ()=>{
     if(users.length===0){ searchResults.innerHTML='<li class="p-2 text-gray-500 italic">No users found</li>'; return; }
 
     searchResults.innerHTML = users.map(u=>`
-        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100">
+        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100 cursor-pointer">
             ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
             <span>${u.name}</span>
         </li>
@@ -206,34 +203,56 @@ userSearchInput.addEventListener("input", async ()=>{
 });
 
 // ------------------ New Chat Modal ------------------
-newChatBtn.addEventListener("click", ()=>{ 
+newChatBtn.addEventListener("click", async () => {
     newChatSearch.value = "";
-    newChatResults.innerHTML = "";
+    newChatResults.innerHTML = '<li class="p-2 text-gray-500 italic">Loading users...</li>';
     showModal(newChatModal);
+
+    // Fetch ALL users and store them for local filtering
+    const usersRef = collectionGroup(db, 'profile');
+    const snapshot = await getDocs(usersRef);
+
+    allUsers = snapshot.docs
+        .filter(doc => doc.ref.parent.id !== currentUser.uid)
+        .map(doc => ({ uid: doc.ref.parent.id, ...doc.data() }));
+
+    // Initial render of the full list
+    renderNewChatList(allUsers);
 });
-document.querySelectorAll(".close-btn").forEach(btn=> btn.addEventListener("click", ()=>hideModal(btn.closest(".modal"))));
-newChatModal.addEventListener("click", e=>{ if(e.target===newChatModal) hideModal(newChatModal); });
 
-newChatSearch.addEventListener("input", async ()=>{
-    const queryText = newChatSearch.value.trim();
-    if(!queryText){ newChatResults.innerHTML=""; return; }
-    const users = await searchUsers(queryText);
-    if(users.length===0){ newChatResults.innerHTML='<li class="p-2 text-gray-500 italic">No users found</li>'; return; }
+// Helper function to render the user list in the modal
+function renderNewChatList(usersToRender) {
+    if (usersToRender.length === 0) {
+        newChatResults.innerHTML = '<li class="p-2 text-gray-500 italic">No users found.</li>';
+        return;
+    }
 
-    newChatResults.innerHTML = users.map(u=>`
-        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100">
+    newChatResults.innerHTML = usersToRender.map(u => `
+        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo || ''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100 cursor-pointer">
             ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
             <span>${u.name}</span>
         </li>
     `).join("");
 
-    newChatResults.querySelectorAll("li").forEach(li=>{
-        li.addEventListener("click", ()=>{
+    newChatResults.querySelectorAll("li").forEach(li => {
+        li.addEventListener("click", () => {
             openChat(li.dataset.uid, li.dataset.name, li.dataset.photo);
             hideModal(newChatModal);
         });
     });
+}
+
+// Close modal buttons
+document.querySelectorAll(".close-btn").forEach(btn=> btn.addEventListener("click", ()=>hideModal(btn.closest(".modal"))));
+newChatModal.addEventListener("click", e=>{ if(e.target===newChatModal) hideModal(newChatModal); });
+
+// Filter the locally stored user list
+newChatSearch.addEventListener("input", () => {
+    const queryText = newChatSearch.value.trim().toLowerCase();
+    const filteredUsers = allUsers.filter(user => user.name.toLowerCase().includes(queryText));
+    renderNewChatList(filteredUsers);
 });
+
 
 // ------------------ Chat ------------------
 function openChat(uid, name, photo){
