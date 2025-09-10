@@ -55,11 +55,22 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
 // Firebase config
-const firebaseConfig = JSON.parse(window.__firebase_config);
-const appId = window.__app_id || 'default-app-id';
-const app = initializeApp(firebaseConfig, appId);
+const firebaseConfig = {
+  apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+  authDomain: "litwire-97956.firebaseapp.com",
+  projectId: "litwire-97956",
+  storageBucket: "litwire-97956.firebasestorage.app",
+  messagingSenderId: "263009111921",
+  appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+  measurementId: "G-ZWVFHF5YQX"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
@@ -118,7 +129,7 @@ onAuthStateChanged(auth, async user=>{
     matchesContainer.innerHTML = '';
     
     try{
-        const userDoc = await getDoc(doc(db, `artifacts/${appId}/users/${userId}/profile/data`));
+        const userDoc = await getDoc(doc(db, `artifacts/users/${userId}/profile`));
         const userProfile = userDoc.exists() ? userDoc.data() : {interests: []};
         const userInterests = userProfile.interests || [];
         
