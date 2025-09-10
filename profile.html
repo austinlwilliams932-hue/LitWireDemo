@@ -64,13 +64,26 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
-const firebaseConfig = JSON.parse(window.__firebase_config);
-const appId = window.__app_id || 'default-app-id';
-const app = initializeApp(firebaseConfig, appId);
+// --- Firebase config ---
+const firebaseConfig = {
+  apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+  authDomain: "litwire-97956.firebaseapp.com",
+  projectId: "litwire-97956",
+  storageBucket: "litwire-97956.firebasestorage.app",
+  messagingSenderId: "263009111921",
+  appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+  measurementId: "G-ZWVFHF5YQX"
+};
+
+// --- Initialize Firebase ---
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// --- DOM elements ---
 const loadingEl = document.getElementById('loading');
 const profileContainer = document.getElementById('profile-container');
 const errorOverlay = document.getElementById('error-overlay');
@@ -79,6 +92,7 @@ const debugOutput = document.getElementById('debug-output');
 function show(el){ el.classList.remove('hidden'); }
 function hide(el){ el.classList.add('hidden'); }
 
+// --- Auth state listener ---
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = 'index.html'; // redirect if not signed in
@@ -89,9 +103,10 @@ onAuthStateChanged(auth, async (user) => {
     show(loadingEl);
 
     try {
-        const docRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
+        const docRef = doc(db, `artifacts/litwire-97956/users/${userId}/profile/data`);
         const docSnap = await getDoc(docRef);
         profileContainer.innerHTML = '';
+
         if (docSnap.exists()) {
             const profile = docSnap.data();
             let html = `<div class="space-y-2">`;
@@ -111,8 +126,10 @@ onAuthStateChanged(auth, async (user) => {
             <div class="mt-4 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 break-all">
             <span class="font-semibold">User ID:</span> ${userId}</div>`;
         }
+
         hide(loadingEl);
         show(profileContainer);
+
     } catch (err) {
         debugOutput.textContent = JSON.stringify(err, null, 2);
         hide(loadingEl);
@@ -120,6 +137,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+// --- Sign out button ---
 document.getElementById('sign-out-btn').addEventListener('click', async () => {
     await signOut(auth);
     window.location.href = 'index.html';
