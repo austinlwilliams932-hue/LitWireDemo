@@ -207,7 +207,7 @@ const renderNavbar = (user) => {
         `;
         document.getElementById("logout-btn").addEventListener("click", async () => {
             await auth.signOut();
-            startAuth(); // Re-run auth flow
+            startAuth(true); // skip auto-login after explicit logout
         });
     } else {
         navContainer.innerHTML = `
@@ -220,7 +220,6 @@ const renderNavbar = (user) => {
         document.getElementById("nav-signup").addEventListener("click", () => showModal("signup-modal"));
     }
 };
-
 
 // Cloud Run JWT login
 async function signInWithCloudRunToken(uid) {
@@ -244,18 +243,19 @@ async function signInWithCloudRunToken(uid) {
 }
 
 // Auth flow
-async function startAuth() {
+async function startAuth(skipAutoLogin = false) {
     loadingEl.classList.remove("hidden");
     mainContentView.classList.add("hidden");
 
     onAuthStateChanged(auth, async (user) => {
         try {
-            if (!user) {
+            if (!user && !skipAutoLogin) {
+                // Only auto-login on first page load
                 await signInWithCloudRunToken("temp-uid-" + Math.random().toString(36).substring(2, 10));
             }
         } catch (err) {
             console.error("Startup auth error:", err);
-            await signInAnonymously(auth);
+            if (!skipAutoLogin) await signInAnonymously(auth);
         } finally {
             loadingEl.classList.add("hidden");
             mainContentView.classList.remove("hidden");
@@ -264,7 +264,7 @@ async function startAuth() {
     });
 }
 
-// Form handlers
+// Login Form
 loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = loginForm["login-email"].value;
@@ -278,6 +278,7 @@ loginForm.addEventListener("submit", async (e) => {
     }
 });
 
+// Signup Form
 signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = signupForm["signup-email"].value;
@@ -287,7 +288,6 @@ signupForm.addEventListener("submit", async (e) => {
         const user = userCredential.user;
         const userProfileDocRef = doc(db, `/artifacts/users/${user.uid}/profiles/main_profile`);
         await setDoc(userProfileDocRef, { name: user.email.split("@")[0] });
-
         closeModal("signup-modal");
     } catch (err) {
         signupMessage.textContent = err.message;
