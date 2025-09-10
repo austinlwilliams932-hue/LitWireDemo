@@ -66,7 +66,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -82,41 +82,45 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const loadingEl = document.getElementById('loading');
-const matchesContainer = document.getElementById('matches-container') || document.createElement('div'); // for page with matches
+const matchesContainer = document.getElementById('matches-container');
 const signOutBtn = document.getElementById('sign-out-btn');
 
-function show(el) { el.classList.remove('hidden'); }
-function hide(el) { el.classList.add('hidden'); }
+function show(el){ el.classList.remove('hidden'); }
+function hide(el){ el.classList.add('hidden'); }
 
-// Render one match card
+// Render a single influencer card
 function renderMatch(profile, matchPercentage){
     const el = document.createElement('div');
-    el.className = 'content-card';
+    el.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col mb-6';
+
     const interestsHtml = (profile.marketingPlan || []).map(p => `<span class="tag">${p.Type || 'Unknown'}</span>`).join(' ');
+
     el.innerHTML = `
-        <div class="flex justify-between items-start mb-2">
-            <div>
-                <h2 class="text-xl font-semibold">${profile.bookTitle || 'Untitled Book'}</h2>
-                <p class="text-gray-500">${profile.bookDescription || 'No description available.'}</p>
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-user-circle text-gray-400 text-3xl"></i>
+                <div>
+                    <p class="text-xl font-semibold text-gray-900">${profile["Opportunity Name"] || 'Unknown'}</p>
+                    <p class="text-sm text-gray-500">${profile.Notes || ''}</p>
+                </div>
             </div>
-            <div class="text-right">
-                <span class="text-blue-900 font-bold">${matchPercentage}% Match</span><br/>
-                <button class="button mt-2" onclick="window.open('${profile.marketingPlan?.[0]?.SourceLink || '#'}','_blank')">View Profile</button>
+            <div class="flex flex-col items-end space-y-2">
+                <span class="text-lg font-bold text-blue-900">${matchPercentage}% Match</span>
+                <button class="button" onclick="window.open('${profile["Source Link"] || '#'}','_blank')">View Profile</button>
             </div>
         </div>
-        <div class="mt-2 flex flex-wrap gap-2">
-            ${interestsHtml.length ? interestsHtml : '<span class="text-gray-500">No marketing info</span>'}
+        <div class="space-y-2 mt-2">
+            <p class="text-sm text-gray-600 font-medium">Marketing Info:</p>
+            <div class="flex flex-wrap gap-2">${interestsHtml.length ? interestsHtml : '<p class="text-gray-500 text-sm">No info available</p>'}</div>
         </div>
     `;
     matchesContainer.appendChild(el);
 }
 
-// Placeholder Gemini Flash 2.5 function
-async function getMatchPercentage(userBook, profile){
-    // TODO: Replace with real Gemini API call
-    // Compare userBook.bookTitle, bookDescription vs profile.marketingPlan, targetAudience, etc.
-    // For now, random 60-100%
-    return Math.floor(Math.random()*41)+60;
+// Placeholder Gemini function (replace with real AI call)
+async function getMatchPercentage(userBook, influencer){
+    // Example: compare userBook.bookTitle / bookDescription vs influencer profile
+    return Math.floor(Math.random()*41) + 60; // returns 60-100% for now
 }
 
 onAuthStateChanged(auth, async user => {
@@ -124,41 +128,37 @@ onAuthStateChanged(auth, async user => {
         await signInAnonymously(auth);
         return;
     }
+
     show(loadingEl);
     matchesContainer.innerHTML = '';
 
     try{
         const userId = user.uid;
+        const docRef = doc(db, `users/${userId}/profiles/author`);
+        const docSnap = await getDoc(docRef);
 
-        // Get current user's book info
-        const userProfileSnap = await getDoc(doc(db, `users/${userId}/profiles/author`));
-        const userProfile = userProfileSnap.exists() ? userProfileSnap.data() : {};
-
-        // Get all other users
-        const usersCol = collection(db, 'users');
-        const userDocs = await getDocs(usersCol);
-
-        const otherProfiles = [];
-        for(const docSnap of userDocs.docs){
-            if(docSnap.id === userId) continue; // skip yourself
-            const profileRef = doc(db, `users/${docSnap.id}/profiles/author`);
-            const profileSnap = await getDoc(profileRef);
-            if(profileSnap.exists()){
-                otherProfiles.push(profileSnap.data());
-            }
+        if(!docSnap.exists()){
+            matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
+            hide(loadingEl);
+            show(matchesContainer);
+            return;
         }
 
-        if(otherProfiles.length === 0){
-            matchesContainer.innerHTML = `<div class="content-card text-center text-gray-500">No matches found.</div>`;
+        const userProfile = docSnap.data();
+        const marketingPlan = userProfile.marketingPlan || [];
+
+        if(marketingPlan.length === 0){
+            matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
         } else {
-            for(const profile of otherProfiles){
-                const matchPercentage = await getMatchPercentage(userProfile, profile);
-                renderMatch(profile, matchPercentage);
+            for(const influencer of marketingPlan){
+                const matchPercentage = await getMatchPercentage(userProfile, influencer);
+                renderMatch(influencer, matchPercentage);
             }
         }
+
     } catch(err){
         console.error(err);
-        matchesContainer.innerHTML = `<div class="content-card text-center text-red-500">Error loading matches.</div>`;
+        matchesContainer.innerHTML = `<p class="text-red-500 text-center">Error loading matches.</p>`;
     } finally{
         hide(loadingEl);
         show(matchesContainer);
@@ -168,7 +168,7 @@ onAuthStateChanged(auth, async user => {
 // Sign out
 signOutBtn?.addEventListener('click', async ()=>{
     await signOut(auth);
-    await signInAnonymously(auth);
+    window.location.href = 'index.html';
 });
 </script>
 </body>
