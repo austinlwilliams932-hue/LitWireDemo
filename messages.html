@@ -12,6 +12,17 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 h1, .text-3xl { letter-spacing: 0.025em; }
 .container { max-width: 1200px; margin: 0 auto; }
 .hidden { display: none !important; }
+
+.chat-container { display: flex; height: calc(100vh - 12rem); }
+.sidebar { width: 300px; min-width: 300px; background-color: #fff; border-right: 1px solid #e5e7eb; overflow-y: auto; padding:1rem; }
+.chat-window { flex-grow: 1; display: flex; flex-direction: column; background-color: #f9fafb; }
+.chat-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; background-color: #fff; display:flex; gap:1rem; align-items:center; }
+.chat-messages { flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
+.message-bubble { max-width: 75%; padding: 0.75rem 1rem; border-radius: 1.25rem; }
+.sent { background-color: #3b82f6; color: #fff; align-self: flex-end; }
+.received { background-color: #e5e7eb; color: #1f2937; align-self: flex-start; }
+.chat-input { padding: 1rem; background-color: #fff; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; }
+
 .modal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
@@ -21,15 +32,9 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 .modal-content { background-color: #fff; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 400px; position: relative; transform: translateY(-20px); transition: transform 0.3s ease; }
 .modal.show .modal-content { transform: translateY(0); }
 .close-btn { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
-.chat-container { display: flex; height: calc(100vh - 12rem); }
-.sidebar { width: 300px; min-width: 300px; background-color: #fff; border-right: 1px solid #e5e7eb; overflow-y: auto; padding: 1rem; }
-.chat-window { flex-grow: 1; display: flex; flex-direction: column; background-color: #f9fafb; }
-.chat-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; background-color: #fff; display: flex; align-items: center; gap: 0.5rem; }
-.chat-messages { flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
-.message-bubble { max-width: 75%; padding: 0.75rem 1rem; border-radius: 1.25rem; }
-.sent { background-color: #3b82f6; color: #fff; align-self: flex-end; }
-.received { background-color: #e5e7eb; color: #1f2937; align-self: flex-start; }
-.chat-input { padding: 1rem; background-color: #fff; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; }
+
+#search-results li { display:flex; align-items:center; gap:0.5rem; }
+#search-results li:hover { background-color:#e5e7eb; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -45,14 +50,20 @@ h1, .text-3xl { letter-spacing: 0.025em; }
   <div id="main-content-view" class="hidden">
     <h1 class="text-3xl font-bold text-gray-900 mb-6">Messages</h1>
     <div class="bg-white rounded-lg shadow-lg chat-container">
+      <!-- Sidebar -->
       <div class="sidebar">
         <input type="text" id="user-search" placeholder="Search users..." class="w-full p-2 border rounded mb-4">
         <ul id="search-results" class="space-y-2"></ul>
       </div>
+
+      <!-- Chat window -->
       <div id="chat-window" class="chat-window hidden">
         <div class="chat-header">
           <img id="chat-user-photo" src="" alt="User" class="w-12 h-12 rounded-full">
-          <p id="chat-user-name" class="font-bold text-lg text-gray-800"></p>
+          <div>
+            <p id="chat-user-name" class="font-bold text-lg text-gray-800"></p>
+            <p class="text-sm text-gray-500">Online</p>
+          </div>
         </div>
         <div id="chat-messages" class="chat-messages"></div>
         <form id="message-form" class="chat-input">
@@ -107,7 +118,7 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, collectionGroup, query, orderBy, getDocs, addDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, collectionGroup, getDocs, query, where, addDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -130,8 +141,10 @@ const loginForm = document.getElementById("login-form");
 const signupForm = document.getElementById("signup-form");
 const loginMessage = document.getElementById("login-message");
 const signupMessage = document.getElementById("signup-message");
+
 const userSearchInput = document.getElementById("user-search");
 const searchResults = document.getElementById("search-results");
+
 const chatWindow = document.getElementById("chat-window");
 const chatUserName = document.getElementById("chat-user-name");
 const chatUserPhoto = document.getElementById("chat-user-photo");
@@ -142,134 +155,148 @@ const messageInput = document.getElementById("message-input");
 let currentUser = null;
 let currentChatPartnerId = null;
 
-// Modal functions
+// Modal helpers
 function showModal(modal){ modal.classList.add("show"); }
 function hideModal(modal){ modal.classList.remove("show"); loginMessage.textContent=""; signupMessage.textContent=""; }
 
 // Navbar
 async function renderNavbar(user){
-  navContainer.innerHTML = "";
-  if(user){
-    navContainer.innerHTML = `
-      <div class="flex items-center space-x-6">
-        <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
-        <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
-        <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
-        <a href="matches.html" class="text-gray-800 hover:text-blue-900 font-medium">Matches</a>
-        <a href="messages.html" class="text-gray-800 hover:text-green-600 font-medium">Messages</a>
-        <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
-      </div>
-    `;
-    document.getElementById("logout-btn").addEventListener("click", async()=>{await signOut(auth);});
-  } else {
-    navContainer.innerHTML = `
-      <div class="flex items-center space-x-6">
-        <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
-        <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
-      </div>
-    `;
-    document.getElementById("nav-login").addEventListener("click",()=>showModal(loginModal));
-    document.getElementById("nav-signup").addEventListener("click",()=>showModal(signupModal));
-  }
+    navContainer.innerHTML = "";
+    if(user){
+        navContainer.innerHTML = `
+            <div class="flex items-center space-x-6">
+                <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
+                <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
+                <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
+                <a href="matches.html" class="text-gray-800 hover:text-blue-900 font-medium">Matches</a>
+                <a href="messages.html" class="text-gray-800 hover:text-blue-900 font-medium">Messages</a>
+                <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
+            </div>
+        `;
+        document.getElementById("logout-btn").addEventListener("click", async()=>{await signOut(auth)});
+    } else {
+        navContainer.innerHTML = `
+            <div class="flex items-center space-x-6">
+                <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
+                <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
+            </div>
+        `;
+        document.getElementById("nav-login").addEventListener("click",()=>showModal(loginModal));
+        document.getElementById("nav-signup").addEventListener("click",()=>showModal(signupModal));
+    }
 }
 
 // Auth listener
 onAuthStateChanged(auth, async user=>{
-  currentUser = user;
-  mainContentView.classList.remove("hidden");
-  await renderNavbar(user);
-  if(!user) showModal(signupModal);
+    currentUser = user;
+    mainContentView.classList.remove("hidden");
+    await renderNavbar(user);
+    if(!user) showModal(signupModal);
 });
 
 // Login
 loginForm.addEventListener("submit", async e=>{
-  e.preventDefault();
-  try{
-    await signInWithEmailAndPassword(auth, loginForm["login-email"].value, loginForm["login-password"].value);
-    hideModal(loginModal);
-  } catch(err){ loginMessage.textContent=err.message; loginMessage.style.color="red"; }
+    e.preventDefault();
+    try{
+        await signInWithEmailAndPassword(auth, loginForm["login-email"].value, loginForm["login-password"].value);
+        hideModal(loginModal);
+    } catch(err){ loginMessage.textContent=err.message; loginMessage.style.color="red"; }
 });
 
 // Signup
 signupForm.addEventListener("submit", async e=>{
-  e.preventDefault();
-  const name = signupForm["signup-name"].value;
-  const email = signupForm["signup-email"].value;
-  const password = signupForm["signup-password"].value;
-  const role = signupForm["signup-role"].value;
-  const bio = signupForm["signup-bio"].value;
-  const photo = signupForm["signup-photo"].value || null;
+    e.preventDefault();
+    const name = signupForm["signup-name"].value;
+    const email = signupForm["signup-email"].value;
+    const password = signupForm["signup-password"].value;
+    const role = signupForm["signup-role"].value;
+    const bio = signupForm["signup-bio"].value;
+    const photo = signupForm["signup-photo"].value || null;
 
-  try{
-    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-    const user = userCredential.user;
-    await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {
-      name,email,role,bio,photo,onboardingComplete:false
-    });
-    hideModal(signupModal);
-    await renderNavbar(user);
-  } catch(err){ signupMessage.textContent=err.message; signupMessage.style.color="red"; }
+    try{
+        const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+        const user = userCredential.user;
+        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {
+            name,email,role,bio,photo,onboardingComplete:false
+        });
+        hideModal(signupModal);
+        await renderNavbar(user);
+    } catch(err){ signupMessage.textContent=err.message; signupMessage.style.color="red"; }
 });
 
 // Close modals
 document.querySelectorAll(".close-btn").forEach(btn => { btn.addEventListener("click",()=>hideModal(btn.closest(".modal"))); });
 document.querySelectorAll(".modal").forEach(modal => { modal.addEventListener("click",e=>{ if(e.target===modal) hideModal(modal); }); });
 
-// Load all users
-async function loadUsers(){
-  if(!currentUser) return [];
-  const profilesQuery = collectionGroup(db,'profile');
-  const snapshot = await getDocs(profilesQuery);
-  return snapshot.docs
-    .filter(doc=>doc.ref.parent.id !== currentUser.uid)
-    .map(doc=>({ uid: doc.ref.parent.id, ...doc.data() }));
+// ---------- User Search ----------
+async function searchUsers(queryText){
+    if(!queryText) return [];
+    const usersRef = collectionGroup(db,'profile');
+    const q = query(usersRef,
+        where('name', '>=', queryText),
+        where('name', '<=', queryText + '\uf8ff')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs
+        .filter(doc=>doc.ref.parent.id !== currentUser.uid)
+        .map(doc=>({ uid: doc.ref.parent.id, ...doc.data() }));
 }
 
-// Search users
 userSearchInput.addEventListener("input", async ()=>{
-  const users = await loadUsers();
-  const queryText = userSearchInput.value.toLowerCase();
-  const filtered = users.filter(u=>u.name.toLowerCase().includes(queryText));
-  searchResults.innerHTML = filtered.map(u=>`<li class="p-2 bg-gray-100 rounded cursor-pointer" data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}">${u.name}</li>`).join("");
-  document.querySelectorAll("#search-results li").forEach(li=>{
-    li.addEventListener("click", ()=> startChat(li.dataset.uid, li.dataset.name, li.dataset.photo));
-  });
+    const queryText = userSearchInput.value.trim();
+    if(!queryText){ searchResults.innerHTML=""; return; }
+    const users = await searchUsers(queryText);
+    searchResults.innerHTML = users.map(u=>`
+        <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo||''}" class="p-2 rounded cursor-pointer flex items-center gap-2">
+            ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
+            <span>${u.name}</span>
+        </li>
+    `).join("");
+
+    document.querySelectorAll("#search-results li").forEach(li=>{
+        li.addEventListener("click", ()=>{
+            openChat(li.dataset.uid, li.dataset.name, li.dataset.photo);
+        });
+    });
 });
 
-// Start chat
-async function startChat(uid, name, photo){
-  currentChatPartnerId = uid;
-  chatUserName.textContent = name;
-  chatUserPhoto.src = photo || "https://via.placeholder.com/150";
-  chatWindow.classList.remove("hidden");
-  chatMessages.innerHTML = "";
-
-  const chatId = [currentUser.uid, uid].sort().join("_");
-  const messagesRef = collection(db, `artifacts/chats/${chatId}/messages`);
-  onSnapshot(messagesRef, qSnap=>{
+// ---------- Chat ----------
+function openChat(uid, name, photo){
+    currentChatPartnerId = uid;
+    chatUserName.textContent = name;
+    chatUserPhoto.src = photo || "https://via.placeholder.com/40";
+    chatWindow.classList.remove("hidden");
     chatMessages.innerHTML = "";
-    qSnap.docs.sort((a,b)=>a.data().timestamp - b.data().timestamp).forEach(doc=>{
-      const m = doc.data();
-      const div = document.createElement("div");
-      div.className = `message-bubble ${m.sender===currentUser.uid ? 'sent':'received'}`;
-      div.textContent = m.text;
-      chatMessages.appendChild(div);
+    loadMessages();
+}
+
+// Load messages in real-time
+function loadMessages(){
+    const messagesRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
+    onSnapshot(messagesRef, snapshot=>{
+        chatMessages.innerHTML = snapshot.docs.map(doc=>{
+            const msg = doc.data();
+            return `<div class="message-bubble ${msg.sender===currentUser.uid?'sent':'received'}">${msg.text}</div>`;
+        }).join("");
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     });
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  });
 }
 
 // Send message
 messageForm.addEventListener("submit", async e=>{
-  e.preventDefault();
-  if(!messageInput.value.trim() || !currentChatPartnerId) return;
-  const chatId = [currentUser.uid, currentChatPartnerId].sort().join("_");
-  await addDoc(collection(db, `artifacts/chats/${chatId}/messages`), {
-    sender: currentUser.uid,
-    text: messageInput.value.trim(),
-    timestamp: Date.now()
-  });
-  messageInput.value = "";
+    e.preventDefault();
+    const text = messageInput.value.trim();
+    if(!text || !currentChatPartnerId) return;
+    const senderId = currentUser.uid;
+    const receiverId = currentChatPartnerId;
+
+    const senderRef = collection(db, "artifacts/users", senderId, "chats", receiverId, "messages");
+    const receiverRef = collection(db, "artifacts/users", receiverId, "chats", senderId, "messages");
+
+    await addDoc(senderRef, { sender: senderId, text, timestamp: Date.now() });
+    await addDoc(receiverRef, { sender: senderId, text, timestamp: Date.now() });
+
+    messageInput.value = "";
 });
 </script>
 </body>
