@@ -112,6 +112,15 @@ const debugOutput = document.getElementById('debug-output');
 let userId = null;
 let userProfile = null;
 
+function showLoading() { loadingOverlay.classList.remove('hidden'); }
+function hideLoading() { loadingOverlay.classList.add('hidden'); }
+function showError(err) {
+  debugOutput.textContent = JSON.stringify(err, null, 2);
+  errorOverlay.classList.remove('hidden');
+  hideLoading();
+}
+
+showLoading();
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = 'index.html';
@@ -120,18 +129,23 @@ onAuthStateChanged(auth, async (user) => {
   userId = user.uid;
 
   try {
-    const userDoc = await getDoc(doc(db, `users/${userId}/profile`));
+    const userDoc = await getDoc(doc(db, `users/${userId}`));
     userProfile = userDoc.exists() ? userDoc.data() : { name: 'User' };
     setupFeedListener();
   } catch (err) {
-    debugOutput.textContent = JSON.stringify(err, null, 2);
-    errorOverlay.classList.remove('hidden');
+    showError(err);
+  } finally {
+    hideLoading();
   }
 });
 
 signOutBtn.addEventListener('click', async () => {
-  await signOut(auth);
-  window.location.href = 'index.html';
+  try {
+    await signOut(auth);
+    window.location.href = 'index.html';
+  } catch (err) {
+    showError(err);
+  }
 });
 
 function setupFeedListener() {
@@ -139,6 +153,7 @@ function setupFeedListener() {
   const q = query(feedCollectionRef, orderBy('createdAt', 'desc'));
 
   onSnapshot(q, (snapshot) => {
+    // Remove existing non-fake posts
     Array.from(feedContainer.children)
       .filter(el => !el.dataset.isFake)
       .forEach(el => el.remove());
@@ -156,7 +171,7 @@ function setupFeedListener() {
       `;
       feedContainer.appendChild(postElement);
     });
-  });
+  }, (err) => showError(err));
 }
 
 newPostForm.addEventListener('submit', async (e) => {
@@ -164,6 +179,7 @@ newPostForm.addEventListener('submit', async (e) => {
   const content = postContentInput.value.trim();
   if (!content || !userId) return;
 
+  showLoading();
   try {
     await addDoc(collection(db, 'feed'), {
       content,
@@ -173,8 +189,9 @@ newPostForm.addEventListener('submit', async (e) => {
     });
     postContentInput.value = '';
   } catch (err) {
-    debugOutput.textContent = JSON.stringify(err, null, 2);
-    errorOverlay.classList.remove('hidden');
+    showError(err);
+  } finally {
+    hideLoading();
   }
 });
 </script>
