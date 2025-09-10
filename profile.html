@@ -51,6 +51,41 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <button onclick="document.getElementById('error-overlay').classList.add('hidden');" class="button mt-4">Close</button>
 </div>
 
+<!-- Edit Profile Modal -->
+<div id="edit-profile-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+        <h2 class="text-xl font-bold mb-4">Edit Profile</h2>
+        <form id="edit-profile-form" class="space-y-4">
+            <div>
+                <label class="block font-medium text-gray-700">Name</label>
+                <input type="text" id="edit-name" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700">Email</label>
+                <input type="email" id="edit-email" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700">Role</label>
+                <input type="text" id="edit-role" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700">Bio</label>
+                <textarea id="edit-bio" class="w-full border rounded px-3 py-2"></textarea>
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700">Profile Photo</label>
+                <input type="file" id="edit-photo-file" accept="image/*" class="w-full border rounded px-3 py-2" />
+                <p class="text-xs text-gray-500 mt-1">Choose a file to upload as your profile picture.</p>
+            </div>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button type="button" id="cancel-edit" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded bg-blue-900 text-white hover:bg-blue-700">Save</button>
+            </div>
+        </form>
+        <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl">&times;</button>
+    </div>
+</div>
+
 </div>
 </main>
 
@@ -63,15 +98,16 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
 // --- Firebase config ---
 const firebaseConfig = {
   apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
   authDomain: "litwire-97956.firebaseapp.com",
   projectId: "litwire-97956",
-  storageBucket: "litwire-97956.firebasestorage.app",
+  storageBucket: "litwire-97956.appspot.com",
   messagingSenderId: "263009111921",
   appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
   measurementId: "G-ZWVFHF5YQX"
@@ -82,6 +118,7 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // --- DOM elements ---
 const loadingEl = document.getElementById('loading');
@@ -89,13 +126,19 @@ const profileContainer = document.getElementById('profile-container');
 const errorOverlay = document.getElementById('error-overlay');
 const debugOutput = document.getElementById('debug-output');
 
+const editModal = document.getElementById('edit-profile-modal');
+const editForm = document.getElementById('edit-profile-form');
+const cancelEditBtn = document.getElementById('cancel-edit');
+const closeModalBtn = document.getElementById('close-modal');
+const photoFileInput = document.getElementById('edit-photo-file');
+
 function show(el){ el.classList.remove('hidden'); }
 function hide(el){ el.classList.add('hidden'); }
 
 // --- Auth state listener ---
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        window.location.href = 'index.html'; // redirect if not signed in
+        window.location.href = 'index.html';
         return;
     }
 
@@ -103,32 +146,19 @@ onAuthStateChanged(auth, async (user) => {
     show(loadingEl);
 
     try {
-        const docRef = doc(db, `artifacts/litwire-97956/users/${userId}/profile/data`);
+        const docRef = doc(db, `artifacts/users/${userId}/profile`);
         const docSnap = await getDoc(docRef);
-        profileContainer.innerHTML = '';
 
+        let profile;
         if (docSnap.exists()) {
-            const profile = docSnap.data();
-            let html = `<div class="space-y-2">`;
-
-            for (const [key, value] of Object.entries(profile)) {
-                html += `<p class="text-gray-700"><span class="font-semibold">${key}:</span> ${value || 'N/A'}</p>`;
-            }
-
-            html += `</div>
-            <div class="mt-4 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 break-all">
-            <span class="font-semibold">User ID:</span> ${userId}</div>`;
-
-            profileContainer.innerHTML = html;
+            profile = docSnap.data();
         } else {
-            profileContainer.innerHTML = `
-            <p class="text-gray-700">No profile data found. Create your profile on the homepage!</p>
-            <div class="mt-4 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 break-all">
-            <span class="font-semibold">User ID:</span> ${userId}</div>`;
+            profile = {};
         }
 
         hide(loadingEl);
         show(profileContainer);
+        showProfile(profile, userId);
 
     } catch (err) {
         debugOutput.textContent = JSON.stringify(err, null, 2);
@@ -141,6 +171,83 @@ onAuthStateChanged(auth, async (user) => {
 document.getElementById('sign-out-btn').addEventListener('click', async () => {
     await signOut(auth);
     window.location.href = 'index.html';
+});
+
+// --- Profile display function ---
+function showProfile(profile, userId) {
+    const { name, email, role, bio, photo } = profile;
+
+    let html = `
+    <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
+        <div class="flex-shrink-0">
+            <img src="${photo || 'https://via.placeholder.com/120'}" alt="Profile Photo" class="w-32 h-32 rounded-full object-cover border-2 border-blue-900">
+        </div>
+        <div class="flex-1 space-y-2">
+            <h2 class="text-2xl font-bold text-gray-900">${name || 'No Name'}</h2>
+            <p class="text-gray-600"><span class="font-semibold">Email:</span> ${email || 'N/A'}</p>
+            <p class="text-gray-600"><span class="font-semibold">Role:</span> ${role || 'N/A'}</p>
+            <p class="text-gray-600"><span class="font-semibold">Bio:</span> ${bio || 'N/A'}</p>
+            <button id="edit-profile-btn" class="mt-3 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-700">Edit Profile</button>
+        </div>
+    </div>
+    <div class="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 break-all">
+        <span class="font-semibold">User ID:</span> ${userId}
+    </div>
+    `;
+
+    profileContainer.innerHTML = html;
+
+    document.getElementById('edit-profile-btn').addEventListener('click', () => openEditModal(profile));
+}
+
+// --- Edit modal ---
+function openEditModal(profile) {
+    document.getElementById('edit-name').value = profile.name || '';
+    document.getElementById('edit-email').value = profile.email || '';
+    document.getElementById('edit-role').value = profile.role || '';
+    document.getElementById('edit-bio').value = profile.bio || '';
+    photoFileInput.value = '';
+    editModal.classList.remove('hidden');
+}
+
+function closeEditModal() { editModal.classList.add('hidden'); }
+cancelEditBtn.addEventListener('click', closeEditModal);
+closeModalBtn.addEventListener('click', closeEditModal);
+
+// --- Handle form submit ---
+editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    show(loadingEl);
+
+    const userId = auth.currentUser.uid;
+    let updatedProfile = {
+        name: document.getElementById('edit-name').value,
+        email: document.getElementById('edit-email').value,
+        role: document.getElementById('edit-role').value,
+        bio: document.getElementById('edit-bio').value,
+        photo: ''
+    };
+
+    try {
+        // Handle photo upload if file selected
+        if (photoFileInput.files.length > 0) {
+            const file = photoFileInput.files[0];
+            const storageRef = ref(storage, `profile_photos/${userId}/${file.name}`);
+            await uploadBytes(storageRef, file);
+            updatedProfile.photo = await getDownloadURL(storageRef);
+        } else {
+            updatedProfile.photo = document.querySelector('#profile-container img').src;
+        }
+
+        await setDoc(doc(db, `artifacts/users/${userId}/profile`), updatedProfile);
+        closeEditModal();
+        hide(loadingEl);
+        showProfile(updatedProfile, userId);
+    } catch (err) {
+        hide(loadingEl);
+        debugOutput.textContent = JSON.stringify(err, null, 2);
+        show(errorOverlay);
+    }
 });
 </script>
 </body>
