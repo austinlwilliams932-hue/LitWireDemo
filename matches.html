@@ -66,7 +66,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
 const firebaseConfig = {
@@ -91,36 +91,29 @@ const signOutBtn = document.getElementById('sign-out-btn');
 function show(el){ el.classList.remove('hidden'); }
 function hide(el){ el.classList.add('hidden'); }
 
-// Dummy influencer data
-const influencers = [
-    {name: 'Literary Lexie', bio: 'Fantasy & sci-fi lover.', interests: ['Fantasy','Sci-fi','Magic','Epic']},
-    {name: 'Mystery Mike', bio: 'Thrillers & whodunits enthusiast.', interests: ['Mystery','Thriller','Crime','Suspense']},
-    {name: 'Romance Rachel', bio: 'Hopeless romantic & historical fiction fan.', interests: ['Romance','Historical Fiction','Drama']},
-    {name: 'Historical Helen', bio: 'Non-fiction & historical fiction lover.', interests: ['History','Non-fiction','Historical Fiction']},
-    {name: 'Adventure Alex', bio: 'Adventure & philosophical reads.', interests: ['Adventure','Travel','Philosophy']}
-];
-
-function renderMatch(profile, commonInterests, matchPercentage){
+function renderMatch(profile){
     const el = document.createElement('div');
     el.className = 'bg-white p-6 rounded-2xl shadow-md border border-gray-200 flex flex-col';
-    const interestsHtml = commonInterests.map(i => `<span class="tag">${i}</span>`).join(' ');
+
+    // Use marketingPlan as interests
+    const interestsHtml = (profile.marketingPlan || []).map(p => `<span class="tag">${p.Type || 'Unknown'}</span>`).join(' ');
+
     el.innerHTML = `
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center space-x-4">
                 <i class="fas fa-user-circle text-gray-400 text-3xl"></i>
                 <div>
-                    <p class="text-xl font-semibold text-gray-900">${profile.name}</p>
-                    <p class="text-sm text-gray-500">${profile.bio}</p>
+                    <p class="text-xl font-semibold text-gray-900">${profile.bookTitle || 'Untitled Book'}</p>
+                    <p class="text-sm text-gray-500">${profile.bookDescription || 'No description available.'}</p>
                 </div>
             </div>
             <div class="flex flex-col items-end space-y-2">
-                <span class="text-lg font-bold text-blue-900">${matchPercentage}% Match</span>
-                <button class="button" onclick="alert('Messaging ${profile.name}!')">Message</button>
+                <button class="button" onclick="window.open('${profile.marketingPlan?.[0]?.SourceLink || '#'}','_blank')">View Profile</button>
             </div>
         </div>
         <div class="space-y-2 mt-2">
-            <p class="text-sm text-gray-600 font-medium">Shared Interests:</p>
-            <div class="flex flex-wrap gap-2">${commonInterests.length ? interestsHtml : '<p class="text-gray-500 text-sm">No common interests</p>'}</div>
+            <p class="text-sm text-gray-600 font-medium">Marketing Plan:</p>
+            <div class="flex flex-wrap gap-2">${interestsHtml.length ? interestsHtml : '<p class="text-gray-500 text-sm">No marketing info</p>'}</div>
         </div>
     `;
     matchesContainer.appendChild(el);
@@ -132,26 +125,31 @@ onAuthStateChanged(auth, async user=>{
         await signInAnonymously(auth);
         return;
     }
-    const userId = user.uid;
     show(loadingEl);
     matchesContainer.innerHTML = '';
-    
+
     try{
-        const userDoc = await getDoc(doc(db, `artifacts/users/${userId}/profile`));
-        const userProfile = userDoc.exists() ? userDoc.data() : {interests: []};
-        const userInterests = userProfile.interests || [];
-        
-        const matches = influencers.map(i=>{
-            const common = i.interests.filter(inter=>userInterests.includes(inter));
-            const percent = Math.round((common.length / Math.max(userInterests.length, i.interests.length)) * 100);
-            return {i, common, percent};
-        }).sort((a,b)=>b.percent-a.percent);
-        
-        if(matches.length){
-            matches.forEach(m=>renderMatch(m.i, m.common, m.percent));
-        } else {
-            matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found. Add more interests!</p>`;
+        const usersCol = collection(db, 'users');
+        const userDocs = await getDocs(usersCol);
+        const matches = [];
+
+        userDocs.forEach(docSnap=>{
+            const profileDocRef = doc(db, `users/${docSnap.id}/profiles/author`);
+            matches.push(profileDocRef);
+        });
+
+        for(const profileRef of matches){
+            const profileSnap = await getDoc(profileRef);
+            if(profileSnap.exists()){
+                const data = profileSnap.data();
+                renderMatch(data);
+            }
         }
+
+        if(matchesContainer.childElementCount === 0){
+            matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
+        }
+
     } catch(e){
         console.error(e);
         matchesContainer.innerHTML = `<p class="text-red-500 text-center">Error loading matches.</p>`;
