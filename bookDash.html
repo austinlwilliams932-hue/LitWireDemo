@@ -286,30 +286,29 @@ onAuthStateChanged(auth, async user => {
 resetBtn.onclick = async () => {
     if (!auth.currentUser) return;
     const userId = auth.currentUser.uid;
+    const authorProfileRef = doc(db, `users/${userId}/profiles/author`);
+    const mainProfileRef = doc(db, `artifacts/users/${userId}/profile`);
 
     if (!confirm("Are you sure you want to reset your campaign? This will remove all data.")) return;
 
     try {
-        // Delete author-specific campaign data
-        const authorProfileRef = doc(db, `users/${userId}/profiles/author`);
-        await deleteDoc(authorProfileRef);
+        // Delete author-specific campaign data, ignore not-found errors
+        try {
+            await deleteDoc(authorProfileRef);
+        } catch(err) {
+            if (err.code !== 'not-found') throw err;
+        }
 
-        // Reset main profile flags
-        const mainProfileRef = doc(db, `users/${userId}/profiles/profile`);
-        await updateDoc(mainProfileRef, {
-            onboardingComplete: false,
-            role: "",          // clear role
-            isAuthor: false,   // optional, depending on index page logic
-            isInfluencer: false
-        });
+        // Reset onboardingComplete in the main profile
+        await setDoc(mainProfileRef, { onboardingComplete: false }, { merge: true });
 
-        // Clear dashboard UI immediately
+        // Clear dashboard UI
         renderPlan([]);
         renderInfluencers([]);
 
-        alert("Campaign has been reset. Please reselect your role on the homepage.");
+        alert("Campaign has been reset.");
 
-        // Redirect to index to refresh CTA buttons
+        // Redirect to index to refresh CTA buttons immediately
         window.location.href = 'index.html';
     } catch (err) {
         debugOutput.textContent = JSON.stringify(err, null, 2);
