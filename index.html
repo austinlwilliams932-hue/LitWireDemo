@@ -108,134 +108,137 @@ h1, .text-3xl { letter-spacing: 0.025em; }
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-    authDomain: "litwire-97956.firebaseapp.com",
-    projectId: "litwire-97956",
-    storageBucket: "litwire-97956.appspot.com",
-    messagingSenderId: "263009111921",
-    appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+        authDomain: "litwire-97956.firebaseapp.com",
+        projectId: "litwire-97956",
+        storageBucket: "litwire-97956.appspot.com",
+        messagingSenderId: "263009111921",
+        appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
+    };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-const mainContentView = document.getElementById("main-content-view");
-const navContainer = document.getElementById("nav-container");
-const loginModal = document.getElementById("login-modal");
-const signupModal = document.getElementById("signup-modal");
-const loginForm = document.getElementById("login-form");
-const signupForm = document.getElementById("signup-form");
-const loginMessage = document.getElementById("login-message");
-const signupMessage = document.getElementById("signup-message");
-const ctaButtons = document.getElementById("cta-buttons");
+    const mainContentView = document.getElementById("main-content-view");
+    const navContainer = document.getElementById("nav-container");
+    const loginModal = document.getElementById("login-modal");
+    const signupModal = document.getElementById("signup-modal");
+    const loginForm = document.getElementById("login-form");
+    const signupForm = document.getElementById("signup-form");
+    const loginMessage = document.getElementById("login-message");
+    const signupMessage = document.getElementById("signup-message");
+    const ctaButtons = document.getElementById("cta-buttons");
 
-// Modal utilities
-function showModal(modal) { modal.classList.add("show"); }
-function hideModal(modal) { modal.classList.remove("show"); loginMessage.textContent=""; signupMessage.textContent=""; }
+    // Modal utilities
+    function showModal(modal) { modal.classList.add("show"); }
+    function hideModal(modal) { modal.classList.remove("show"); loginMessage.textContent=""; signupMessage.textContent=""; }
 
-// Navbar rendering
-async function renderNavbar(user){
-    navContainer.innerHTML = "";
-    if(user){
-        const profileRef = doc(db, `artifacts/users/${user.uid}/profile`);
-        const profileSnap = await getDoc(profileRef, { source: "server" });
-        const hasDashboard = profileSnap.exists() && profileSnap.data().onboardingComplete;
+    // Navbar rendering
+    async function renderNavbar(user){
+        navContainer.innerHTML = "";
+        if(user){
+            // Updated doc reference
+            const profileRef = doc(db, "users", user.uid);
+            const profileSnap = await getDoc(profileRef, { source: "server" });
+            const hasDashboard = profileSnap.exists() && profileSnap.data().onboardingComplete;
 
-        navContainer.innerHTML = `
-            <div class="flex items-center space-x-6">
-                <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
-                <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
-                <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
-                <a href="matches.html" class="text-gray-800 hover:text-blue-900 font-medium">Matches</a>
-                <a href="messages.html" class="text-gray-800 hover:text-blue-900 font-medium">Messages</a>
-                ${hasDashboard ? `<a href="bookDash.html" class="text-gray-800 hover:text-green-600 font-medium">Dashboard</a>` : ""}
-                <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
-            </div>
-        `;
-        document.getElementById("logout-btn").addEventListener("click", async()=>{await signOut(auth)});
-    } else {
-        navContainer.innerHTML = `
-            <div class="flex items-center space-x-6">
-                <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
-                <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
-            </div>
-        `;
-        document.getElementById("nav-login").addEventListener("click",()=>showModal(loginModal));
-        document.getElementById("nav-signup").addEventListener("click",()=>showModal(signupModal));
+            navContainer.innerHTML = `
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="text-gray-800 hover:text-blue-900 font-medium">Home</a>
+                    <a href="profile.html" class="text-gray-800 hover:text-blue-900 font-medium">Profile</a>
+                    <a href="feed.html" class="text-gray-800 hover:text-blue-900 font-medium">Feed</a>
+                    <a href="matches.html" class="text-gray-800 hover:text-blue-900 font-medium">Matches</a>
+                    <a href="messages.html" class="text-gray-800 hover:text-blue-900 font-medium">Messages</a>
+                    ${hasDashboard ? `<a href="bookDash.html" class="text-gray-800 hover:text-green-600 font-medium">Dashboard</a>` : ""}
+                    <button id="logout-btn" class="text-gray-600 hover:text-blue-900 font-medium">Logout</button>
+                </div>
+            `;
+            document.getElementById("logout-btn").addEventListener("click", async()=>{await signOut(auth)});
+        } else {
+            navContainer.innerHTML = `
+                <div class="flex items-center space-x-6">
+                    <button id="nav-login" class="text-gray-600 hover:text-blue-900 font-medium">Login</button>
+                    <button id="nav-signup" class="bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900">Sign Up</button>
+                </div>
+            `;
+            document.getElementById("nav-login").addEventListener("click",()=>showModal(loginModal));
+            document.getElementById("nav-signup").addEventListener("click",()=>showModal(signupModal));
+        }
     }
-}
-  
-// Update CTA buttons depending on profile completion
-async function updateCTAs(user){
-    if(!user) return;
-    const profileRef = doc(db, `artifacts/users/${user.uid}/profile`);
-    const profileSnap = await getDoc(profileRef, { source: "server" }); // fresh read
-    const onboardingComplete = profileSnap.exists() ? profileSnap.data().onboardingComplete : false;
+    
+    // Update CTA buttons depending on profile completion
+    async function updateCTAs(user){
+        if(!user) return;
+        // Updated doc reference
+        const profileRef = doc(db, "users", user.uid);
+        const profileSnap = await getDoc(profileRef, { source: "server" }); // fresh read
+        const onboardingComplete = profileSnap.exists() ? profileSnap.data().onboardingComplete : false;
 
-    if(onboardingComplete){
-        ctaButtons.innerHTML = `<a href="bookDash.html" class="btn-dashboard">Go to Dashboard</a>`;
-    } else {
-        ctaButtons.innerHTML = `
-            <a href="author.html" class="btn-author">I'm an Author</a>
-            <a href="influencer.html" class="btn-influencer">I'm an Influencer</a>
-        `;
+        if(onboardingComplete){
+            ctaButtons.innerHTML = `<a href="bookDash.html" class="btn-dashboard">Go to Dashboard</a>`;
+        } else {
+            ctaButtons.innerHTML = `
+                <a href="author.html" class="btn-author">I'm an Author</a>
+                <a href="influencer.html" class="btn-influencer">I'm an Influencer</a>
+            `;
+        }
     }
-}
 
-// Auth listener
-onAuthStateChanged(auth, async user => {
-    mainContentView.classList.remove("hidden");
-    await renderNavbar(user);
-    await updateCTAs(user);
-    if(!user) showModal(signupModal);
-});
-
-// Login
-loginForm.addEventListener("submit", async e=>{
-    e.preventDefault();
-    try{
-        await signInWithEmailAndPassword(auth, loginForm["login-email"].value, loginForm["login-password"].value);
-        hideModal(loginModal);
-    } catch(err){ 
-        loginMessage.textContent=err.message; 
-        loginMessage.style.color="red"; 
-    }
-});
-
-// Signup
-signupForm.addEventListener("submit", async e=>{
-    e.preventDefault();
-    const name = signupForm["signup-name"].value;
-    const email = signupForm["signup-email"].value;
-    const password = signupForm["signup-password"].value;
-    const role = signupForm["signup-role"].value;
-    const bio = signupForm["signup-bio"].value;
-    const photo = signupForm["signup-photo"].value || null;
-
-    try{
-        const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-        const user = userCredential.user;
-        await setDoc(doc(db, `artifacts/users/${user.uid}/profile`), {
-            name,email,role,bio,photo,onboardingComplete:false
-        });
-        hideModal(signupModal);
+    // Auth listener
+    onAuthStateChanged(auth, async user => {
+        mainContentView.classList.remove("hidden");
         await renderNavbar(user);
         await updateCTAs(user);
-    } catch(err){ 
-        signupMessage.textContent=err.message; 
-        signupMessage.style.color="red"; 
-    }
-});
+        if(!user) showModal(signupModal);
+    });
 
-// Close modals
-document.querySelectorAll(".close-btn").forEach(btn => { btn.addEventListener("click",()=>hideModal(btn.closest(".modal"))); });
-document.querySelectorAll(".modal").forEach(modal => { modal.addEventListener("click",e=>{ if(e.target===modal) hideModal(modal); }); });
+    // Login
+    loginForm.addEventListener("submit", async e=>{
+        e.preventDefault();
+        try{
+            await signInWithEmailAndPassword(auth, loginForm["login-email"].value, loginForm["login-password"].value);
+            hideModal(loginModal);
+        } catch(err){ 
+            loginMessage.textContent=err.message; 
+            loginMessage.style.color="red"; 
+        }
+    });
+
+    // Signup
+    signupForm.addEventListener("submit", async e=>{
+        e.preventDefault();
+        const name = signupForm["signup-name"].value;
+        const email = signupForm["signup-email"].value;
+        const password = signupForm["signup-password"].value;
+        const role = signupForm["signup-role"].value;
+        const bio = signupForm["signup-bio"].value;
+        const photo = signupForm["signup-photo"].value || null;
+
+        try{
+            const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+            const user = userCredential.user;
+            // Updated setDoc call to use the "users" collection directly
+            await setDoc(doc(db, "users", user.uid), {
+                name,email,role,bio,photo,onboardingComplete:false, uid: user.uid
+            });
+            hideModal(signupModal);
+            await renderNavbar(user);
+            await updateCTAs(user);
+        } catch(err){ 
+            signupMessage.textContent=err.message; 
+            signupMessage.style.color="red"; 
+        }
+    });
+
+    // Close modals
+    document.querySelectorAll(".close-btn").forEach(btn => { btn.addEventListener("click",()=>hideModal(btn.closest(".modal"))); });
+    document.querySelectorAll(".modal").forEach(modal => { modal.addEventListener("click",e=>{ if(e.target===modal) hideModal(modal); }); });
 </script>
 </body>
 </html>
