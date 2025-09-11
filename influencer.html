@@ -60,17 +60,64 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <label class="block font-medium mb-1">Handle</label>
 <input type="text" id="handle" class="input-field" placeholder="@yourhandle">
 
-<label class="block font-medium mb-1">Dealbreakers</label>
-<textarea id="dealbreakers" class="input-field" rows="3" placeholder="Any preferences or restrictions..."></textarea>
+<label class="block font-medium mb-1 mt-4">Genres & Subgenres</label>
+<div class="mb-4">
+<select id="genre" class="input-field">
+<option value="">Select a genre...</option>
+<option value="Fantasy">Fantasy</option>
+<option value="Romance">Romance</option>
+<option value="Science Fiction">Science Fiction</option>
+<option value="Thriller">Thriller</option>
+</select>
+<div id="subgenre-tags" class="flex flex-wrap gap-2 mt-2"></div>
+</div>
 
-<label class="block font-medium mb-1">Collaboration Style</label>
+<label class="block font-medium mb-1 mt-4">Tropes</label>
+<div class="mb-4">
+<input type="text" id="tropes-input" class="input-field" placeholder="Add tropes (e.g., enemies-to-lovers, found family)...">
+<div id="tropes-tags" class="flex flex-wrap gap-2 mt-2"></div>
+</div>
+<label class="block font-medium mb-1 mt-4">Spice Level</label>
+<div class="mb-4 flex items-center gap-4">
+<span class="text-sm text-gray-500">Fade-to-black</span>
+<input type="range" id="spice-level" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" min="0" max="4" value="0">
+<span class="text-sm text-gray-500">Explicit</span>
+</div>
+
+<label class="block font-medium mb-1 mt-4">Trigger Warnings</label>
+<div id="trigger-warnings-group" class="mb-4 flex flex-wrap gap-4">
+<label><input type="checkbox" name="triggerWarning" value="Violence"> Violence</label>
+<label><input type="checkbox" name="triggerWarning" value="Abuse"> Abuse</label>
+<label><input type="checkbox" name="triggerWarning" value="Self-harm"> Self-harm</label>
+</div>
+
+<label class="block font-medium mb-1 mt-4">Audience Demographics</label>
+<div id="audience-demographics-group" class="mb-4 flex flex-wrap gap-4">
+<label><input type="checkbox" name="audience" value="YA Readers"> YA Readers</label>
+<label><input type="checkbox" name="audience" value="LGBTQ+"> LGBTQ+</label>
+<label><input type="checkbox" name="audience" value="BIPOC"> BIPOC</label>
+</div>
+
+<label class="block font-medium mb-1 mt-4">Dealbreakers</label>
+<textarea id="dealbreakers" class="input-field" rows="3" placeholder="Any preferences or restrictions..."></textarea>
+<div id="dealbreaker-tags" class="flex flex-wrap gap-2 mt-2"></div>
+<p class="text-sm text-gray-500 mt-1">Free text + common tags like mafia thrillers, erotica, religious content.</p>
+
+<label class="block font-medium mb-1 mt-4">Collaboration Style</label>
 <div class="mb-4">
 <label class="mr-4"><input type="radio" name="collabStyle" value="Creative Freedom" checked> Creative Freedom</label>
-<label class="mr-4"><input type="radio" name="collabStyle" value="Guided"> Guided</label>
+<label class="mr-4"><input type="radio" name="collabStyle" value="Structured Campaign"> Structured Campaign</label>
 <label><input type="radio" name="collabStyle" value="Flexible"> Flexible</label>
 </div>
 
-<label class="block font-medium mb-1">Platforms</label>
+<label class="block font-medium mb-1 mt-4">Time Commitment</label>
+<div class="mb-4 flex items-center gap-4">
+<span class="text-sm text-gray-500">Light</span>
+<input type="range" id="time-commitment" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" min="0" max="4" value="0">
+<span class="text-sm text-gray-500">Heavy</span>
+</div>
+
+<label class="block font-medium mb-1 mt-4">Platforms</label>
 <div class="mb-4">
 <label class="mr-4"><input type="checkbox" name="platform" value="Instagram"> Instagram</label>
 <label class="mr-4"><input type="checkbox" name="platform" value="TikTok"> TikTok</label>
@@ -78,11 +125,12 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <label><input type="checkbox" name="platform" value="Blog"> Blog</label>
 </div>
 
-<label class="block font-medium mb-1">Aesthetic</label>
+<label class="block font-medium mb-1 mt-4">Aesthetic</label>
 <div id="aesthetic-options" class="flex flex-wrap mb-6">
-<div class="aesthetic-option" data-aesthetic="Minimalist"><img src="https://via.placeholder.com/60?text=M" alt="Minimalist"></div>
-<div class="aesthetic-option" data-aesthetic="Colorful"><img src="https://via.placeholder.com/60?text=C" alt="Colorful"></div>
-<div class="aesthetic-option" data-aesthetic="Dark"><img src="https://via.placeholder.com/60?text=D" alt="Dark"></div>
+<div class="aesthetic-option" data-aesthetic="dark-moody"><img src="https://via.placeholder.com/100?text=Dark/Moody" alt="Dark/Moody"></div>
+<div class="aesthetic-option" data-aesthetic="pastel-floral"><img src="https://via.placeholder.com/100?text=Pastel/Floral" alt="Pastel/Floral"></div>
+<div class="aesthetic-option" data-aesthetic="minimalist"><img src="https://via.placeholder.com/100?text=Minimalist" alt="Minimalist"></div>
+<div class="aesthetic-option" data-aesthetic="cozy-vintage"><img src="https://via.placeholder.com/100?text=Cozy/Vintage" alt="Cozy/Vintage"></div>
 </div>
 
 <div class="flex space-x-4">
@@ -118,12 +166,12 @@ import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/fi
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-  authDomain: "litwire-97956.firebaseapp.com",
-  projectId: "litwire-97956",
-  storageBucket: "litwire-97956.appspot.com",
-  messagingSenderId: "263009111921",
-  appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
+apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+authDomain: "litwire-97956.firebaseapp.com",
+projectId: "litwire-97956",
+storageBucket: "litwire-97956.appspot.com",
+messagingSenderId: "263009111921",
+appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -133,98 +181,232 @@ const db = getFirestore(app);
 const signOutBtn = document.getElementById('sign-out-btn');
 const dashboardLink = document.getElementById('dashboard-link');
 
-signOutBtn.addEventListener('click', async () => {
-  await signOut(auth);
-  window.location.href = 'index.html';
-});
+const genreDropdown = document.getElementById('genre');
+const subgenreTagsDiv = document.getElementById('subgenre-tags');
+const tropesInput = document.getElementById('tropes-input');
+const tropesTagsDiv = document.getElementById('tropes-tags');
+const dealbreakersInput = document.getElementById('dealbreakers');
+const dealbreakerTagsDiv = document.getElementById('dealbreaker-tags');
+const triggerWarningCheckboxes = document.querySelectorAll('input[name="triggerWarning"]');
+const audienceCheckboxes = document.querySelectorAll('input[name="audience"]');
 
-let currentUser = null;
-let profileData = {};
+const subgenres = {
+'Fantasy': ['High Fantasy', 'Urban Fantasy', 'Dark Academia'],
+'Romance': ['Enemies-to-Lovers', 'Cozy', 'Fantasy Romance'],
+'Science Fiction': ['Dystopian', 'Space Opera', 'Cyberpunk'],
+'Thriller': ['Psychological Thriller', 'Legal Thriller', 'Cozy Mystery']
+};
+
+const spiceLevelLabels = ['Fade-to-black', 'Low', 'Medium', 'High', 'Explicit'];
+const timeCommitmentLabels = ['Very Light', 'Light', 'Medium', 'Heavy', 'Very Heavy'];
+
 const loadingOverlay = document.getElementById('loading-overlay');
 const authLoading = document.getElementById('auth-loading');
 const errorOverlay = document.getElementById('error-overlay');
 const debugOutput = document.getElementById('debug-output');
 
+let currentUser = null;
+let profileData = {};
+
 authLoading.classList.remove('hidden');
 
 onAuthStateChanged(auth, async (user) => {
-  authLoading.classList.add('hidden');
-  if (!user) { window.location.href = 'index.html'; return; }
-  currentUser = user;
+authLoading.classList.add('hidden');
+if (!user) { window.location.href = 'index.html'; return; }
+currentUser = user;
 
-  const docRef = doc(db, `artifacts/users/${user.uid}/profile`);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    profileData = docSnap.data();
-    prefillForm(profileData);
-    if(profileData.onboardingComplete) dashboardLink.classList.remove('hidden');
-  }
+const docRef = doc(db, `artifacts/users/${user.uid}/profile`);
+const docSnap = await getDoc(docRef);
+if (docSnap.exists()) {
+profileData = docSnap.data();
+prefillForm(profileData);
+if(profileData.onboardingComplete) dashboardLink.classList.remove('hidden');
+}
 });
 
+signOutBtn.addEventListener('click', async () => {
+await signOut(auth);
+window.location.href = 'index.html';
+});
+
+function addTag(container, text) {
+const tag = document.createElement('span');
+tag.className = 'px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-full font-medium cursor-pointer flex items-center';
+tag.innerHTML = `${text} <span class="ml-2 text-red-500 hover:text-red-700">&times;</span>`;
+tag.querySelector('span').addEventListener('click', () => {
+tag.remove();
+updatePreview();
+});
+container.appendChild(tag);
+}
+
+function handleInputChange(event, container) {
+if (event.key === 'Enter' || event.type === 'blur') {
+event.preventDefault();
+const value = event.target.value.trim();
+if (value) {
+addTag(container, value);
+event.target.value = '';
+updatePreview();
+}
+}
+}
+
 function prefillForm(data) {
-  document.getElementById('handle').value = data.handle || '';
-  document.getElementById('dealbreakers').value = data.dealbreakers || '';
-  if (data.collabStyle) {
-    const styleRadio = document.querySelector(`input[name="collabStyle"][value="${data.collabStyle}"]`);
-    if (styleRadio) styleRadio.checked = true;
-  }
-  if (Array.isArray(data.platforms)) {
-    data.platforms.forEach(p => {
-      const cb = document.querySelector(`input[name="platform"][value="${p}"]`);
-      if (cb) cb.checked = true;
-    });
-  }
-  if (data.aesthetic) {
-    const option = document.querySelector(`.aesthetic-option[data-aesthetic="${data.aesthetic}"]`);
-    if(option) option.classList.add('selected');
-  }
-  updatePreview();
+document.getElementById('handle').value = data.handle || '';
+document.getElementById('dealbreakers').value = data.dealbreakers || '';
+if (data.collabStyle) {
+const styleRadio = document.querySelector(`input[name="collabStyle"][value="${data.collabStyle}"]`);
+if (styleRadio) styleRadio.checked = true;
+}
+if (Array.isArray(data.platforms)) {
+data.platforms.forEach(p => {
+const cb = document.querySelector(`input[name="platform"][value="${p}"]`);
+if (cb) cb.checked = true;
+});
+}
+if (data.aesthetic) {
+const option = document.querySelector(`.aesthetic-option[data-aesthetic="${data.aesthetic}"]`);
+if(option) option.classList.add('selected');
+}
+if (data.genres) {
+data.genres.forEach(genre => addTag(subgenreTagsDiv, genre));
+}
+if (data.tropes) {
+data.tropes.forEach(trope => addTag(tropesTagsDiv, trope));
+}
+if (data.triggerWarnings) {
+data.triggerWarnings.forEach(tw => {
+const cb = document.querySelector(`input[name="triggerWarning"][value="${tw}"]`);
+if (cb) cb.checked = true;
+});
+}
+if (data.audience) {
+data.audience.forEach(demographic => {
+const cb = document.querySelector(`input[name="audience"][value="${demographic}"]`);
+if (cb) cb.checked = true;
+});
+}
+if (data.dealbreakerTags) {
+data.dealbreakerTags.forEach(tag => addTag(dealbreakerTagsDiv, tag));
+}
+if (data.spiceLevel) {
+document.getElementById('spice-level').value = data.spiceLevel;
+}
+if (data.timeCommitment) {
+document.getElementById('time-commitment').value = data.timeCommitment;
+}
+updatePreview();
 }
 
 function updatePreview() {
-  const sidebar = document.getElementById('preview-sidebar');
-  sidebar.classList.remove('hidden');
-  sidebar.innerHTML = '';
-  const handle = document.getElementById('handle').value || 'Your handle';
-  const handleText = document.createElement('p');
-  handleText.className = 'text-xl font-bold mb-2';
-  handleText.textContent = handle;
-  sidebar.appendChild(handleText);
+const sidebar = document.getElementById('preview-sidebar');
+sidebar.classList.remove('hidden');
+sidebar.innerHTML = '';
+const handle = document.getElementById('handle').value || 'Your handle';
+const handleText = document.createElement('p');
+handleText.className = 'text-xl font-bold mb-2';
+handleText.textContent = handle;
+sidebar.appendChild(handleText);
 
-  const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
-  if(platforms.length){
-    const platformsEl = document.createElement('p');
-    platformsEl.textContent = `Platforms: ${platforms.join(', ')}`;
-    sidebar.appendChild(platformsEl);
-  }
+const genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+if (genres.length) {
+const genresEl = document.createElement('p');
+genresEl.textContent = `Genres: ${genres.join(', ')}`;
+sidebar.appendChild(genresEl);
+}
 
-  const aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic;
-  if(aesthetic){
-    const aestheticEl = document.createElement('p');
-    aestheticEl.textContent = `Aesthetic: ${aesthetic}`;
-    sidebar.appendChild(aestheticEl);
-  }
+const tropes = Array.from(tropesTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+if (tropes.length) {
+const tropesEl = document.createElement('p');
+tropesEl.textContent = `Tropes: ${tropes.join(', ')}`;
+sidebar.appendChild(tropesEl);
+}
+
+const spiceLevel = document.getElementById('spice-level').value;
+const spiceEl = document.createElement('p');
+spiceEl.textContent = `Spice Level: ${spiceLevelLabels[spiceLevel]}`;
+sidebar.appendChild(spiceEl);
+
+const triggerWarnings = Array.from(document.querySelectorAll('input[name="triggerWarning"]:checked')).map(cb => cb.value);
+if (triggerWarnings.length) {
+const twEl = document.createElement('p');
+twEl.textContent = `Trigger Warnings: ${triggerWarnings.join(', ')}`;
+sidebar.appendChild(twEl);
+}
+
+const audience = Array.from(document.querySelectorAll('input[name="audience"]:checked')).map(cb => cb.value);
+if (audience.length) {
+const audienceEl = document.createElement('p');
+audienceEl.textContent = `Audience: ${audience.join(', ')}`;
+sidebar.appendChild(audienceEl);
+}
+
+const dealbreakers = document.getElementById('dealbreakers').value.trim();
+if(dealbreakers) {
+const dbTextEl = document.createElement('p');
+dbTextEl.textContent = `Dealbreakers (text): ${dealbreakers}`;
+sidebar.appendChild(dbTextEl);
+}
+
+const dealbreakerTags = Array.from(dealbreakerTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+if (dealbreakerTags.length) {
+const dbTagsEl = document.createElement('p');
+dbTagsEl.textContent = `Dealbreaker Tags: ${dealbreakerTags.join(', ')}`;
+sidebar.appendChild(dbTagsEl);
+}
+
+const collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
+const collabEl = document.createElement('p');
+collabEl.textContent = `Collaboration: ${collabStyle}`;
+sidebar.appendChild(collabEl);
+
+const timeCommitment = document.getElementById('time-commitment').value;
+const timeEl = document.createElement('p');
+timeEl.textContent = `Time Commitment: ${timeCommitmentLabels[timeCommitment]}`;
+sidebar.appendChild(timeEl);
+
+const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
+if(platforms.length){
+const platformsEl = document.createElement('p');
+platformsEl.textContent = `Platforms: ${platforms.join(', ')}`;
+sidebar.appendChild(platformsEl);
+}
+
+const aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic;
+if(aesthetic){
+const aestheticEl = document.createElement('p');
+aestheticEl.textContent = `Aesthetic: ${aesthetic}`;
+sidebar.appendChild(aestheticEl);
+}
 }
 
 function saveProfile() {
-  if(!currentUser) return;
+if(!currentUser) return;
 
-  profileData.handle = document.getElementById('handle').value.trim();
-  profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
-  profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
-  profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
-  profileData.aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic || '';
-  profileData.onboardingComplete = true;
+profileData.handle = document.getElementById('handle').value.trim();
+profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
+profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
+profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
+profileData.aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic || '';
+profileData.genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+profileData.tropes = Array.from(tropesTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+profileData.spiceLevel = document.getElementById('spice-level').value;
+profileData.triggerWarnings = Array.from(document.querySelectorAll('input[name="triggerWarning"]:checked')).map(cb => cb.value);
+profileData.audience = Array.from(document.querySelectorAll('input[name="audience"]:checked')).map(cb => cb.value);
+profileData.dealbreakerTags = Array.from(dealbreakerTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+profileData.timeCommitment = document.getElementById('time-commitment').value;
+profileData.onboardingComplete = true;
 
-  loadingOverlay.classList.remove('hidden');
+loadingOverlay.classList.remove('hidden');
 
-  setDoc(doc(db, `artifacts/users/${currentUser.uid}/profile`), profileData, {merge:true})
-    .then(()=> window.location.href = 'bookDash.html')
-    .catch(err=>{
-      debugOutput.textContent = JSON.stringify(err,null,2);
-      errorOverlay.classList.remove('hidden');
-    })
-    .finally(()=> loadingOverlay.classList.add('hidden'));
+setDoc(doc(db, `artifacts/users/${currentUser.uid}/profile`), profileData, {merge:true})
+.then(()=> window.location.href = 'bookDash.html')
+.catch(err=>{
+debugOutput.textContent = JSON.stringify(err,null,2);
+errorOverlay.classList.remove('hidden');
+})
+.finally(()=> loadingOverlay.classList.add('hidden'));
 }
 
 // Event listeners
@@ -235,12 +417,32 @@ document.getElementById('dealbreakers').addEventListener('input', updatePreview)
 document.querySelectorAll('input[name="platform"]').forEach(cb=>cb.addEventListener('change', updatePreview));
 document.querySelectorAll('input[name="collabStyle"]').forEach(rb=>rb.addEventListener('change', updatePreview));
 document.querySelectorAll('.aesthetic-option').forEach(option=>{
-  option.addEventListener('click',()=>{
-    document.querySelectorAll('.aesthetic-option').forEach(opt=>opt.classList.remove('selected'));
-    option.classList.add('selected');
-    updatePreview();
-  });
+option.addEventListener('click',()=>{
+document.querySelectorAll('.aesthetic-option').forEach(opt=>opt.classList.remove('selected'));
+option.classList.add('selected');
+updatePreview();
 });
+});
+
+genreDropdown.addEventListener('change', (e) => {
+subgenreTagsDiv.innerHTML = '';
+const selectedGenre = e.target.value;
+if (selectedGenre && subgenres[selectedGenre]) {
+subgenres[selectedGenre].forEach(sub => addTag(subgenreTagsDiv, sub));
+}
+updatePreview();
+});
+
+tropesInput.addEventListener('keydown', (e) => handleInputChange(e, tropesTagsDiv));
+tropesInput.addEventListener('blur', (e) => handleInputChange(e, tropesTagsDiv));
+
+dealbreakersInput.addEventListener('keydown', (e) => handleInputChange(e, dealbreakerTagsDiv));
+dealbreakersInput.addEventListener('blur', (e) => handleInputChange(e, dealbreakerTagsDiv));
+
+triggerWarningCheckboxes.forEach(cb => cb.addEventListener('change', updatePreview));
+audienceCheckboxes.forEach(cb => cb.addEventListener('change', updatePreview));
+document.getElementById('spice-level').addEventListener('input', updatePreview);
+document.getElementById('time-commitment').addEventListener('input', updatePreview);
 </script>
 </body>
 </html>
