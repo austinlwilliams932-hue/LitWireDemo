@@ -30,7 +30,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
 
-<!-- Full LitWire Header -->
 <header class="header-top">
 <nav>
 <div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
@@ -61,41 +60,39 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <button onclick="document.getElementById('error-overlay').classList.add('hidden');" class="button mt-4">Close</button>
 </div>
 
-<!-- Edit Profile Modal -->
 <div id="edit-profile-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
-        <h2 class="text-xl font-bold mb-4">Edit Profile</h2>
-        <form id="edit-profile-form" class="space-y-4">
-            <div>
-                <label class="block font-medium text-gray-700">Name</label>
-                <input type="text" id="edit-name" class="w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-                <label class="block font-medium text-gray-700">Email</label>
-                <input type="email" id="edit-email" class="w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-                <label class="block font-medium text-gray-700">Role</label>
-                <input type="text" id="edit-role" class="w-full border rounded px-3 py-2" />
-            </div>
-            <div>
-                <label class="block font-medium text-gray-700">Bio</label>
-                <textarea id="edit-bio" class="w-full border rounded px-3 py-2"></textarea>
-            </div>
-            <div>
-                <label class="block font-medium text-gray-700">Profile Photo</label>
-                <input type="file" id="edit-photo-file" accept="image/*" class="w-full border rounded px-3 py-2" />
-                <p class="text-xs text-gray-500 mt-1">Choose a file to upload as your profile picture.</p>
-            </div>
-            <div class="flex justify-end space-x-3 mt-4">
-                <button type="button" id="cancel-edit" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
-                <button type="submit" class="px-4 py-2 rounded bg-blue-900 text-white hover:bg-blue-700">Save</button>
-            </div>
-        </form>
-        <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl">&times;</button>
-    </div>
+<div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+<h2 class="text-xl font-bold mb-4">Edit Profile</h2>
+<form id="edit-profile-form" class="space-y-4">
+<div>
+<label class="block font-medium text-gray-700">Name</label>
+<input type="text" id="edit-name" class="w-full border rounded px-3 py-2" />
 </div>
-
+<div>
+<label class="block font-medium text-gray-700">Email</label>
+<input type="email" id="edit-email" class="w-full border rounded px-3 py-2" />
+</div>
+<div>
+<label class="block font-medium text-gray-700">Role</label>
+<input type="text" id="edit-role" class="w-full border rounded px-3 py-2" />
+</div>
+<div>
+<label class="block font-medium text-gray-700">Bio</label>
+<textarea id="edit-bio" class="w-full border rounded px-3 py-2"></textarea>
+</div>
+<div>
+<label class="block font-medium text-gray-700">Profile Photo</label>
+<input type="file" id="edit-photo-file" accept="image/*" class="w-full border rounded px-3 py-2" />
+<p class="text-xs text-gray-500 mt-1">Choose a file to upload as your profile picture.</p>
+</div>
+<div class="flex justify-end space-x-3 mt-4">
+<button type="button" id="cancel-edit" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+<button type="submit" class="px-4 py-2 rounded bg-blue-900 text-white hover:bg-blue-700">Save</button>
+</div>
+</form>
+<button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl">&times;</button>
+</div>
+</div>
 </div>
 </main>
 
@@ -113,13 +110,13 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-    authDomain: "litwire-97956.firebaseapp.com",
-    projectId: "litwire-97956",
-    storageBucket: "litwire-97956.appspot.com",
-    messagingSenderId: "263009111921",
-    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-    measurementId: "G-ZWVFHF5YQX"
+apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+authDomain: "litwire-97956.firebaseapp.com",
+projectId: "litwire-97956",
+storageBucket: "litwire-97956.appspot.com",
+messagingSenderId: "263009111921",
+appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+measurementId: "G-ZWVFHF5YQX"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -143,65 +140,116 @@ function show(el){ el.classList.remove('hidden'); }
 function hide(el){ el.classList.add('hidden'); }
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = 'index.html';
-        return;
-    }
-    const userId = user.uid;
-    show(loadingEl);
+if (!user) {
+window.location.href = 'index.html';
+return;
+}
+const userId = user.uid;
+show(loadingEl);
 
-    try {
-        const docRef = doc(db, `artifacts/users/${userId}/profile`);
-        const docSnap = await getDoc(docRef);
-        const profile = docSnap.exists() ? docSnap.data() : {};
-        hide(loadingEl);
-        show(profileContainer);
-        showProfile(profile, userId);
-    } catch (err) {
-        debugOutput.textContent = JSON.stringify(err, null, 2);
-        hide(loadingEl);
-        show(errorOverlay);
-    }
+try {
+const userDocRef = doc(db, 'users', userId);
+const userDocSnap = await getDoc(userDocRef);
+
+if (!userDocSnap.exists()) {
+throw new Error("User document not found.");
+}
+const userData = userDocSnap.data();
+const userType = userData.userType;
+
+let profileData = {
+name: userData.name || '',
+email: userData.email || '',
+photo: userData.photo || '',
+userType: userType || 'N/A'
+};
+
+const profileDocRef = doc(db, `users/${userId}/profiles/${userType}`);
+const profileDocSnap = await getDoc(profileDocRef);
+
+if (profileDocSnap.exists()) {
+const profileSpecificData = profileDocSnap.data();
+Object.assign(profileData, profileSpecificData);
+}
+
+hide(loadingEl);
+show(profileContainer);
+showProfile(profileData, userId);
+
+} catch (err) {
+debugOutput.textContent = JSON.stringify(err, null, 2);
+hide(loadingEl);
+show(errorOverlay);
+}
 });
 
 document.getElementById('sign-out-btn').addEventListener('click', async () => {
-    await signOut(auth);
-    window.location.href = 'index.html';
+await signOut(auth);
+window.location.href = 'index.html';
 });
 
 function showProfile(profile, userId) {
-    const { name, email, role, bio, photo } = profile;
+const { name, email, userType, photo } = profile;
 
-    // Corrected Base64 encoded SVG for a simple person outline icon
-    const defaultIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZlNjM2NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE5IDIxdi0yYy0xLjY3Ni0xLjczNC0zLjg0LTIuMTg3LTYuMDc4LTIuMjEzLS40NjItLjAwNS0uOTIzLS4wMDUtMS4zODIuMDA0LTIuMjQ4LjAyNy00LjQwMi41MDgtNi4wNzggMi4yMWwxLTF6TTkgNGEzIDMgMCAxIDAgNiAwTTE3LjUgMTAuMjVjLjY5IDAgMS4yNS0uNTYgMS4yNS0xLjI1cy0uNTYtMS4yNS0xLjI1LTEuMjUtMS4yNS41Ni0xLjI1IDEuMjVzLjU2IDEuMjUgMS4yNSAxLjI1Wm0tMTEgMGMtLjY5IDAtMS4yNS0uNTYtMS4yNS0xLjI1cy41Ni0xLjI1IDEuMjUtMS4yNSAxLjI1LjU2IDEuMjUgMS4yNS0uNTYgMS4yNS0xLjI1IDEuMjV6bTMuMzItMi45NzNjLTIuMTM4LS4yOTgtNC4wNDMtLjE4OS01LjQyMSAxLjI2YTIuMTYyIDIuMTYyIDAgMCAwLS41NzguODcyYy0uMTgzLjY4MS0uMTQyIDEuMzk3LS4wNjYgMi4xMmEuNjM0LjYzNCAwIDAgMC4xNzguNDE5Yy42NDYuNzM1IDEuNTYgMS4xOCAyLjU2NiAxLjUzIDMuMjUyIDEuMTQzIDUuNzUxIDEuMTQzIDguOTg1IDBjMS4wMDYtLjM1MSAxLjkxOS0uNzk2IDIuNTY1LTEuNTNhLjYzNC42MzQgMCAwIDAgLjE3OS0uNDE5Yy4wNzUtLjcyLS4wNjktMS40NzEtLjI1Mi0yLjE4NWEyLjE1IDIuMTUgMCAwIDAtLjYtLjkxNWMtMS4zOTMtMS40NC0zLjMzNi0xLjU1LTUuNzQtMS4yMjMtMS43NjEuMjQzLTMuMzIuNTQ0LTQuMTE3Ljk4My0uNTQ4LjMwMy0xLjAxOS43MTEtMS41MjEgMS4xNTYtMS4wMjguODg3LTIuMTc5IDEuNDctMy41MzMgMS43MjItOS4xNDYuODk1LTExLjY1IDEuMTI4LTExLjkyNCAyLjc3OC0uMDguNDkxLS4wODcgMS4wMDUtLjA5NSAxLjUwOS0uMDMxIDEuODczLS4xODIgMy40ODMtLjA5NiAzLjgwNnNMLjc0LjM1OSAyLjMyLjM3NGgxNi44MjZjMS41ODQuMDE1IDIuMDY1LS4xNjcgMi4xMDQtLjM4Mi4wNzQtLjQyNy0uMDY4LTEuMzYtLjA1OC0yLjU1Ny4wMDktLjk5Ni0uMDM2LTEuOTI0LS4wNDktMi4zMy0xLjYzOC01LjM5LTIuMTQ0LTcuNDkyLTQuMTU2LTcuNjc0LS45ODQtLjA5LTIuMzY5LS4yMjQtNC44OTUtLjM4Ny0xLjk5Ny0uMTI0LTMuNzU0LS4xNzItNS4yODEtLjA2LTcuODE1LjY2OC0xMC40NzcgMS4zMzItMTIuMjg5IDEuOTItMS4wMjEuMzEyLTEuOTc2LjU2OC0yLjg4Ny43OTQtLjg1OS4yMTctMS41NzkuMzk4LTIuMTY0LjUxLTIuNDAzLjQ2NC0zLjY5NC43MDUtNC41NDQuODYtMi4yNDYuNDE2LTMuNDY3LjU1OC00LjA0Ni42NTQtMS43ODgtLjMxNi0zLjU2OC0uNTMxLTUuMDQ0LS42MDgtLjc0LS4wMzktMS40MDcuMDQ1LTEuOTkxLjIxMi0uODc2LjI0My0xLjUyNC41NjEtMi4xNTYuODgxLS40MzIuMjItLjgzNi40NzQtMS4yNTMuNzkyLS42NDMuNTQtMS4yNTcgMS4yNTgtMS44MjIgMi4wNy0uNTY2LjgzNi0xLjA1NiAxLjg4OC0xLjU4OCAzLjMyNC0xLjI4NCAzLjQ5Mi0yLjE4NSA2LjIyOS0yLjY3NyA3LjYwMi0uMjQxLjY4My0uNDYgMS4zNjgtLjYxMyAxLjg4NS0uMTA0LjM0OS0uMTQzLjUxNy0uMTQzLjYwOC0uMDE4LjMtLjA1Mi41ODYtLjA1Ni44NTctLjA3NC45Ni0uMDkgMi4zNTctLjA5OSAzLjYwNy0uMDEyIDEuMzItLjAyMiAyLjcwNi0uMDM4IDMuOTk1LS4wNTUgMi40NzEtLjE0OCA0LjczNi0uMjg4IDUuMzYtLjUyMi43MzItMS43MzMgMi4zMTctNC4xNzUgNC45ODQtLjUwNC41NTgtMS4yOTQgMS41ODctMi4yNDIgMi41NjItMS4wODkgMS4xMjYtMi4yNDEgMi4yNDItMy42NjggMy40MjMtNC4xNjUgMy40MjYtNC43NTMgMy45OC01Ljc2NiA0LjM1Mi0uMTQ0LjA1Mi0uMjkuMTAyLS40MzkuMTVhMS4xNTEgMS4xNTEgMCAwIDAtLjUyNy4yMzQtMi4yMDcgMi4yMDcgMCAwIDAtLjk3Ny45MzlCjIyLjY1My42MTJjLS4yNzQuMDU1LS41NTEuMDA1LS43OTktLjEyMS0uMjQ5LS4xMTYtLjUzMi0uMzAzLS43ODYtLjU3MS0uNDQ2LS40NjctLjk1MS0xLjI0OC0xLjQ1My0yLjIyMy0xLjEyNC0xLjk1My0yLjAyOS00LjAxNi0yLjIyOC01LjU2OC0uNjEyLTQuODE0LS43OTktOC4yNDUtLjg4Ni05LjM0Mi0uMDIzLS4yNTItLjA1OC0uNTQzLS4xNDEtLjg2Ni0uMTAyLS4zOTktLjI4LS42MjQtLjU0NS0uODgtLjc2LS43MzMtMS43NjgtMS42OTktMi42NDgtMi45MjgtMS4wOTktMS40NzUtMS41OTktMi43NzEtMS43NzQtMy41MjItLjE1OS0uNjk2LS4zMTItMS40OTMtLjQyOC0yLjQxNC0uMTM5LTEuMTIyLS4yMzUtMi41OTQtLjIzMi00Ljg2OS4wMDYtLjU3My4wMzYtMS4wNDguMDc1LTEuNDQ5LjA3Ni0uNzc5LjIxLTEuNDI1LjMzNC0xLjk0NC4xMi0uNTE2LjIxMS0xLjAyLjI3Ni0xLjQyLjQ0MS0yLjY4MSAxLjA1NC00Ljc3MiAxLjYzNi02LjU5NmE0LjAxMyA0LjAxMyAwIDAgMCAxLjU0OS00LjY2NmMuMzU1LS43NzcuOTc1LTIuNDMzIDEuODU5LTUuMDEyIDEuOTc1LTEuNjQ2IDMuODU0LTIuMTczIDYuMjY0LTIuMjU4IDEuMTItLjA0IDMuMTI3LS4xMjcgNS4wMTktLjI0NCAxLjIzMy0uMDc3IDIuNTM1LS4xNTkgMy43NjUtLjIxNiAxLjY5MS0uMDg0IDIuOTQ3LS4yMTQgNC42MjUtLjM1NyAyLjM0Ni0uMTk5IDUuMTYtLjUwNSA3LjA0NS0uODIzIDEuNDI5LS4yMjQgMi43MTMtLjM0MyAzLjc2OC0uMzczIDMuMzI0LS4wOTcgNS44NTQtLjIxOCA2LjQyOS0uNTUxLjE5LS4xMTEuMzctLjM4NC40OTMtLjc1OWExLjIxIDEuMjEgMCAwIDAtLjIwNS0uNjYxYy0uOTQ3LTEuNDYzLTIuMTQtMi4wOTItMy4xMTktMi40MjgtLjIyLS4wNzQtLjQ0LS4xNC0uNjk2LS4yMjJhMi45OTggMi45OTggMCAwIDAtMS43NzItLjE2MmMtMS44OC40MzktMi4wODkuNjI0LTQuMTE5LjkzMS0xLjI2NC4xODItMi42NTMuMzIzLTMuOTgyLjQxNS0xLjIyNy4wODgtMi4yNDkuMDkyLTMuMDM1LjA3Ny0uMTctLjAwMy0uMzYtLjAxOC0uNTU5LS4wMzUtMS44NzUtLjE3MS0yLjc0OC0uNDEtMy42Mi0uNDYxLS42MDItLjA0Mi0xLjQ0LS4wNTYtMi41MS0uMDU1LTIuMDY3LjAwMy00LjExMi4xMy02LjU1My4zOTYtMi40NDMuMjY2LTUuNTExLjYyNS04LjAyMi44NjItMS4yMy4xMTgtMi40NDcuMjA4LTMuNDI3LjI1NS0uOTcuMDQ2LTEuNzUyLjA2My0yLjQyNS4wNTUtLjY3My0uMDA4LTEuMjYtLjAyMi0xLjc4My0uMDc1LS45NDctLjA5Ny0xLjk2OS0uMzItMy4xMDMtLjYyMi0xLjQxNi0uMzg0LTIuNjYtLjkxMy0zLjgyMy0xLjU1NmwtLjYwMy0uMzIyLTEuMTk2LS42MzhjLS42OTgtLjM3My0xLjQ0MS0uNzY2LTIuMjI2LTEuMjE3LTEuNDQtLjc4Ni0yLjczMi0xLjk5Mi0zLjQ0OS0zLjIzOC0uNzE4LTEuMjQ1LS44NzktMi42OTUtLjUwNy0zLjg1NS4zNjktMS4xMzYuNzctMS42NjQgMS4xNjYtMi4wMDguNDk1LS40MjgtLjYzOS0uMzcyLS43OTktLjM3NC0uNjUyLS4wMS0xLjMxMS0uMDEyLTEuOTg3LS4wMDUtLjc2NS4wMDYtMS41MjMuMDEzLTIuMjc0LS4wMzctMS42Ni0uMTEyLTMuMzI5LS4zMTQtNC45MTQtLjY2NC0uNzcxLS4xNjktMS40NzYtLjM1MS0yLjA0LS40MDQtLjYwMi0uMDU2LTEuMTM1LS4wNTYtMS42NDktLjAyMS0uNjI4LjA0My0xLjI0OS4xOTItMS44MTguNDU0LS42MDMuMjgxLTEuMTE3LjY4My0xLjQ2MyAxLjE0OS0uNjcuODkzLTEuMTQyIDEuOTQtMS4zNDEgMi41NzItLjIzLjcyNS0uMTA3IDEuMzY4LjE2OSAxLjkyM2wuNTM0IDEuMThjLjI0MS41MjQuNzcgMS42MDcgMS40MzcgMy4yNjl6Ii8+PC9zdmc+';
+const defaultIcon = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzZlNjM2NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTE5IDIxdi0yYy0xLjY3Ni0xLjczNC0zLjg0LTIuMTg3LTYuMDc4LTIuMjEzLS40NjItLjAwNS0uOTIzLS4wMDUtMS4zODIuMDA0LTIuMjQ4LjAyNy00LjQwMi41MDgtNi4wNzggMi4yMWwxLTF6TTkgNGEzIDMgMCAxIDAgNiAwTTE3LjUgMTAuMjVjLjY5IDAgMS4yNS0uNTYgMS4yNS0xLjI1cy0uNTYtMS4yNS0xLjI1LTEuMjVzLTEuMjUuNTYtMS4yNSAxLjI1cy41NiAxLjI1IDEuMjUgMS4yNVptLTExIDBjLS42OSAwLTEuMjUtLjU2LTEuMjUtMS4yNXMuNTYtMS4yNSAxLjI1LTEuMjVzMS4yNS41NiAxLjI1IDEuMjUtLjU2IDEuMjUtMS4yNSAxLjI1em0zLjMyLTkuOTczYy0yLjEzOC0uMjk4LTQuMDQzLS4xODktNS40MjEgMS4yNmEyLjE2MiAyLjE2MiAwIDAgMC0uNTc4Ljg3MmMtLjE4My42ODEtLjE0MiAxLjM5Ny0uMDY2IDIuMTJhLjYzNC42MzQgMCAwIDAuMTc4LjQxOWMuNjQ2LjczNSAxLjU2IDEuMTggMi41NjYgMS41MyAzLjI1MiAxLjE0MyA1Ljc1MSAxLjE0MyA4Ljk4NSAwbDEuMDA2LS4zNTEgMS45MTktLjc5NiAyLjU2NS0xLjUzYy42NDYtLjczNSAxLjU2LTEuMTggMi41NjUtMS41M2ExLjIzMyAxLjIzMyAwIDAgMC0uMjU1Ljg1MWMuMTIzLjM5Ny4wMTIuNjg0LS4xNzguNDE5Yy4wNzUtLjcyLS4wNjktMS40NzEtLjI1Mi0yLjE4NWEyLjE1IDIuMTUgMCAwIDAtLjYtLjkxNWMtMS4zOTMtMS40NC0zLjMzNi0xLjU1LTUuNzQtMS4yMjMtMS43NjEuMjQzLTMuMzIuNTQ0LTQuMTE3Ljk4My0uNTQ4LjMwMy0xLjAxOS43MTEtMS41MjEgMS4xNTYtMS4wMjguODg3LTIuMTc5IDEuNDctMy41MzMgMS43MjItOS4xNDYuODk1LTExLjY1IDEuMTI4LTExLjkyNCAyLjc3OC0uMDguNDkxLS4wODcgMS4wMDUtLjA5NSAxLjUwOS0uMDMxIDEuODczLS4xODIgMy40ODMtLjA5NiAzLjgwNnNMLjc0LjM1OSAyLjMyLjM3NGgxNi44MjZjMS41ODQuMDE1IDIuMDY1LS4xNjcgMi4xMDQtLjM4Mi4wNzQtLjQyNy0uMDY4LTEuMzYtLjA1OC0yLjU1Ny4wMDktLjk5Ni0uMDM2LTEuOTI0LS4wNDktMi4zMy0xLjYzOC01LjM5LTIuMTQ0LTcuNDkyLTQuMTU2LTcuNjc0LS45ODQtLjA5LTIuMzY5LS4yMjQtNC44OTUtLjM4Ny0xLjk5Ny0uMTI0LTMuNzU0LS4xNzItNS4yODEtLjA2LTcuODE1LjY2OC0xMC40NzcgMS4zMzItMTIuMjg5IDEuOTItMS4wMjEuMzEyLTEuOTc2LjU2OC0yLjg4Ny43OTQtLjg1OS4yMTctMS41NzkuMzk4LTIuMTY0LjUxLTIuNDAzLjQ2NC0zLjY5NC43MDUtNC41NDQuODYtMi4yNDYuNDE2LTMuNDY3LjU1OC00LjA0Ni42NTQtMS43ODgtLjMxNi0zLjU2OC0uNTMxLTUuMDQ0LS42MDgtLjc0LS4wMzktMS40MDcuMDQ1LTEuOTkxLjIxMi0uODc2LjI0My0xLjUyNC41NjEtMi4xNTYuODgxLS40MzIuMjItLjgzNi40NzQtMS4yNTMuNzkyLS42NDMuNTQtMS4yNTcgMS4yNTgtMS44MjIgMi4wNy0uNTY2LjgzNi0xLjA1NiAxL44OC0xLjU4OCAzLjMyNC0xLjI4NCAzLjQ5Mi0yLjE4NSA2LjIyOS0yLjY3NyA3LjYwMi0uMjQxLjY4My0uNDYgMS4zNjgtLjYxMyAxLjg4NS0uMTA0LjM0OS0uMTQzLjUxNy0uMTQzLjYwOC0uMDE4LjMtLjA1Mi41ODYtLjA1Ni44NTctLjA3NC45Ni0uMDkgMi4zNTctLjA5OSAzLjYwNy0uMDEyIDEuMzItLjAyMiAyLjcwNi0uMDM4IDMuOTk1LS4wNTUgMi40NzEtLjE0OCA0LjczNi0uMjg4IDUuMzYtLjUyMi43MzItMS43MzMgMi4zMTctNC4xNzUgNC45ODQtLjUwNC41NTgtMS4yOTQgMS41ODctMi4yNDIgMi41NjItMS4wODkgMS4xMjYtMi4yNDEgMi4yNDItMy42NjggMy40MjMtNC4xNjUgMy40MjYtNC43NTMgMy45OC01Ljc2NiA0LjM1Mi0uMTQ0LjA1Mi0uMjkuMTAyLS40MzkuMTVhMS4xNTEgMS4xNTEgMCAwIDAtLjUyNy4yMzQtMi4yMDcgMi4yMDcgMCAwIDAtLjk3Ny45MzlCjIyLjY1My42MTJjLS4yNzQuMDU1LS41NTEuMDA1LS43OTktLjEyMS0uMjQ5LS4xMTYtLjUzMi0uMzAzLS43ODYtLjU3MS0uNDQ2LS40NjctLjk1MS0xLjI0OC0xLjQ1My0yLjIyMy0xLjEyNC0xLjk1My0yLjAyOS00LjAxNi0yLjIyOC01LjU2OC0uNjEyLTQuODE0LS43OTktOC4yNDUtLjg4Ni05LjM0Mi0uMDIzLS4yNTItLjA1OC0uNTQzLS4xNDEtLjg2Ni0uMTAyLS4zOTktLjI4LS42MjQtLjU0NS0uODgtLjc2LS43MzMtMS43NjgtMS42OTktMi42NDgtMi45MjgtMS4wOTktMS40NzUtMS41OTktMi43NzEtMS43NzQtMy41MjItLjE1OS0uNjk2LS4zMTItMS40OTMtLjQyOC0yLjQxNC0uMTM5LTEuMTIyLS4yMzUtMi41OTQtLjIzMi00Ljg2OS4wMDYtLjU3My4wMzYtMS4wNDguMDc1LTEuNDQ5LjA3Ni0uNzc5LjIxLTEuNDI1LjMzNC0xLjk0NC4xMi0uNTE2LjIxMS0xLjAyLjI3Ni0xLjQyLjQ0MS0yLjY4MSAxLjA1NC00Ljc3MiAxLjYzNi02LjU5NmE0LjAxMyA0LjAxMyAwIDAgMCAxLjU0OS00LjY2NmMuMzU1LS43NzcuOTc1LTIuNDMzIDEuODU5LTUuMDEyIDEuOTc1LTEuNjQ2IDMuODU0LTIuMTczIDYuMjY0LTIuMjU4IDEuMTItLjA0IDMuMTI3LS4xMjcgNS4wMTktLjI0NCAxLjIzMy0uMDc3IDIuNTM1LS4xNTkgMy43NjUtLjIxNiAxLjY5MS0uMDg0IDIuOTQ3LS4yMTQgNC42MjUtLjM1NyAyLjM0Ni0uMTk5IDUuMTYtLjUwNSA3LjA0NS0uODIzIDEuNDI5LS4yMjQgMi43MTMtLjM0MyAzLjc2OC0uMzczIDMuMzI0LS4wOTcgNS44NTQtLjIxOCA2LjQyOS0uNTUxLjE5LS4xMTEuMzctLjM4NC40OTMtLjc1OWExLjIxIDEuMjEgMCAwIDAtLjIwNS0uNjYxYy0uOTQ3LTEuNDYzLTIuMTQtMi4wOTItMy4xMTktMi40MjgtLjIyLS4wNzQtLjQ0LS4xNC0uNjk2LS4yMjJhMi45OTggMi45OTggMCAwIDAtMS43NzItLjE2MmMtMS44OC40MzktMi4wODkuNjI0LTQuMTE5LjkzMS0xLjI2NC4xODItMi42NTMuMzIzLTMuOTgyLjQxNS0xLjIyNy4wODgtMi4yNDkuMDkyLTMuMDM1LjA3Ny0uMTctLjAwMy0uMzYtLjAxOC0uNTU5LS4wMzUtMS44NzUtLjE3MS0yLjc0OC0uNDEtMy42Mi0uNDYxLS42MDItLjA0Mi0xLjQ0LS4wNTYtMi41MS0uMDU1LTIuMDY3LjAwMy00LjExMi4xMy02LjU1My4zOTYtMi40NDMuMjY2LTUuNTExLjYyNS04LjAyMi44NjItMS4yMy4xMTgtMi40NDcuMjA4LTMuNDI3LjI1NS0uOTcuMDQ2LTEuNzUyLjA2My0yLjQyNS4wNTUtLjY3My0uMDA4LTEuMjYtLjAyMi0xLjc4My0uMDc1LS45NDctLjA5Ny0xLjk2OS0uMzItMy4xMDMtLjYyMi0xLjQxNi0uMzg0LTIuNjYtLjkxMy0z.23-83863456385'
 
-    profileContainer.innerHTML = `
-    <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
-        <div class="flex-shrink-0">
-            <img src="${photo || defaultIcon}" alt="Profile Photo" class="w-32 h-32 rounded-full object-cover border-2 border-blue-900">
-        </div>
-        <div class="flex-1 space-y-2">
-            <h2 class="text-2xl font-bold text-gray-900">${name || 'No Name'}</h2>
-            <p class="text-gray-600"><span class="font-semibold">Email:</span> ${email || 'N/A'}</p>
-            <p class="text-gray-600"><span class="font-semibold">Role:</span> ${role || 'N/A'}</p>
-            <p class="text-gray-600"><span class="font-semibold">Bio:</span> ${bio || 'N/A'}</p>
-            <button id="edit-profile-btn" class="mt-3 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-700">Edit Profile</button>
-        </div>
-    </div>
-    <div class="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 break-all">
-        <span class="font-semibold">User ID:</span> ${userId}
-    </div>
-    `;
-    document.getElementById('edit-profile-btn').addEventListener('click', () => openEditModal(profile));
+profileContainer.innerHTML = `
+<div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
+<div class="flex-shrink-0">
+<img src="${photo || defaultIcon}" alt="Profile Photo" class="w-32 h-32 rounded-full object-cover border-2 border-blue-900">
+</div>
+<div class="flex-1 space-y-2">
+<h2 class="text-2xl font-bold text-gray-900">${name || 'No Name'}</h2>
+<p class="text-gray-600"><span class="font-semibold">Email:</span> ${email || 'N/A'}</p>
+<p class="text-gray-600"><span class="font-semibold">Account Type:</span> ${userType || 'N/A'}</p>
+<button id="edit-profile-btn" class="mt-3 px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-700">Edit Profile</button>
+</div>
+</div>
+<div id="additional-profile-data" class="mt-6"></div>
+<div class="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 break-all">
+<span class="font-semibold">User ID:</span> ${userId}
+</div>
+`;
+
+const additionalDataContainer = document.getElementById('additional-profile-data');
+
+if (userType === 'author') {
+additionalDataContainer.innerHTML = `
+<div class="mt-6 p-6 content-card">
+<h3 class="text-xl font-bold mb-4">Book Details</h3>
+<p class="text-gray-600"><span class="font-semibold">Book Title:</span> ${profile.bookTitle || 'N/A'}</p>
+<p class="text-gray-600 mt-2"><span class="font-semibold">Book Description:</span> ${profile.bookDescription || 'N/A'}</p>
+<p class="text-gray-600 mt-2"><span class="font-semibold">Genre:</span> ${profile.bookGenre || 'N/A'}</p>
+</div>
+`;
+} else if (userType === 'influencer') {
+const genres = profile.genres && Array.isArray(profile.genres) ? profile.genres.join(', ') : 'N/A';
+const tropes = profile.tropes && Array.isArray(profile.tropes) ? profile.tropes.join(', ') : 'N/A';
+const platforms = profile.platforms && Array.isArray(profile.platforms) ? profile.platforms.join(', ') : 'N/A';
+
+additionalDataContainer.innerHTML = `
+<div class="mt-6 p-6 content-card">
+<h3 class="text-xl font-bold mb-4">Influencer Details</h3>
+<p class="text-gray-600"><span class="font-semibold">Handle:</span> ${profile.handle || 'N/A'}</p>
+<p class="text-gray-600 mt-2"><span class="font-semibold">Bio:</span> ${profile.bio || 'N/A'}</p>
+<p class="text-gray-600 mt-2"><span class="font-semibold">Genres:</span> ${genres}</p>
+<p class="text-gray-600 mt-2"><span class="font-semibold">Tropes:</span> ${tropes}</p>
+<p class="text-gray-600 mt-2"><span class="font-semibold">Platforms:</span> ${platforms}</p>
+<p class="text-gray-600 mt-2"><span class="font-semibold">Collaboration Style:</span> ${profile.collabStyle || 'N/A'}</p>
+</div>
+`;
+}
+
+document.getElementById('edit-profile-btn').addEventListener('click', () => openEditModal(profile));
 }
 
 function openEditModal(profile) {
-    document.getElementById('edit-name').value = profile.name || '';
-    document.getElementById('edit-email').value = profile.email || '';
-    document.getElementById('edit-role').value = profile.role || '';
-    document.getElementById('edit-bio').value = profile.bio || '';
-    photoFileInput.value = '';
-    editModal.classList.remove('hidden');
+document.getElementById('edit-name').value = profile.name || '';
+document.getElementById('edit-email').value = profile.email || '';
+document.getElementById('edit-role').value = profile.userType || '';
+document.getElementById('edit-bio').value = profile.bio || '';
+photoFileInput.value = '';
+editModal.classList.remove('hidden');
 }
 
 function closeEditModal() { editModal.classList.add('hidden'); }
@@ -209,37 +257,56 @@ cancelEditBtn.addEventListener('click', closeEditModal);
 closeModalBtn.addEventListener('click', closeEditModal);
 
 editForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    show(loadingEl);
+e.preventDefault();
+show(loadingEl);
 
-    const userId = auth.currentUser.uid;
-    let updatedProfile = {
-        name: document.getElementById('edit-name').value,
-        email: document.getElementById('edit-email').value,
-        role: document.getElementById('edit-role').value,
-        bio: document.getElementById('edit-bio').value,
-        photo: ''
-    };
+const userId = auth.currentUser.uid;
+const userType = document.getElementById('edit-role').value;
+const mainProfileRef = doc(db, 'users', userId);
+const profileDocRef = doc(db, `users/${userId}/profiles/${userType}`);
 
-    try {
-        if (photoFileInput.files.length > 0) {
-            const file = photoFileInput.files[0];
-            const storageRef = ref(storage, `profile_photos/${userId}/${file.name}`);
-            await uploadBytes(storageRef, file);
-            updatedProfile.photo = await getDownloadURL(storageRef);
-        } else {
-            updatedProfile.photo = document.querySelector('#profile-container img').src;
-        }
+let updatedMainProfile = {
+name: document.getElementById('edit-name').value,
+email: document.getElementById('edit-email').value,
+userType: userType
+};
 
-        await setDoc(doc(db, `artifacts/users/${userId}/profile`), updatedProfile);
-        closeEditModal();
-        hide(loadingEl);
-        showProfile(updatedProfile, userId);
-    } catch (err) {
-        hide(loadingEl);
-        debugOutput.textContent = JSON.stringify(err, null, 2);
-        show(errorOverlay);
-    }
+let updatedProfileData = {};
+
+if (userType === 'author') {
+updatedProfileData = {
+bookTitle: document.getElementById('edit-book-title')?.value || '',
+bookDescription: document.getElementById('edit-book-description')?.value || '',
+bookGenre: document.getElementById('edit-book-genre')?.value || '',
+};
+} else if (userType === 'influencer') {
+updatedProfileData = {
+handle: document.getElementById('edit-handle')?.value || '',
+bio: document.getElementById('edit-bio')?.value || '',
+// Add other influencer fields here, e.g., genres, tropes, platforms
+};
+}
+
+try {
+if (photoFileInput.files.length > 0) {
+const file = photoFileInput.files[0];
+const storageRef = ref(storage, `profile_photos/${userId}/${file.name}`);
+await uploadBytes(storageRef, file);
+updatedMainProfile.photo = await getDownloadURL(storageRef);
+}
+
+await setDoc(mainProfileRef, updatedMainProfile, { merge: true });
+await setDoc(profileDocRef, updatedProfileData, { merge: true });
+
+const newProfile = { ...updatedMainProfile, ...updatedProfileData };
+closeEditModal();
+hide(loadingEl);
+showProfile(newProfile, userId);
+} catch (err) {
+hide(loadingEl);
+debugOutput.textContent = JSON.stringify(err, null, 2);
+show(errorOverlay);
+}
 });
 </script>
 </body>
