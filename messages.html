@@ -93,7 +93,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, getDocs, query, where, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where, addDoc, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
@@ -156,56 +156,72 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
             document.getElementById("logout-btn").addEventListener("click",()=>signOut(auth));
         }
     }
+    
+    // ------------------ Load Active Chats ------------------
+    async function loadActiveChats(uid) {
+        const chatsRef = collection(db, "users", uid, "chats");
+        const chatsSnapshot = await getDocs(chatsRef);
+        
+        if (chatsSnapshot.empty) {
+            searchResults.innerHTML = '<li class="p-2 text-gray-500 italic">No active conversations.</li>';
+            return;
+        }
+
+        searchResults.innerHTML = '<li class="p-2 text-gray-500 italic">Loading conversations...</li>';
+        
+        const promises = chatsSnapshot.docs.map(async chatDoc => {
+            const chatPartnerUid = chatDoc.id;
+            const partnerProfileRef = doc(db, "users", chatPartnerUid);
+            const partnerProfileSnap = await getDoc(partnerProfileRef);
+            return { uid: chatPartnerUid, ...partnerProfileSnap.data() };
+        });
+
+        const activeChats = await Promise.all(promises);
+        
+        searchResults.innerHTML = activeChats.map(u => `
+            <li data-uid="${u.uid}" data-name="${u.name}" data-photo="${u.photo || ''}" class="p-2 rounded flex items-center gap-2 hover:bg-gray-100 cursor-pointer">
+                ${u.photo ? `<img src="${u.photo}" class="w-8 h-8 rounded-full">` : `<i class="fas fa-user-circle text-2xl"></i>`}
+                <span>${u.name}</span>
+            </li>
+        `).join("");
+        
+        document.querySelectorAll("#search-results li").forEach(li => {
+            li.addEventListener("click", () => openChat(li.dataset.uid, li.dataset.name, li.dataset.photo));
+        });
+    }
 
     // ------------------ Auth Listener ------------------
     onAuthStateChanged(auth, async user=>{
         currentUser = user;
         mainContentView.classList.remove("hidden");
         renderNavbar(user);
+        if (user) {
+            await loadActiveChats(user.uid);
+        }
     });
 
     // ------------------ User Search Function (Corrected) ------------------
     async function searchUsers(queryText){
-        console.log("Starting user search for:", queryText);
-        if(!queryText){
-            console.log("Query text is empty, returning.");
-            return [];
-        }
-        try {
-            const usersRef = collection(db, 'users');
-            console.log("Created collection reference for 'users'.");
-
-            const q = query(
-                usersRef,
-                where('name', '>=', queryText),
-                where('name', '<=', queryText + '\uf8ff')
-            );
-            console.log("Created query:", q);
-
-            const snapshot = await getDocs(q);
-            console.log("Received snapshot from getDocs. Number of documents:", snapshot.size);
-
-            if(snapshot.empty){
-                console.log("Snapshot is empty. No users found with this query.");
-            }
-
-            const users = snapshot.docs
-                .filter(doc => doc.id !== currentUser.uid)
-                .map(doc => ({ uid: doc.id, ...doc.data() }));
-
-            console.log("Found and mapped users:", users);
-            return users;
-
-        } catch (err) {
-            console.error("Search failed with an error:", err);
-            return [];
-        }
+        const usersRef = collection(db, 'users');
+        const q = query(
+            usersRef,
+            where('name', '>=', queryText),
+            where('name', '<=', queryText + '\uf8ff')
+        );
+        const snapshot = await getDocs(q);
+        const users = snapshot.docs
+            .filter(doc => doc.id !== currentUser.uid)
+            .map(doc => ({ uid: doc.id, ...doc.data() }));
+        return users;
     }
 
     // ------------------ Sidebar Search ------------------
     userSearchInput.addEventListener("input", async ()=>{
         const queryText = userSearchInput.value.trim();
-        if(!queryText){ searchResults.innerHTML=""; return; }
+        if(queryText === ""){
+            await loadActiveChats(currentUser.uid); // Load active chats if search is empty
+            return;
+        }
         const users = await searchUsers(queryText);
         if(users.length===0){ searchResults.innerHTML='<li class="p-2 text-gray-500 italic">No users found</li>'; return; }
 
@@ -228,7 +244,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
 
         const usersRef = collection(db, 'users');
         const snapshot = await getDocs(usersRef);
-        console.log("Fetched all users for modal. Number of documents:", snapshot.size);
 
         allUsers = snapshot.docs
             .filter(doc => doc.id !== currentUser.uid)
