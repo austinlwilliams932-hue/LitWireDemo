@@ -380,35 +380,45 @@ aestheticEl.textContent = `Aesthetic: ${aesthetic}`;
 sidebar.appendChild(aestheticEl);
 }
 }
-
 function saveProfile() {
-if(!currentUser) return;
+  if (!currentUser) return;
 
-profileData.handle = document.getElementById('handle').value.trim();
-profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
-profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
-profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
-profileData.aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic || '';
-profileData.genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-profileData.tropes = Array.from(tropesTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-profileData.spiceLevel = document.getElementById('spice-level').value;
-profileData.triggerWarnings = Array.from(document.querySelectorAll('input[name="triggerWarning"]:checked')).map(cb => cb.value);
-profileData.audience = Array.from(document.querySelectorAll('input[name="audience"]:checked')).map(cb => cb.value);
-profileData.dealbreakerTags = Array.from(dealbreakerTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-profileData.timeCommitment = document.getElementById('time-commitment').value;
-profileData.onboardingComplete = true;
+  // Gather all form data into the profileData object
+  profileData.handle = document.getElementById('handle').value.trim();
+  profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
+  profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
+  profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
+  profileData.aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic || '';
+  profileData.genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+  profileData.tropes = Array.from(tropesTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+  profileData.spiceLevel = document.getElementById('spice-level').value;
+  profileData.triggerWarnings = Array.from(document.querySelectorAll('input[name="triggerWarning"]:checked')).map(cb => cb.value);
+  profileData.audience = Array.from(document.querySelectorAll('input[name="audience"]:checked')).map(cb => cb.value);
+  profileData.dealbreakerTags = Array.from(dealbreakerTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+  profileData.timeCommitment = document.getElementById('time-commitment').value;
+  profileData.onboardingComplete = true;
 
-loadingOverlay.classList.remove('hidden');
+  loadingOverlay.classList.remove('hidden');
 
-setDoc(doc(db, `artifacts/users/${currentUser.uid}/profile`), profileData, {merge:true})
-.then(()=> window.location.href = 'bookDash.html')
-.catch(err=>{
-debugOutput.textContent = JSON.stringify(err,null,2);
-errorOverlay.classList.remove('hidden');
-})
-.finally(()=> loadingOverlay.classList.add('hidden'));
+  // Save the influencer's profile data to a structured path
+  setDoc(doc(db, `users/${currentUser.uid}/profiles/influencer`), profileData, { merge: true })
+    .then(() => {
+      // Update the root user document to set userType and onboardingComplete
+      return setDoc(doc(db, "users", currentUser.uid), {
+        onboardingComplete: true,
+        userType: 'influencer'
+      }, { merge: true });
+    })
+    .then(() => {
+      // Redirect to the dashboard after both updates are complete
+      window.location.href = 'bookDash.html';
+    })
+    .catch(err => {
+      debugOutput.textContent = JSON.stringify(err, null, 2);
+      errorOverlay.classList.remove('hidden');
+    })
+    .finally(() => loadingOverlay.classList.add('hidden'));
 }
-
 // Event listeners
 document.getElementById('preview-matches-btn').addEventListener('click', saveProfile);
 document.getElementById('save-finish-btn').addEventListener('click', saveProfile);
