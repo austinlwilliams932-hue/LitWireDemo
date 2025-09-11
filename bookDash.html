@@ -15,7 +15,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 .spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .hidden { display: none; }
-.loading-overlay, #error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; color:#fff; text-align:center; padding:1rem; }
+.loading-overlay, #error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; color:#fff; text-align:center; padding:1rem; }
 .loading-overlay { background-color: rgba(0,0,0,0.7); }
 #error-overlay { background-color: rgba(255,0,0,0.85); font-family: monospace; overflow:auto; }
 #error-overlay.hidden, .loading-overlay.hidden { display:none; }
@@ -80,33 +80,74 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <div id="tab-content-overview" class="dashboard-tab-content active">
 <h2 class="text-2xl font-bold text-gray-800 mb-4">Metrics Summary</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-<div class="metric-card"><p id="metric-matches" class="text-4xl font-bold text-blue-900">0</p><p class="text-gray-600">Matches</p></div>
-<div class="metric-card"><p id="metric-contacted" class="text-4xl font-bold text-blue-900">0</p><p class="text-gray-600">Influencers Contacted</p></div>
-<div class="metric-card"><p id="metric-confirmed" class="text-4xl font-bold text-blue-900">0</p><p class="text-gray-600">Confirmed</p></div>
-<div class="metric-card"><p id="metric-posts" class="text-4xl font-bold text-blue-900">0</p><p class="text-gray-600">Posts Live</p></div>
+<div class="metric-card">
+<p id="metric-matches" class="text-4xl font-bold text-blue-900">0</p>
+<p class="text-gray-600">Matches</p>
+</div>
+<div class="metric-card">
+<p id="metric-contacted" class="text-4xl font-bold text-blue-900">0</p>
+<p class="text-gray-600">Influencers Contacted</p>
+</div>
+<div class="metric-card">
+<p id="metric-confirmed" class="text-4xl font-bold text-blue-900">0</p>
+<p class="text-gray-600">Confirmed</p>
+</div>
+<div class="metric-card">
+<p id="metric-posts" class="text-4xl font-bold text-blue-900">0</p>
+<p class="text-gray-600">Posts Live</p>
+</div>
 </div>
 </div>
 
 <div id="tab-content-influencers" class="dashboard-tab-content">
 <h2 class="text-2xl font-bold text-gray-800 mb-4">Influencer Profiles</h2>
 <div class="flex flex-wrap gap-4 mb-6">
-<div class="flex items-center gap-2"><label for="platform-filter" class="text-gray-600">Platform:</label>
-<select id="platform-filter" class="border rounded-md p-2"><option>All</option><option>TikTok</option><option>Instagram</option><option>YouTube</option></select></div>
-<div class="flex items-center gap-2"><label for="tier-filter" class="text-gray-600">Engagement Tier:</label>
-<select id="tier-filter" class="border rounded-md p-2"><option>All</option><option>Micro</option><option>Macro</option><option>Mega</option></select></div>
-<div class="flex items-center gap-2"><label for="region-filter" class="text-gray-600">Region:</label>
-<select id="region-filter" class="border rounded-md p-2"><option>All</option><option>North America</option><option>Europe</option><option>Asia</option></select></div>
+<div class="flex items-center gap-2">
+<label for="platform-filter" class="text-gray-600">Platform:</label>
+<select id="platform-filter" class="border rounded-md p-2">
+<option>All</option>
+<option>TikTok</option>
+<option>Instagram</option>
+<option>YouTube</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<label for="tier-filter" class="text-gray-600">Engagement Tier:</label>
+<select id="tier-filter" class="border rounded-md p-2">
+<option>All</option>
+<option>Micro</option>
+<option>Macro</option>
+<option>Mega</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<label for="region-filter" class="text-gray-600">Region:</label>
+<select id="region-filter" class="border rounded-md p-2">
+<option>All</option>
+<option>North America</option>
+<option>Europe</option>
+<option>Asia</option>
+</select>
+</div>
 </div>
 <div id="influencer-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 </div>
 
 <div id="tab-content-analytics" class="dashboard-tab-content">
 <h2 class="text-2xl font-bold text-gray-800 mb-4">Campaign Analytics</h2>
-<div class="chart-container mb-6"><h3 class="text-xl font-semibold mb-4">Engagement Growth Over Time</h3>
-<img src="https://placehold.co/800x400" alt="Engagement Growth Chart" class="w-full h-auto"></div>
+<div class="chart-container mb-6">
+<h3 class="text-xl font-semibold mb-4">Engagement Growth Over Time</h3>
+<img src="https://placehold.co/800x400" alt="Engagement Growth Chart" class="w-full h-auto">
+</div>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<div class="chart-container"><h3 class="text-xl font-semibold mb-4">Influencer Reach by Platform</h3><img src="https://placehold.co/400x300" alt="Influencer Reach Chart" class="w-full h-auto"></div>
-<div class="chart-container"><h3 class="text-xl font-semibold mb-4">Post Performance (Likes vs. Comments)</h3><img src="https://placehold.co/400x300" alt="Post Performance Chart" class="w-full h-auto"></div>
+<div class="chart-container">
+<h3 class="text-xl font-semibold mb-4">Influencer Reach by Platform</h3>
+<img src="https://placehold.co/400x300" alt="Influencer Reach Chart" class="w-full h-auto">
+</div>
+<div class="chart-container">
+<h3 class="text-xl font-semibold mb-4">Post Performance (Likes vs. Comments)</h3>
+<img src="https://placehold.co/400x300" alt="Post Performance Chart" class="w-full h-auto">
+</div>
 </div>
 </div>
 
@@ -121,23 +162,33 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <div class="card p-8">
 <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Influencer Dashboard</h1>
 <p class="text-lg text-gray-600">Welcome back! Here are some recommended books and campaign invites.</p>
+
 <div class="mt-8">
 <h2 class="text-2xl font-semibold text-gray-900 mb-4">Your Feed</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 <div class="section-card bg-purple-50 rounded-lg p-6">
 <h3 class="text-xl font-semibold text-purple-800 mb-2">Recommended Books</h3>
 <p class="text-sm text-gray-600">Your personalized feed based on your profile preferences.</p>
-<div class="mt-4"><p class="text-sm text-blue-700 font-medium">✨ 'The Last Starship' by Jane Doe</p>
-<p class="text-sm text-blue-700 font-medium mt-1">✨ 'Shadows of the Crown' by Alex Smith</p></div></div>
+<div class="mt-4">
+<p class="text-sm text-blue-700 font-medium">✨ 'The Last Starship' by Jane Doe</p>
+<p class="text-sm text-blue-700 font-medium mt-1">✨ 'Shadows of the Crown' by Alex Smith</p>
+</div>
+</div>
 <div class="section-card bg-green-50 rounded-lg p-6">
 <h3 class="text-xl font-semibold text-green-800 mb-2">Campaign Invitations</h3>
 <p class="text-sm text-gray-600">Direct invites from authors.</p>
-<div class="mt-4"><p class="text-sm text-green-700 font-medium">📧 Invite from Sarah Johnson</p>
-<p class="text-sm text-green-700 font-medium mt-1">📧 Invite from Lit-Verse Publishing</p></div></div>
+<div class="mt-4">
+<p class="text-sm text-green-700 font-medium">📧 Invite from Sarah Johnson</p>
+<p class="text-sm text-green-700 font-medium mt-1">📧 Invite from Lit-Verse Publishing</p>
+</div>
+</div>
 <div class="section-card bg-yellow-50 rounded-lg p-6">
 <h3 class="text-xl font-semibold text-yellow-800 mb-2">Your Library</h3>
 <p class="text-sm text-gray-600">Books you've saved or accepted.</p>
-<div class="mt-4"><p class="text-sm text-purple-700 font-medium">📚 'A Flicker in the Dark'</p></div></div>
+<div class="mt-4">
+<p class="text-sm text-purple-700 font-medium">📚 'A Flicker in the Dark'</p>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -216,10 +267,14 @@ if (!auth.currentUser) return;
 const userId = auth.currentUser.uid;
 const authorProfileRef = doc(db, `users/${userId}/profiles/author`);
 const mainProfileRef = doc(db, `users/${userId}`);
+
 if (!confirm("Are you sure you want to reset your campaign? This will remove all data.")) return;
+
 try {
 await deleteDoc(authorProfileRef);
 await setDoc(mainProfileRef, { onboardingComplete: false, userType: 'author' }, { merge: true });
+
+// Redirecting to home is a more reliable way to reset the page state
 window.location.href = 'index.html';
 } catch (err) {
 console.error(err);
@@ -241,74 +296,124 @@ if (!influencerData || influencerData.length === 0) {
 influencerGrid.innerHTML = `<p class="text-gray-500">No influencers matched yet. Run your campaign!</p>`;
 return;
 }
-influencerData.forEach(inf => {
+
+influencerData?.forEach(inf => {
 const card = document.createElement('div');
 card.className = 'influencer-card';
-card.innerHTML = `<img src="${inf.photo || 'https://placehold.co/96'}" alt="${inf.name}">
+card.innerHTML = `
+<img src="${inf.photo || 'https://placehold.co/96'}" alt="${inf.name}">
 <p class="font-semibold text-gray-900">${inf.name}</p>
 <p class="text-gray-600 text-sm">${inf.platform || 'Unknown Platform'}</p>
-<span class="tag">${inf.tier || 'Unknown Tier'}</span>`;
+<span class="tag">${inf.tier || 'Unknown Tier'}</span>
+`;
 influencerGrid.appendChild(card);
 });
 }
 
-function renderPlan(planSteps){
+function renderPlan(planData) {
 planContainer.innerHTML = '';
-if (!planSteps || planSteps.length === 0) {
-planContainer.innerHTML = `<p class="text-gray-500">No campaign plan set up yet.</p>`;
+if (!planData || planData.length === 0) {
+planContainer.innerHTML = `<p class="text-gray-500">No campaign plan available.</p>`;
 return;
 }
-planSteps.forEach((step, i) => {
+planData.forEach((step, index) => {
 const stepEl = document.createElement('div');
 stepEl.className = 'content-card';
-stepEl.innerHTML = `<h3 class="text-lg font-bold mb-2">${i+1}. ${step.title}</h3>
-<p class="text-gray-600">${step.description}</p>`;
+stepEl.innerHTML = `
+<h3 class="text-xl font-semibold text-gray-800 mb-2">Step ${index + 1}: ${step.name || 'Untitled Step'}</h3>
+<p class="text-gray-600">${step.description || 'No description available for this step.'}</p>
+`;
 planContainer.appendChild(stepEl);
 });
 }
 
-async function initDashboard(){
-show(loadingEl);
-const start = Date.now();
+async function fetchCampaignPlanFromCF(bookTitle, budget, startDate, targetAudience) {
+const payload = { bookTitle, budget, startDate, targetAudience };
 try {
-onAuthStateChanged(auth, async user => {
-if (!user) {
-window.location.href = 'index.html';
-return;
-}
-const userId = user.uid;
-const profileRef = doc(db, `users/${userId}`);
-const profileSnap = await getDoc(profileRef);
-if (!profileSnap.exists()) throw new Error("User profile not found.");
-const userData = profileSnap.data();
-if (userData.userType === 'author') {
-const authorProfileRef = doc(db, `users/${userId}/profiles/author`);
-const authorSnap = await getDoc(authorProfileRef);
-if (authorSnap.exists()) {
-renderBookData(authorSnap.data());
-renderInfluencers(authorSnap.data().influencers || []);
-renderPlan(authorSnap.data().plan || []);
-show(authorDashboard);
-show(actionButtons);
-} else {
-window.location.href = 'authorOnboarding.html';
-}
-} else {
-show(influencerDashboard);
-}
-const elapsed = Date.now() - start;
-const delay = Math.max(0, 500 - elapsed);
-setTimeout(() => { hide(loadingEl); show(mainContent); }, delay);
+const response = await fetch('https://marketingsteps-737284668725.us-east4.run.app', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(payload)
 });
+if (!response.ok) {
+const errorData = await response.text();
+throw new Error(`Cloud Function error: ${response.status} - ${errorData}`);
+}
+const data = await response.json();
+return data.marketingPlan || [];
 } catch (err) {
-console.error(err);
-debugOutput.textContent = err.message || JSON.stringify(err, null, 2);
+console.error('Error fetching campaign plan:', err);
+debugOutput.textContent = `Error fetching campaign plan:\n${err.message || err}`;
 show(errorOverlay);
-hide(loadingEl);
+return [];
 }
 }
 
-initDashboard();
+onAuthStateChanged(auth, async user => {
+if(!user){
+window.location.href = 'index.html';
+return;
+}
+
+// Show the loading screen immediately upon auth state change
+show(loadingEl);
+
+try {
+const mainProfileRef = doc(db, 'users', user.uid);
+const mainProfileSnap = await getDoc(mainProfileRef);
+if (!mainProfileSnap.exists()) {
+console.log("No user profile found, redirecting to index.");
+window.location.href = 'index.html';
+return;
+}
+const userData = mainProfileSnap.data();
+const userType = userData.userType;
+
+hide(authorDashboard);
+hide(influencerDashboard);
+
+if (userType === 'author') {
+show(authorDashboard);
+show(actionButtons);
+const authorDocRef = doc(db, `users/${user.uid}/profiles/author`);
+const authorSnap = await getDoc(authorDocRef);
+let authorData = {};
+
+if (authorSnap.exists()) {
+authorData = authorSnap.data();
+} else {
+// Create an empty author profile document if it doesn't exist
+await setDoc(authorDocRef, {});
+}
+
+renderBookData({
+title: authorData.bookTitle,
+description: authorData.bookDescription,
+startDate: authorData.startDate,
+coverPhoto: authorData.coverPhoto
+});
+const cfPlan = await fetchCampaignPlanFromCF(
+authorData.bookTitle,
+authorData.budget || '0',
+authorData.startDate,
+authorData.targetAudience || []
+);
+renderPlan(cfPlan);
+renderInfluencers(authorData.influencers || []);
+} else if (userType === 'influencer') {
+show(influencerDashboard);
+hide(actionButtons);
+}
+} catch(err){
+console.error("Dashboard load error:", err);
+debugOutput.textContent = err.message || JSON.stringify(err, null, 2);
+show(errorOverlay);
+} finally{
+// Hide the loading screen and show the main content only after all operations are complete
+hide(loadingEl);
+show(mainContent);
+}
+});
 });
 </script>
 </body>
