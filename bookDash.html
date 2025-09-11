@@ -354,7 +354,10 @@ if(!user){
 window.location.href = 'index.html';
 return;
 }
+
+// Show the loading screen immediately upon auth state change
 show(loadingEl);
+
 try {
 const mainProfileRef = doc(db, 'users', user.uid);
 const mainProfileSnap = await getDoc(mainProfileRef);
@@ -406,6 +409,7 @@ console.error("Dashboard load error:", err);
 debugOutput.textContent = err.message || JSON.stringify(err, null, 2);
 show(errorOverlay);
 } finally{
+// Hide the loading screen and show the main content only after all operations are complete
 hide(loadingEl);
 show(mainContent);
 }
