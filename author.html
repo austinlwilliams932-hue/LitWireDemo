@@ -575,7 +575,7 @@ const formData = {
 bookTitle: document.getElementById('book-title')?.value.trim() ?? '',
 bookSynopsis: document.getElementById('book-description')?.value.trim() ?? '',
 // Note: This only saves the filename. Actual file upload requires Firebase Storage.
-bookCover: document.getElementById('book-cover')?.files?.[0]?.name ?? '', 
+bookCover: document.getElementById('book-cover')?.files?.[0]?.name ?? '', 
 genre: document.getElementById('genre')?.value ?? '',
 tropeTags: document.getElementById('trope-tags')?.value ?? '',
 formatAvailable: Array.from(document.querySelectorAll('input[name="formatAvailable"]:checked')).map(el => el.value),
@@ -609,6 +609,9 @@ try {
 const docRef = doc(db, `users/${currentUser.uid}/profiles/author`);
 await setDoc(docRef, formData, { merge: true });
 
+// NEW: Update the user's main profile to mark onboarding as complete
+await setDoc(doc(db, "users", currentUser.uid), { onboardingComplete: true }, { merge: true });
+
 // Then, send a subset of data to the Cloud Function
 const response = await fetch("https://bookie-737284668725.us-central1.run.app", {
 method: "POST",
@@ -626,8 +629,8 @@ throw new Error('Network response was not ok');
 const result = await response.json();
 console.log("Cloud Function Response:", result);
 
-// Redirect to dashboard on success
-window.location.href = 'bookDash.html';
+// Redirect to the index page which will now show the dashboard button
+window.location.href = 'index.html';
 
 } catch (err) {
 debugOutput.textContent = JSON.stringify(err, null, 2);
