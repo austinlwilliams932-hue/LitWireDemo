@@ -270,7 +270,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         renderNewChatList(filteredUsers);
     });
 
-
     // ------------------ Chat ------------------
     function openChat(uid, name, photo){
         currentChatPartnerId = uid;
@@ -279,7 +278,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         chatWindow.classList.remove("hidden");
         chatMessages.innerHTML = "";
 
-        // Updated path for the messages collection
         const messagesRef = collection(db, "users", currentUser.uid, "chats", currentChatPartnerId, "messages");
         onSnapshot(messagesRef, snapshot=>{
             chatMessages.innerHTML = snapshot.docs.map(doc=>{
@@ -296,7 +294,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         const text = messageInput.value.trim();
         if(!text || !currentChatPartnerId) return;
 
-        // Updated paths for sending messages
         const senderRef = collection(db, "users", currentUser.uid, "chats", currentChatPartnerId, "messages");
         const receiverRef = collection(db, "users", currentChatPartnerId, "chats", currentUser.uid, "messages");
 
