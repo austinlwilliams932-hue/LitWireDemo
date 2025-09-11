@@ -274,10 +274,7 @@ try {
 await deleteDoc(authorProfileRef);
 await setDoc(mainProfileRef, { onboardingComplete: false, userType: 'author' }, { merge: true });
 
-renderBookData({});
-renderPlan([]);
-renderInfluencers([]);
-
+// Redirecting to home is a more reliable way to reset the page state
 window.location.href = 'index.html';
 } catch (err) {
 console.error(err);
@@ -383,7 +380,7 @@ if (authorSnap.exists()) {
 authorData = authorSnap.data();
 } else {
 // Create an empty author profile document if it doesn't exist
-await setDoc(authorDocRef, {}, { merge: true });
+await setDoc(authorDocRef, {});
 }
 
 renderBookData({
