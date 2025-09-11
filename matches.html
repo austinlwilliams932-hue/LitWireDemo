@@ -152,7 +152,7 @@ async function callCloudRun(userProfile, influencers) {
                 budget: userProfile.budget,
                 desired_audience_type: userProfile.targetAudience?.[0] ?? '',
                 user_id: auth.currentUser.uid,
-                influencers
+                influencers: influencers
             })
         });
 
@@ -181,18 +181,22 @@ async function init() {
             // Get author profile
             const docRef = doc(db, `users/${user.uid}/profiles/author`);
             const docSnap = await getDoc(docRef);
-            if (!docSnap.exists()) {
-                matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
-                hide(loadingEl);
-                show(matchesContainer);
-                return;
-            }
             const userProfile = docSnap.data();
-            console.log("USER PROFILE:", userProfile);
 
             // Fetch influencers from Firestore
             const influencers = await fetchInfluencers();
 
+            // Check if all necessary data exists before calling the Cloud Function
+            if (!userProfile || influencers.length === 0) {
+                matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches or required data found.</p>`;
+                hide(loadingEl);
+                show(matchesContainer);
+                return;
+            }
+
+            console.log("USER PROFILE:", userProfile);
+            console.log("INFLUENCERS:", influencers);
+            
             // Call CF with author profile + influencers
             const cfResponse = await callCloudRun(userProfile, influencers);
 
