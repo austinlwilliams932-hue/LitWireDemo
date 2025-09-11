@@ -172,7 +172,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
             return [];
         }
         try {
-            // New, more efficient query on the 'users' collection
             const usersRef = collection(db, 'users');
             console.log("Created collection reference for 'users'.");
 
@@ -227,8 +226,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         newChatResults.innerHTML = '<li class="p-2 text-gray-500 italic">Loading users...</li>';
         showModal(newChatModal);
 
-        // Fetch ALL users and store them for local filtering
-        // New, more efficient query on the 'users' collection
         const usersRef = collection(db, 'users');
         const snapshot = await getDocs(usersRef);
         console.log("Fetched all users for modal. Number of documents:", snapshot.size);
@@ -237,7 +234,6 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
             .filter(doc => doc.id !== currentUser.uid)
             .map(doc => ({ uid: doc.id, ...doc.data() }));
 
-        // Initial render of the full list
         renderNewChatList(allUsers);
     });
 
@@ -283,7 +279,8 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         chatWindow.classList.remove("hidden");
         chatMessages.innerHTML = "";
 
-        const messagesRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
+        // Updated path for the messages collection
+        const messagesRef = collection(db, "users", currentUser.uid, "chats", currentChatPartnerId, "messages");
         onSnapshot(messagesRef, snapshot=>{
             chatMessages.innerHTML = snapshot.docs.map(doc=>{
                 const msg = doc.data();
@@ -299,8 +296,9 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         const text = messageInput.value.trim();
         if(!text || !currentChatPartnerId) return;
 
-        const senderRef = collection(db, "artifacts/users", currentUser.uid, "chats", currentChatPartnerId, "messages");
-        const receiverRef = collection(db, "artifacts/users", currentChatPartnerId, "chats", currentUser.uid, "messages");
+        // Updated paths for sending messages
+        const senderRef = collection(db, "users", currentUser.uid, "chats", currentChatPartnerId, "messages");
+        const receiverRef = collection(db, "users", currentChatPartnerId, "chats", currentUser.uid, "messages");
 
         await addDoc(senderRef, { sender: currentUser.uid, text, timestamp: Date.now() });
         await addDoc(receiverRef, { sender: currentUser.uid, text, timestamp: Date.now() });
