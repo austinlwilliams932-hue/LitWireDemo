@@ -28,6 +28,85 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 .header-top a:hover { color:#2e598b; }
 .main { margin-top:6rem; padding:2rem; }
 .tag { display:inline-block; padding:0.25rem 0.75rem; border-radius:9999px; font-size:0.875rem; font-weight:500; background-color:#dbeafe; color:#1e3a8a; margin:0.125rem; }
+
+/* Tinder-style card */
+.swipe-card-container {
+    position: relative;
+    width: 350px;
+    height: 450px;
+    margin: 2rem auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.swipe-card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    cursor: grab;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform, opacity;
+    background-size: cover;
+    background-position: center;
+}
+.swipe-card h3 {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    color: #fff;
+}
+.swipe-card-info {
+    width: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+    color: white;
+    padding: 2rem 1.5rem 1rem;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    border-radius: 0 0 1rem 1rem;
+}
+.swipe-buttons {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+.swipe-btn {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+.swipe-btn.like { color: #10B981; background-color: #E6FFFA; }
+.swipe-btn.like:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+.swipe-btn.pass { color: #EF4444; background-color: #FEF2F2; }
+.swipe-btn.pass:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+
+/* Draggable state styles */
+.is-dragging {
+  cursor: grabbing;
+}
+.is-left {
+  transform: rotate(-10deg) translateX(-150px);
+  opacity: 0;
+}
+.is-right {
+  transform: rotate(10deg) translateX(150px);
+  opacity: 0;
+}
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -58,6 +137,19 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 <div class="spinner-border"></div>
 <p class="text-xl mt-4">Loading matches...</p>
 </div>
+
+<div id="matchmaking-module" class="hidden">
+    <div class="swipe-card-container" id="swipe-area">
+        </div>
+    <div class="swipe-buttons">
+        <button id="pass-btn" class="swipe-btn pass"><i class="fas fa-times"></i></button>
+        <button id="like-btn" class="swipe-btn like"><i class="fas fa-heart"></i></button>
+    </div>
+    <div id="no-more-cards" class="text-center text-gray-500 mt-8 hidden">
+        <p>You've seen all potential matches for now! Check back later.</p>
+    </div>
+</div>
+<hr class="my-8 border-gray-300">
 
 <div id="matches-container" class="w-full hidden"></div>
 
@@ -94,6 +186,16 @@ const debugOutput = document.getElementById('debug-output');
 const errorOverlay = document.getElementById('error-overlay');
 const signOutBtn = document.getElementById('sign-out-btn');
 
+// New DOM elements for matchmaking module
+const matchmakingModule = document.getElementById('matchmaking-module');
+const swipeArea = document.getElementById('swipe-area');
+const likeBtn = document.getElementById('like-btn');
+const passBtn = document.getElementById('pass-btn');
+const noMoreCards = document.getElementById('no-more-cards');
+
+let allMatches = [];
+let currentCardIndex = 0;
+
 function show(el){ el.classList.remove('hidden'); }
 function hide(el){ el.classList.add('hidden'); }
 
@@ -103,18 +205,15 @@ signOutBtn.addEventListener('click', async () => {
     window.location.href = 'index.html';
 });
 
-// Render a single influencer card
+// Render a single influencer card for the list view
 function renderMatch(profile) {
     const el = document.createElement('div');
     el.className = 'content-card';
-
     const name = profile.name ?? "Unknown Influencer";
     const audienceSize = profile.audience_size ?? "Unknown";
     const percentage = profile.similarity ?? 0;
     const blurb = profile.blurb ?? "";
-
     const percentBadge = `<span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">${percentage}% match</span>`;
-
     el.innerHTML = `
         <div class="flex justify-between items-center">
             <h2 class="text-xl font-semibold mb-2">${name}</h2>
@@ -124,6 +223,117 @@ function renderMatch(profile) {
         ${blurb ? `<p class="mt-2 italic text-gray-700">${blurb}</p>` : ''}
     `;
     matchesContainer.appendChild(el);
+}
+
+// Create a single swipeable card
+function createSwipeCard(profile) {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'swipe-card';
+    
+    // Check if a picture URL exists in the profile, otherwise use a placeholder.
+    const pictureUrl = profile.picture_url || `https://picsum.photos/350/450?random=${Math.floor(Math.random() * 100)}`;
+    cardEl.style.backgroundImage = `url('${pictureUrl}')`;
+    
+    const name = profile.name ?? "Unknown Influencer";
+    const audienceSize = profile.audience_size ?? "Unknown";
+    const blurb = profile.blurb ?? "";
+
+    cardEl.innerHTML = `
+        <div class="swipe-card-info">
+            <h3 class="text-2xl font-bold">${name}</h3>
+            <p class="text-sm mt-1">Estimated Audience: ${audienceSize}</p>
+            ${blurb ? `<p class="mt-2 text-sm italic">${blurb}</p>` : ''}
+        </div>
+    `;
+    return cardEl;
+}
+
+// Handles the swipe action
+function handleSwipe(action) {
+    if (currentCardIndex >= allMatches.length) return;
+
+    const currentCard = swipeArea.lastElementChild;
+    if (!currentCard) return;
+
+    if (action === 'like') {
+        currentCard.classList.add('is-right');
+        // TODO: Handle 'like' action (e.g., save to a "liked" list in Firebase)
+    } else if (action === 'pass') {
+        currentCard.classList.add('is-left');
+        // TODO: Handle 'pass' action
+    }
+
+    currentCard.addEventListener('transitionend', () => {
+        currentCard.remove();
+        currentCardIndex++;
+        renderNextCard();
+    });
+}
+
+// Renders the next card in the stack
+function renderNextCard() {
+    if (currentCardIndex < allMatches.length) {
+        const nextCard = createSwipeCard(allMatches[currentCardIndex]);
+        swipeArea.appendChild(nextCard);
+    } else {
+        show(noMoreCards);
+    }
+}
+
+// Setup drag and swipe functionality
+function setupSwipeListeners() {
+    let startX, currentX;
+    let isDragging = false;
+
+    swipeArea.addEventListener('mousedown', (e) => {
+        if (currentCardIndex >= allMatches.length) return;
+        const card = swipeArea.lastElementChild;
+        if (!card) return;
+
+        isDragging = true;
+        card.classList.add('is-dragging');
+        startX = e.clientX;
+        card.style.transition = 'none';
+    });
+
+    swipeArea.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const card = swipeArea.lastElementChild;
+        if (!card) return;
+
+        currentX = e.clientX;
+        const deltaX = currentX - startX;
+        card.style.transform = `translateX(${deltaX}px) rotate(${deltaX / 20}deg)`;
+    });
+
+    swipeArea.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        const card = swipeArea.lastElementChild;
+        if (!card) return;
+
+        card.classList.remove('is-dragging');
+        card.style.transition = '';
+
+        const deltaX = currentX - startX;
+        if (deltaX > 100) {
+            handleSwipe('like');
+        } else if (deltaX < -100) {
+            handleSwipe('pass');
+        } else {
+            card.style.transform = ''; // snap back
+        }
+    });
+
+    swipeArea.addEventListener('mouseleave', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        const card = swipeArea.lastElementChild;
+        if (!card) return;
+        card.classList.remove('is-dragging');
+        card.style.transition = '';
+        card.style.transform = '';
+    });
 }
 
 // Call Cloud Function with author profile
@@ -170,11 +380,9 @@ async function init() {
             const docSnap = await getDoc(docRef);
             const userProfile = docSnap.data();
 
-            // Check if user profile data exists before calling the Cloud Function
             if (!userProfile) {
                 matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches or required data found.</p>`;
                 hide(loadingEl);
-                show(matchesContainer);
                 return;
             }
 
@@ -184,11 +392,20 @@ async function init() {
             const cfResponse = await callCloudRun(userProfile);
 
             if (cfResponse?.marketingPlan?.length) {
-                cfResponse.marketingPlan.forEach(profile => {
+                allMatches = cfResponse.marketingPlan;
+                
+                // Populate swipe module with initial card
+                renderNextCard();
+                show(matchmakingModule);
+                setupSwipeListeners();
+
+                // Populate the traditional list view
+                allMatches.forEach(profile => {
                     renderMatch(profile);
                 });
             } else {
                 matchesContainer.innerHTML = `<p class="text-gray-500 text-center">No matches found.</p>`;
+                hide(matchmakingModule);
             }
 
             hide(loadingEl);
@@ -199,6 +416,10 @@ async function init() {
         show(errorOverlay);
     }
 }
+
+// Button event listeners
+likeBtn.addEventListener('click', () => handleSwipe('like'));
+passBtn.addEventListener('click', () => handleSwipe('pass'));
 
 init();
 </script>
