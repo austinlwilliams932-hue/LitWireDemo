@@ -3,453 +3,362 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LitWire - Influencer Onboarding</title>
+<title>LitWire - Influencer Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 <style>
-body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
-.card { background-color: #fff; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); margin-bottom: 2rem; }
-.input-field { width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db; transition: all 0.2s ease; margin-bottom: 1rem; }
-.input-field:focus { border-color: #2e598b; outline: none; box-shadow: 0 0 0 3px rgba(46, 89, 139, 0.2); }
-.btn { padding: 0.75rem 2.5rem; border-radius: 9999px; font-weight: 600; transition: all 0.3s ease; cursor:pointer; }
-.btn-primary { background-color: #2e598b; color: #fff; }
-.btn-primary:hover { background-color: #234368; }
-.btn-secondary { background-color: transparent; border: 2px solid #2e598b; color: #2e598b; }
-.btn-secondary:hover { background-color: #e5e7eb; }
-.aesthetic-option img { border-radius: 0.75rem; border: 3px solid transparent; transition: all 0.2s ease; cursor:pointer; margin:0.25rem; }
-.aesthetic-option.selected img { border-color: #2e598b; box-shadow: 0 0 0 3px rgba(46, 89, 139, 0.5); }
-.loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; color:#fff; text-align:center; }
-.spinner { border:4px solid rgba(255,255,255,0.3); border-top:4px solid #fff; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; }
+body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1f2937; margin: 0; }
+.dashboard-grid { display: grid; grid-template-columns: 240px 1fr 300px; grid-template-rows: 64px 1fr; height: 100vh; }
+/* Mobile & Tablet adjustments */
+@media (max-width: 1024px) {
+    .dashboard-grid { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; }
+    .top-bar { grid-area: 1 / 1 / 2 / 2; }
+    .left-sidebar { grid-area: 2 / 1 / 3 / 2; display: flex; overflow-x: auto; white-space: nowrap; }
+    .left-sidebar nav a { padding: 1rem; border-bottom: 2px solid transparent; }
+    .main-content { grid-area: 3 / 1 / 4 / 2; }
+    .right-sidebar { grid-area: 4 / 1 / 5 / 2; }
+}
+.top-bar { grid-area: 1 / 1 / 2 / 4; background-color: #fff; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 50; }
+.left-sidebar { grid-area: 1 / 1 / 3 / 2; background-color: #1f2937; color: #d1d5db; padding: 2rem 0; display: flex; flex-direction: column; }
+.left-sidebar nav a { display: flex; align-items: center; padding: 0.75rem 2rem; margin: 0.25rem 0; transition: background-color 0.2s, color 0.2s; border-radius: 0.5rem; }
+.left-sidebar nav a:hover { background-color: #374151; color: #fff; }
+.left-sidebar nav a.active { background-color: #2e598b; color: #fff; }
+.main-content { grid-area: 2 / 2 / 3 / 3; overflow-y: auto; padding: 2rem; }
+.right-sidebar { grid-area: 2 / 3 / 3 / 4; background-color: #fff; border-left: 1px solid #e5e7eb; padding: 2rem; overflow-y: auto; }
+.card { background-color: #fff; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.tag { display: inline-block; background-color: #e2e8f0; color: #475569; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+.button { background-color: #2e598b; color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+.button:hover { background-color: #234368; }
+.match-card { display: flex; gap: 1rem; background-color: #f9fafb; padding: 1rem; border-radius: 0.75rem; border: 1px solid #e5e7eb; margin-bottom: 1rem; }
+.match-card img { width: 80px; height: 120px; object-fit: cover; border-radius: 0.5rem; }
+.match-card .match-reason { font-style: italic; color: #6b7280; font-size: 0.875rem; }
+.status-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+.status-new { background-color: #d1fae5; color: #065f46; }
+.status-inprogress { background-color: #fef3c7; color: #92400e; }
+.status-completed { background-color: #e0f2fe; color: #0c4a6e; }
+.timeline-item { position: relative; padding: 1.5rem 0 0 2rem; border-left: 2px dashed #d1d5db; }
+.timeline-item::before { content: ''; position: absolute; left: -8px; top: 1.5rem; width: 14px; height: 14px; background-color: #2e598b; border: 2px solid #fff; border-radius: 50%; }
+.timeline-item:last-child { border-left: none; }
+.timeline-item:last-child::before { display: none; }
+.hidden { display: none; }
+.loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 99; }
+.spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(255,0,0,0.85); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:60; text-align:center; padding:1rem; font-family:monospace; overflow:auto; }
-#error-overlay.hidden { display:none; }
-.header-top { width:100%; background-color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.05); position:fixed; top:0; z-index:50; }
-.header-top nav { max-width: 1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:1rem; }
-.header-top a { color:#4b5563; font-weight:500; text-decoration:none; transition:color 0.2s; }
-.header-top a:hover { color:#2e598b; }
-.main { margin-top:6rem; padding:2rem; display:flex; flex-direction:column; }
-@media (min-width:1024px) { .main { flex-direction:row; } }
 </style>
 </head>
-<body>
+<body class="bg-gray-100">
+    <div id="loading-screen" class="loading-overlay">
+        <div class="spinner-border" role="status"></div>
+        <p class="text-xl mt-4 text-white">Loading your dashboard...</p>
+    </div>
 
-<header class="header-top">
-<nav>
-<div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
-<div class="flex gap-6">
-<a href="index.html">Home</a>
-<a href="profile.html">Profile</a>
-<a href="feed.html">Feed</a>
-<a href="messages.html">Messages</a>
-<a href="matches.html">Matches</a>
-<a href="bookDash.html" id="dashboard-link" class="hidden">Dashboard</a>
-<a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
-</div>
-</nav>
-</header>
+    <div id="main-dashboard" class="dashboard-grid hidden">
+        <header class="top-bar">
+            <div class="flex items-center space-x-4">
+                <div class="text-2xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
+                <div class="relative w-96">
+                    <input type="text" placeholder="Search for books, authors, or campaigns" class="w-full px-4 py-2 rounded-full bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <i class="fas fa-bell text-xl text-gray-600 hover:text-blue-900 cursor-pointer"></i>
+                <div class="flex items-center space-x-2 cursor-pointer">
+                    <img id="profile-photo" src="https://placehold.co/40x40" alt="Profile" class="w-10 h-10 rounded-full object-cover">
+                    <span id="influencer-handle" class="font-medium text-gray-800">Loading...</span>
+                    <i class="fas fa-caret-down text-sm text-gray-400"></i>
+                </div>
+            </div>
+        </header>
 
-<main class="main w-full max-w-7xl mx-auto lg:space-x-8">
+        <aside class="left-sidebar">
+            <nav class="flex-grow space-y-2">
+                <a href="#" class="active"><i class="fas fa-tachometer-alt mr-3"></i><span>Dashboard</span></a>
+                <a href="#"><i class="fas fa-user-circle mr-3"></i><span>My Profile</span></a>
+                <a href="#"><i class="fas fa-star mr-3"></i><span>Matches</span></a>
+                <a href="#"><i class="fas fa-rocket mr-3"></i><span>Campaigns</span></a>
+                <a href="#"><i class="fas fa-envelope mr-3"></i><span>Messages</span></a>
+                <a href="#"><i class="fas fa-chart-line mr-3"></i><span>Analytics</span></a>
+            </nav>
+            <div class="p-4 text-center">
+                <button id="sign-out-btn" class="w-full button bg-red-600 hover:bg-red-800">Sign Out</button>
+            </div>
+        </aside>
 
-<div class="card flex-grow lg:flex-1">
-<header class="mb-6">
-<h1 class="text-3xl font-extrabold text-gray-900">Your LitWire Profile</h1>
-<p class="text-lg text-gray-600 mt-2">Fill out your profile below to get matched with authors you'll love.</p>
-</header>
+        <main class="main-content">
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card text-center">
+                    <p id="active-campaigns-count" class="text-4xl font-bold text-blue-900">0</p>
+                    <p class="text-sm text-gray-500 mt-1">Active Campaigns</p>
+                </div>
+                <div class="card text-center">
+                    <p id="pending-pitches-count" class="text-4xl font-bold text-blue-900">0</p>
+                    <p class="text-sm text-gray-500 mt-1">Pending Pitches</p>
+                </div>
+                <div class="card text-center">
+                    <p id="followers-reached-count" class="text-4xl font-bold text-blue-900">0</p>
+                    <p class="text-sm text-gray-500 mt-1">Followers Reached</p>
+                </div>
+            </section>
 
-<form id="onboarding-form">
-<label class="block font-medium mb-1">Handle</label>
-<input type="text" id="handle" class="input-field" placeholder="@yourhandle">
+            <section class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">My Matches</h2>
+                    <a href="#" class="text-sm text-blue-800 hover:underline">View All</a>
+                </div>
+                <div id="matches-container" class="card space-y-4">
+                    <p class="text-gray-500">Loading matches...</p>
+                </div>
+            </section>
 
-<label class="block font-medium mb-1 mt-4">Genres & Subgenres</label>
-<div class="mb-4">
-<select id="genre" class="input-field">
-<option value="">Select a genre...</option>
-<option value="Fantasy">Fantasy</option>
-<option value="Romance">Romance</option>
-<option value="Science Fiction">Science Fiction</option>
-<option value="Thriller">Thriller</option>
-</select>
-<div id="subgenre-tags" class="flex flex-wrap gap-2 mt-2"></div>
-</div>
+            <section class="mb-8">
+                <h2 class="text-2xl font-bold mb-4">Active Campaigns</h2>
+                <div id="campaigns-container" class="card">
+                    <p class="text-gray-500">Loading campaigns...</p>
+                </div>
+            </section>
 
-<label class="block font-medium mb-1 mt-4">Tropes</label>
-<div class="mb-4">
-<input type="text" id="tropes-input" class="input-field" placeholder="Add tropes (e.g., enemies-to-lovers, found family)...">
-<div id="tropes-tags" class="flex flex-wrap gap-2 mt-2"></div>
-</div>
-<label class="block font-medium mb-1 mt-4">Spice Level</label>
-<div class="mb-4 flex items-center gap-4">
-<span class="text-sm text-gray-500">Fade-to-black</span>
-<input type="range" id="spice-level" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" min="0" max="4" value="0">
-<span class="text-sm text-gray-500">Explicit</span>
-</div>
+            <section>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Messages</h2>
+                    <a href="#" class="text-sm text-blue-800 hover:underline">View Inbox</a>
+                </div>
+                <div id="messages-container" class="card space-y-4">
+                    <p class="text-gray-500">Loading messages...</p>
+                </div>
+            </section>
+        </main>
 
-<label class="block font-medium mb-1 mt-4">Trigger Warnings</label>
-<div id="trigger-warnings-group" class="mb-4 flex flex-wrap gap-4">
-<label><input type="checkbox" name="triggerWarning" value="Violence"> Violence</label>
-<label><input type="checkbox" name="triggerWarning" value="Abuse"> Abuse</label>
-<label><input type="checkbox" name="triggerWarning" value="Self-harm"> Self-harm</label>
-</div>
+        <aside class="right-sidebar space-y-8">
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold">Profile Highlights</h3>
+                <div>
+                    <p class="font-medium text-gray-700 mb-1">Genres</p>
+                    <div id="genres-tags" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-700 mb-1">Aesthetic</p>
+                    <div id="aesthetic-tag" class="flex items-center gap-2"></div>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-700 mb-1">Dealbreakers</p>
+                    <div id="dealbreakers-tags" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
 
-<label class="block font-medium mb-1 mt-4">Audience Demographics</label>
-<div id="audience-demographics-group" class="mb-4 flex flex-wrap gap-4">
-<label><input type="checkbox" name="audience" value="YA Readers"> YA Readers</label>
-<label><input type="checkbox" name="audience" value="LGBTQ+"> LGBTQ+</label>
-<label><input type="checkbox" name="audience" value="BIPOC"> BIPOC</label>
-</div>
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold">Upcoming Deadlines</h3>
+                <div id="deadlines-container" class="space-y-4">
+                    <p class="text-gray-500">Loading deadlines...</p>
+                </div>
+            </div>
 
-<label class="block font-medium mb-1 mt-4">Dealbreakers</label>
-<textarea id="dealbreakers" class="input-field" rows="3" placeholder="Any preferences or restrictions..."></textarea>
-<div id="dealbreaker-tags" class="flex flex-wrap gap-2 mt-2"></div>
-<p class="text-sm text-gray-500 mt-1">Free text + common tags like mafia thrillers, erotica, religious content.</p>
-
-<label class="block font-medium mb-1 mt-4">Collaboration Style</label>
-<div class="mb-4">
-<label class="mr-4"><input type="radio" name="collabStyle" value="Creative Freedom" checked> Creative Freedom</label>
-<label class="mr-4"><input type="radio" name="collabStyle" value="Structured Campaign"> Structured Campaign</label>
-<label><input type="radio" name="collabStyle" value="Flexible"> Flexible</label>
-</div>
-
-<label class="block font-medium mb-1 mt-4">Time Commitment</label>
-<div class="mb-4 flex items-center gap-4">
-<span class="text-sm text-gray-500">Light</span>
-<input type="range" id="time-commitment" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" min="0" max="4" value="0">
-<span class="text-sm text-gray-500">Heavy</span>
-</div>
-
-<label class="block font-medium mb-1 mt-4">Platforms</label>
-<div class="mb-4">
-<label class="mr-4"><input type="checkbox" name="platform" value="Instagram"> Instagram</label>
-<label class="mr-4"><input type="checkbox" name="platform" value="TikTok"> TikTok</label>
-<label class="mr-4"><input type="checkbox" name="platform" value="YouTube"> YouTube</label>
-<label><input type="checkbox" name="platform" value="Blog"> Blog</label>
-</div>
-
-<label class="block font-medium mb-1 mt-4">Aesthetic</label>
-<div id="aesthetic-options" class="flex flex-wrap mb-6">
-<div class="aesthetic-option" data-aesthetic="dark-moody"><img src="https://via.placeholder.com/100?text=Dark/Moody" alt="Dark/Moody"></div>
-<div class="aesthetic-option" data-aesthetic="pastel-floral"><img src="https://via.placeholder.com/100?text=Pastel/Floral" alt="Pastel/Floral"></div>
-<div class="aesthetic-option" data-aesthetic="minimalist"><img src="https://via.placeholder.com/100?text=Minimalist" alt="Minimalist"></div>
-<div class="aesthetic-option" data-aesthetic="cozy-vintage"><img src="https://via.placeholder.com/100?text=Cozy/Vintage" alt="Cozy/Vintage"></div>
-</div>
-
-<div class="flex space-x-4">
-<button type="button" id="preview-matches-btn" class="btn btn-primary">Preview My Matches</button>
-<button type="button" id="save-finish-btn" class="btn btn-secondary">Save & Finish Later</button>
-</div>
-</form>
-</div>
-
-<div class="card w-full lg:w-96 p-6 sticky top-8 h-fit hidden lg:block" id="preview-sidebar"></div>
-
-</main>
-
-<div id="loading-overlay" class="loading-overlay hidden">
-<div class="spinner mb-4"></div>
-<div class="text-xl font-medium">Saving your profile...</div>
-</div>
-
-<div id="auth-loading" class="loading-overlay hidden">
-<div class="spinner mb-4"></div>
-<div class="text-xl font-medium">Checking authentication...</div>
-</div>
-
-<div id="error-overlay" class="hidden">
-<h2 class="text-2xl font-bold mb-4">Error Saving Profile</h2>
-<pre id="debug-output" class="whitespace-pre-wrap"></pre>
-<button onclick="document.getElementById('error-overlay').classList.add('hidden'); document.getElementById('loading-overlay').classList.add('hidden');" class="btn btn-primary mt-4">Close</button>
-</div>
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold">Tips & Insights</h3>
+                <div id="tips-container" class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-gray-700">Loading tips...</p>
+                </div>
+            </div>
+        </aside>
+    </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
-apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-authDomain: "litwire-97956.firebaseapp.com",
-projectId: "litwire-97956",
-storageBucket: "litwire-97956.appspot.com",
-messagingSenderId: "263009111921",
-appId: "1:263009111921:web:713622b1cfa59ddb9130d0"
+    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+    authDomain: "litwire-97956.firebaseapp.com",
+    projectId: "litwire-97956",
+    storageBucket: "litwire-97956.appspot.com",
+    messagingSenderId: "263009111921",
+    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+    measurementId: "G-ZWVFHF5YQX"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const signOutBtn = document.getElementById('sign-out-btn');
-const dashboardLink = document.getElementById('dashboard-link');
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM elements
+    const loadingScreen = document.getElementById('loading-screen');
+    const mainDashboard = document.getElementById('main-dashboard');
+    const signOutBtn = document.getElementById('sign-out-btn');
+    const matchesContainer = document.getElementById('matches-container');
+    const campaignsContainer = document.getElementById('campaigns-container');
+    const messagesContainer = document.getElementById('messages-container');
+    const genresTags = document.getElementById('genres-tags');
+    const aestheticTag = document.getElementById('aesthetic-tag');
+    const dealbreakersTags = document.getElementById('dealbreakers-tags');
+    const deadlinesContainer = document.getElementById('deadlines-container');
+    const tipsContainer = document.getElementById('tips-container');
 
-const genreDropdown = document.getElementById('genre');
-const subgenreTagsDiv = document.getElementById('subgenre-tags');
-const tropesInput = document.getElementById('tropes-input');
-const tropesTagsDiv = document.getElementById('tropes-tags');
-const dealbreakersInput = document.getElementById('dealbreakers');
-const dealbreakerTagsDiv = document.getElementById('dealbreaker-tags');
-const triggerWarningCheckboxes = document.querySelectorAll('input[name="triggerWarning"]');
-const audienceCheckboxes = document.querySelectorAll('input[name="audience"]');
+    function show(el) { el.classList.remove('hidden'); }
+    function hide(el) { el.classList.add('hidden'); }
 
-const subgenres = {
-'Fantasy': ['High Fantasy', 'Urban Fantasy', 'Dark Academia'],
-'Romance': ['Enemies-to-Lovers', 'Cozy', 'Fantasy Romance'],
-'Science Fiction': ['Dystopian', 'Space Opera', 'Cyberpunk'],
-'Thriller': ['Psychological Thriller', 'Legal Thriller', 'Cozy Mystery']
-};
+    // Sign out functionality
+    signOutBtn.addEventListener('click', async () => {
+        await signOut(auth);
+        window.location.href = 'index.html';
+    });
 
-const spiceLevelLabels = ['Fade-to-black', 'Low', 'Medium', 'High', 'Explicit'];
-const timeCommitmentLabels = ['Very Light', 'Light', 'Medium', 'Heavy', 'Very Heavy'];
+    // Helper functions to render dynamic content
+    function renderMatches(matches) {
+        matchesContainer.innerHTML = ''; // Clear existing content
+        if (matches.length === 0) {
+            matchesContainer.innerHTML = `<p class="text-gray-500">No new matches found at this time.</p>`;
+            return;
+        }
+        matches.forEach(match => {
+            const card = `
+                <div class="match-card">
+                    <img src="${match.bookCover || 'https://placehold.co/80x120'}" alt="Book Cover: ${match.bookTitle}">
+                    <div class="flex-grow">
+                        <h3 class="text-xl font-semibold">${match.bookTitle}</h3>
+                        <p class="text-sm text-gray-500 mb-2">by ${match.authorName}</p>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            ${match.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <p class="match-reason">✨ **Why this is a match:** ${match.matchReason}</p>
+                    </div>
+                    <div class="flex flex-col items-center justify-center space-y-2">
+                        <button class="button">Accept</button>
+                        <button class="text-sm text-gray-500 hover:text-gray-800 transition-colors">Pass</button>
+                        <button class="text-sm text-gray-500 hover:text-gray-800 transition-colors">Save</button>
+                    </div>
+                </div>
+            `;
+            matchesContainer.innerHTML += card;
+        });
+    }
 
-const loadingOverlay = document.getElementById('loading-overlay');
-const authLoading = document.getElementById('auth-loading');
-const errorOverlay = document.getElementById('error-overlay');
-const debugOutput = document.getElementById('debug-output');
+    function renderCampaigns(campaigns) {
+        campaignsContainer.innerHTML = '';
+        if (campaigns.length === 0) {
+            campaignsContainer.innerHTML = `<p class="text-gray-500">No active campaigns.</p>`;
+            return;
+        }
+        campaigns.forEach(campaign => {
+            const statusClass = campaign.status === 'New' ? 'status-new' :
+                                campaign.status === 'In Progress' ? 'status-inprogress' :
+                                'status-completed';
+            const statusText = campaign.status;
+            const card = `
+                <div class="timeline-item">
+                    <h3 class="font-semibold text-lg">${campaign.title}</h3>
+                    <p class="text-sm text-gray-600 mb-2">Campaign with ${campaign.authorName}</p>
+                    <p class="text-sm text-gray-800">${campaign.status === 'Completed' ? 'Completed on' : 'Deadline'}: <span class="font-semibold">${campaign.date}</span></p>
+                    <span class="status-tag ${statusClass}">${statusText}</span>
+                </div>
+            `;
+            campaignsContainer.innerHTML += card;
+        });
+    }
 
-let currentUser = null;
-let profileData = {};
+    function renderMessages(messages) {
+        messagesContainer.innerHTML = '';
+        if (messages.length === 0) {
+            messagesContainer.innerHTML = `<p class="text-gray-500">No new messages.</p>`;
+            return;
+        }
+        messages.forEach(message => {
+            const card = `
+                <div class="p-3 bg-gray-50 rounded-lg">
+                    <p class="font-semibold">${message.senderName}</p>
+                    <p class="text-sm text-gray-600 truncate">${message.preview}</p>
+                </div>
+            `;
+            messagesContainer.innerHTML += card;
+        });
+    }
 
-authLoading.classList.remove('hidden');
+    function renderProfileHighlights(profile) {
+        // Profile Highlights
+        genresTags.innerHTML = profile.genres.map(genre => `<span class="tag">${genre}</span>`).join('') || '';
+        aestheticTag.innerHTML = `<i class="fas fa-moon text-gray-600"></i><span class="tag">${profile.aesthetic}</span>`;
+        dealbreakersTags.innerHTML = profile.dealbreakers.map(db => `<span class="tag bg-red-100 text-red-700">${db}</span>`).join('') || '';
+    }
 
-onAuthStateChanged(auth, async (user) => {
-authLoading.classList.add('hidden');
-if (!user) { window.location.href = 'index.html'; return; }
-currentUser = user;
+    function renderDeadlines(deadlines) {
+        deadlinesContainer.innerHTML = '';
+        if (deadlines.length === 0) {
+            deadlinesContainer.innerHTML = `<p class="text-gray-500">No upcoming deadlines.</p>`;
+            return;
+        }
+        deadlines.forEach(deadline => {
+            const card = `
+                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-sm font-medium text-yellow-800">${deadline.timeLeft}</p>
+                    <p class="text-md text-gray-700">${deadline.task}</p>
+                </div>
+            `;
+            deadlinesContainer.innerHTML += card;
+        });
+    }
 
-const docRef = doc(db, `users/${user.uid}/profiles/influencer`);
-const docSnap = await getDoc(docRef);
-if (docSnap.exists()) {
-profileData = docSnap.data();
-prefillForm(profileData);
-if(profileData.onboardingComplete) dashboardLink.classList.remove('hidden');
-}
+    // Main data fetching logic
+    onAuthStateChanged(auth, async user => {
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        const mainProfileRef = doc(db, 'users', user.uid);
+        const influencerProfileRef = doc(db, `users/${user.uid}/profiles/influencer`);
+
+        try {
+            const mainProfileSnap = await getDoc(mainProfileRef);
+            if (!mainProfileSnap.exists() || mainProfileSnap.data().accountType !== 'influencer') {
+                // If not an influencer, redirect to the author dashboard
+                window.location.href = 'bookDash.html';
+                return;
+            }
+
+            const influencerSnap = await getDoc(influencerProfileRef);
+            if (influencerSnap.exists()) {
+                const data = influencerSnap.data();
+
+                // Populate header and stats
+                document.getElementById('influencer-handle').textContent = data.handle || 'Your Handle';
+                document.getElementById('profile-photo').src = data.profilePhoto || 'https://placehold.co/40x40';
+                document.getElementById('active-campaigns-count').textContent = data.activeCampaigns || 0;
+                document.getElementById('pending-pitches-count').textContent = data.pendingPitches || 0;
+                document.getElementById('followers-reached-count').textContent = data.followersReached || 0;
+                
+                // Render main content sections
+                renderMatches(data.matches || []);
+                renderCampaigns(data.campaigns || []);
+                renderMessages(data.messages || []);
+
+                // Render sidebar widgets
+                renderProfileHighlights(data.profileHighlights || { genres: [], aesthetic: 'N/A', dealbreakers: [] });
+                renderDeadlines(data.upcomingDeadlines || []);
+                tipsContainer.innerHTML = `<p class="text-sm text-gray-700">${data.tips || 'No new tips at this time.'}</p>`;
+            } else {
+                // If no influencer profile exists, show empty data
+                console.log("No influencer profile found for this user.");
+                renderMatches([]);
+                renderCampaigns([]);
+                renderMessages([]);
+                renderProfileHighlights({ genres: [], aesthetic: 'N/A', dealbreakers: [] });
+                renderDeadlines([]);
+                tipsContainer.innerHTML = `<p class="text-sm text-gray-700">No new tips at this time.</p>`;
+            }
+
+        } catch (err) {
+            console.error("Error fetching influencer data:", err);
+            // In a real app, you might show a user-friendly error message here
+        } finally {
+            hide(loadingScreen);
+            show(mainDashboard);
+        }
+    });
 });
-
-signOutBtn.addEventListener('click', async () => {
-await signOut(auth);
-window.location.href = 'index.html';
-});
-
-function addTag(container, text) {
-const tag = document.createElement('span');
-tag.className = 'px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-full font-medium cursor-pointer flex items-center';
-tag.innerHTML = `${text} <span class="ml-2 text-red-500 hover:text-red-700">&times;</span>`;
-tag.querySelector('span').addEventListener('click', () => {
-tag.remove();
-updatePreview();
-});
-container.appendChild(tag);
-}
-
-function handleInputChange(event, container) {
-if (event.key === 'Enter' || event.type === 'blur') {
-event.preventDefault();
-const value = event.target.value.trim();
-if (value) {
-addTag(container, value);
-event.target.value = '';
-updatePreview();
-}
-}
-}
-
-function prefillForm(data) {
-document.getElementById('handle').value = data.handle || '';
-document.getElementById('dealbreakers').value = data.dealbreakers || '';
-if (data.collabStyle) {
-const styleRadio = document.querySelector(`input[name="collabStyle"][value="${data.collabStyle}"]`);
-if (styleRadio) styleRadio.checked = true;
-}
-if (Array.isArray(data.platforms)) {
-data.platforms.forEach(p => {
-const cb = document.querySelector(`input[name="platform"][value="${p}"]`);
-if (cb) cb.checked = true;
-});
-}
-if (data.aesthetic) {
-const option = document.querySelector(`.aesthetic-option[data-aesthetic="${data.aesthetic}"]`);
-if(option) option.classList.add('selected');
-}
-if (data.genres) {
-data.genres.forEach(genre => addTag(subgenreTagsDiv, genre));
-}
-if (data.tropes) {
-data.tropes.forEach(trope => addTag(tropesTagsDiv, trope));
-}
-if (data.triggerWarnings) {
-data.triggerWarnings.forEach(tw => {
-const cb = document.querySelector(`input[name="triggerWarning"][value="${tw}"]`);
-if (cb) cb.checked = true;
-});
-}
-if (data.audience) {
-data.audience.forEach(demographic => {
-const cb = document.querySelector(`input[name="audience"][value="${demographic}"]`);
-if (cb) cb.checked = true;
-});
-}
-if (data.dealbreakerTags) {
-data.dealbreakerTags.forEach(tag => addTag(dealbreakerTagsDiv, tag));
-}
-if (data.spiceLevel) {
-document.getElementById('spice-level').value = data.spiceLevel;
-}
-if (data.timeCommitment) {
-document.getElementById('time-commitment').value = data.timeCommitment;
-}
-updatePreview();
-}
-
-function updatePreview() {
-const sidebar = document.getElementById('preview-sidebar');
-sidebar.classList.remove('hidden');
-sidebar.innerHTML = '';
-const handle = document.getElementById('handle').value || 'Your handle';
-const handleText = document.createElement('p');
-handleText.className = 'text-xl font-bold mb-2';
-handleText.textContent = handle;
-sidebar.appendChild(handleText);
-
-const genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-if (genres.length) {
-const genresEl = document.createElement('p');
-genresEl.textContent = `Genres: ${genres.join(', ')}`;
-sidebar.appendChild(genresEl);
-}
-
-const tropes = Array.from(tropesTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-if (tropes.length) {
-const tropesEl = document.createElement('p');
-tropesEl.textContent = `Tropes: ${tropes.join(', ')}`;
-sidebar.appendChild(tropesEl);
-}
-
-const spiceLevel = document.getElementById('spice-level').value;
-const spiceEl = document.createElement('p');
-spiceEl.textContent = `Spice Level: ${spiceLevelLabels[spiceLevel]}`;
-sidebar.appendChild(spiceEl);
-
-const triggerWarnings = Array.from(document.querySelectorAll('input[name="triggerWarning"]:checked')).map(cb => cb.value);
-if (triggerWarnings.length) {
-const twEl = document.createElement('p');
-twEl.textContent = `Trigger Warnings: ${triggerWarnings.join(', ')}`;
-sidebar.appendChild(twEl);
-}
-
-const audience = Array.from(document.querySelectorAll('input[name="audience"]:checked')).map(cb => cb.value);
-if (audience.length) {
-const audienceEl = document.createElement('p');
-audienceEl.textContent = `Audience: ${audience.join(', ')}`;
-sidebar.appendChild(audienceEl);
-}
-
-const dealbreakers = document.getElementById('dealbreakers').value.trim();
-if(dealbreakers) {
-const dbTextEl = document.createElement('p');
-dbTextEl.textContent = `Dealbreakers (text): ${dealbreakers}`;
-sidebar.appendChild(dbTextEl);
-}
-
-const dealbreakerTags = Array.from(dealbreakerTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-if (dealbreakerTags.length) {
-const dbTagsEl = document.createElement('p');
-dbTagsEl.textContent = `Dealbreaker Tags: ${dealbreakerTags.join(', ')}`;
-sidebar.appendChild(dbTagsEl);
-}
-
-const collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
-const collabEl = document.createElement('p');
-collabEl.textContent = `Collaboration: ${collabStyle}`;
-sidebar.appendChild(collabEl);
-
-const timeCommitment = document.getElementById('time-commitment').value;
-const timeEl = document.createElement('p');
-timeEl.textContent = `Time Commitment: ${timeCommitmentLabels[timeCommitment]}`;
-sidebar.appendChild(timeEl);
-
-const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
-if(platforms.length){
-const platformsEl = document.createElement('p');
-platformsEl.textContent = `Platforms: ${platforms.join(', ')}`;
-sidebar.appendChild(platformsEl);
-}
-
-const aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic;
-if(aesthetic){
-const aestheticEl = document.createElement('p');
-aestheticEl.textContent = `Aesthetic: ${aesthetic}`;
-sidebar.appendChild(aestheticEl);
-}
-}
-
-function saveProfile() {
-if(!currentUser) return;
-
-profileData.handle = document.getElementById('handle').value.trim();
-profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
-profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
-profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb=>cb.value);
-profileData.aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic || '';
-profileData.genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-profileData.tropes = Array.from(tropesTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-profileData.spiceLevel = document.getElementById('spice-level').value;
-profileData.triggerWarnings = Array.from(document.querySelectorAll('input[name="triggerWarning"]:checked')).map(cb => cb.value);
-profileData.audience = Array.from(document.querySelectorAll('input[name="audience"]:checked')).map(cb => cb.value);
-profileData.dealbreakerTags = Array.from(dealbreakerTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-profileData.timeCommitment = document.getElementById('time-commitment').value;
-profileData.onboardingComplete = true;
-
-loadingOverlay.classList.remove('hidden');
-
-setDoc(doc(db, `users/${currentUser.uid}/profiles/influencer`), profileData, {merge:true})
-.then(() => {
-  // NEW: Update the root user document to set onboardingComplete to true
-  return setDoc(doc(db, "users", currentUser.uid), { onboardingComplete: true }, { merge: true });
-})
-.then(() => {
-  // Redirect to the index page after both updates are complete
-  window.location.href = 'index.html';
-})
-.catch(err => {
-debugOutput.textContent = JSON.stringify(err,null,2);
-errorOverlay.classList.remove('hidden');
-})
-.finally(()=> loadingOverlay.classList.add('hidden'));
-}
-
-// Event listeners
-document.getElementById('preview-matches-btn').addEventListener('click', saveProfile);
-document.getElementById('save-finish-btn').addEventListener('click', saveProfile);
-document.getElementById('handle').addEventListener('input', updatePreview);
-document.getElementById('dealbreakers').addEventListener('input', updatePreview);
-document.querySelectorAll('input[name="platform"]').forEach(cb=>cb.addEventListener('change', updatePreview));
-document.querySelectorAll('input[name="collabStyle"]').forEach(rb=>rb.addEventListener('change', updatePreview));
-document.querySelectorAll('.aesthetic-option').forEach(option=>{
-option.addEventListener('click',()=>{
-document.querySelectorAll('.aesthetic-option').forEach(opt=>opt.classList.remove('selected'));
-option.classList.add('selected');
-updatePreview();
-});
-});
-
-genreDropdown.addEventListener('change', (e) => {
-subgenreTagsDiv.innerHTML = '';
-const selectedGenre = e.target.value;
-if (selectedGenre && subgenres[selectedGenre]) {
-subgenres[selectedGenre].forEach(sub => addTag(subgenreTagsDiv, sub));
-}
-updatePreview();
-});
-
-tropesInput.addEventListener('keydown', (e) => handleInputChange(e, tropesTagsDiv));
-tropesInput.addEventListener('blur', (e) => handleInputChange(e, tropesTagsDiv));
-
-dealbreakersInput.addEventListener('keydown', (e) => handleInputChange(e, dealbreakerTagsDiv));
-dealbreakersInput.addEventListener('blur', (e) => handleInputChange(e, dealbreakerTagsDiv));
-
-triggerWarningCheckboxes.forEach(cb => cb.addEventListener('change', updatePreview));
-audienceCheckboxes.forEach(cb => cb.addEventListener('change', updatePreview));
-document.getElementById('spice-level').addEventListener('input', updatePreview);
-document.getElementById('time-commitment').addEventListener('input', updatePreview);
 </script>
 </body>
 </html>
