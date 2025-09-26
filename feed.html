@@ -6,81 +6,217 @@
 <title>LitWire - Feed</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
-body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
-.container { max-width: 800px; margin: 0 auto; }
+body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; margin:0; }
 .header-top { width:100%; background-color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.05); position:fixed; top:0; z-index:50; }
-.header-top nav { max-width: 1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:1rem; }
+.header-top nav { max-width: 1280px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding: 1rem 2rem; }
 .header-top a { color:#4b5563; font-weight:500; text-decoration:none; transition:color 0.2s; }
 .header-top a:hover { color:#2e598b; }
-.main { margin-top:6rem; padding:2rem; }
-.loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; color:#fff; text-align:center; }
-.spinner { border:4px solid rgba(255,255,255,0.3); border-top:4px solid #fff; border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(255,0,0,0.85); color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:60; text-align:center; padding:1rem; font-family:monospace; overflow:auto; }
-#error-overlay.hidden { display:none; }
+.main-container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 5rem; }
+@media (min-width: 1024px) {
+    .main-container { grid-template-columns: 2fr 1fr; }
+}
+.post-card { background-color: #fff; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+.post-header { display: flex; align-items: center; gap: 0.75rem; }
+.post-avatar { width: 48px; height: 48px; border-radius: 9999px; object-fit: cover; }
+.post-actions { display: flex; justify-content: space-around; color: #6b7280; padding-top: 0.75rem; border-top: 1px solid #f3f4f6; margin-top: 1rem; }
+.post-actions div { cursor: pointer; transition: color 0.2s; }
+.post-actions div:hover { color: #2e598b; }
+.widget-card { background-color: #fff; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+.poll-option { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 9999px; padding: 0.75rem 1.25rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.poll-option:hover { border-color: #2e598b; background-color: #eef2ff; }
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <header class="header-top">
 <nav>
 <div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
-<div class="flex gap-6">
+<div class="hidden md:flex items-center gap-6">
 <a href="index.html">Home</a>
 <a href="profile.html">Profile</a>
-<a href="feed.html">Feed</a>
+<a href="feed.html" class="text-blue-900 font-bold">Feed</a>
 <a href="messages.html">Messages</a>
 <a href="matches.html">Matches</a>
 <a href="bookDash.html">Dashboard</a>
-<a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
 </div>
+<a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
 </nav>
 </header>
 
-<main class="main container">
-<div class="bg-white p-8 rounded-2xl shadow-lg mb-8">
-<h1 class="text-2xl font-bold mb-4 text-gray-900">LitWire Feed</h1>
-<form id="new-post-form" class="space-y-4">
-<textarea id="post-content" rows="4" placeholder="What's new in the world of books?" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3"></textarea>
-<button type="submit" class="w-full px-6 py-3 bg-blue-900 text-white rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Post</button>
-</form>
+<main class="main-container">
+<div class="space-y-6">
+    <div class="post-card p-6">
+        <h2 class="text-xl font-bold mb-4 text-gray-900">Create a Post</h2>
+        <form id="new-post-form" class="space-y-4">
+            <textarea id="post-content" rows="3" placeholder="What's on your mind, bookworm?" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-900 focus:ring-blue-900 p-3"></textarea>
+            <button type="submit" class="w-full px-6 py-2.5 bg-blue-900 text-white font-semibold rounded-lg shadow-md hover:bg-blue-800 transition duration-300">Post</button>
+        </form>
+    </div>
+
+    <div id="feed-container" class="space-y-6">
+        
+        <div class="post-card p-6" data-is-fake="true">
+            <div class="post-header">
+                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User Avatar" class="post-avatar">
+                <div>
+                    <p class="font-bold text-gray-800">Elena Rodriguez</p>
+                    <p class="text-sm text-gray-500">@elenareads · 15m</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-gray-600 mb-3">Just finished <span class="font-semibold text-blue-900">"The Midnight Library"</span> and WOW. Such a profound and heartwarming story about choices and regrets. A must-read for anyone feeling a little lost. 📚</p>
+                <div class="flex border border-gray-200 rounded-lg overflow-hidden">
+                    <img src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1602190253l/52578297.jpg" alt="Book Cover" class="w-28 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg">The Midnight Library</h3>
+                        <p class="text-sm text-gray-600">by Matt Haig</p>
+                        <div class="text-yellow-500 mt-2">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <span class="text-gray-600 text-sm ml-1">4.0 / 5.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="post-actions">
+                <div><i class="fa-regular fa-heart mr-2"></i>125 Likes</div>
+                <div><i class="fa-regular fa-comment mr-2"></i>32 Comments</div>
+                <div><i class="fa-solid fa-retweet mr-2"></i>18 Reposts</div>
+            </div>
+        </div>
+
+        <div class="post-card p-6" data-is-fake="true">
+            <div class="post-header">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Avatar" class="post-avatar">
+                <div>
+                    <p class="font-bold text-gray-800">Brandon Chen <span class="text-xs bg-blue-100 text-blue-800 font-semibold px-2 py-1 rounded-full ml-1">Author</span></p>
+                    <p class="text-sm text-gray-500">@brandonchenbooks · 2h</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-gray-800 mb-3 text-lg font-semibold">Cover reveal! ✨ So excited to share the cover for my upcoming novel, "Echoes of the Void". It's a sci-fi epic hitting shelves this fall. Pre-order link in bio!</p>
+                <img src="https://marketplace.canva.com/EAFaQMYuZbo/1/0/1003w/canva-green-and-blue-illustrated-man-fantasy-book-cover-n4Pa3d9a0J8.jpg" alt="Book Cover" class="rounded-lg w-full h-auto object-cover shadow-lg">
+            </div>
+            <div class="post-actions">
+                <div><i class="fa-regular fa-heart mr-2"></i>543 Likes</div>
+                <div><i class="fa-regular fa-comment mr-2"></i>102 Comments</div>
+                <div><i class="fa-solid fa-retweet mr-2"></i>97 Reposts</div>
+            </div>
+        </div>
+
+        <div class="post-card p-6" data-is-fake="true">
+            <div class="post-header">
+                <img src="https://randomuser.me/api/portraits/women/50.jpg" alt="User Avatar" class="post-avatar">
+                <div>
+                    <p class="font-bold text-gray-800">Book Club Betties</p>
+                    <p class="text-sm text-gray-500">@BCBetties · 8h</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-gray-800 mb-4">Time to pick our book for next month! What genre are we all in the mood for?</p>
+                <div class="space-y-3">
+                    <div class="poll-option">🤔 Thriller / Mystery</div>
+                    <div class="poll-option">💖 Contemporary Romance</div>
+                    <div class="poll-option">🚀 Science Fiction</div>
+                    <div class="poll-option">🏰 High Fantasy</div>
+                </div>
+                <p class="text-sm text-gray-500 mt-3">1,284 votes · 3 days left</p>
+            </div>
+            <div class="post-actions">
+                <div><i class="fa-regular fa-heart mr-2"></i>98 Likes</div>
+                <div><i class="fa-regular fa-comment mr-2"></i>45 Comments</div>
+                <div><i class="fa-solid fa-retweet mr-2"></i>22 Reposts</div>
+            </div>
+        </div>
+
+        <div class="post-card p-6" data-is-fake="true">
+            <div class="post-header">
+                <img src="https://randomuser.me/api/portraits/men/54.jpg" alt="User Avatar" class="post-avatar">
+                <div>
+                    <p class="font-bold text-gray-800">Reading Rex</p>
+                    <p class="text-sm text-gray-500">@readingrex · 1d</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-gray-700 text-base leading-relaxed">Does anyone else have a "comfort read"? That one book you can always go back to when you need a pick-me-up. Mine is definitely 'The Hobbit'.</p>
+            </div>
+            <div class="post-actions">
+                <div><i class="fa-regular fa-heart mr-2"></i>210 Likes</div>
+                <div><i class="fa-regular fa-comment mr-2"></i>88 Comments</div>
+                <div><i class="fa-solid fa-retweet mr-2"></i>12 Reposts</div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
-<div id="feed-container" class="space-y-6">
-<!-- Faux posts -->
-<div class="bg-white p-6 rounded-xl shadow-md border border-gray-200" data-is-fake="true">
-<div class="flex items-center space-x-4 mb-2">
-<span class="font-semibold text-gray-800">Reading Rex</span>
-</div>
-<p class="text-gray-700">Just finished 'Dune' for the first time. The world-building is incredible! I can't believe I waited so long to read it.</p>
-<p class="text-xs text-gray-400 mt-2">1 hour ago</p>
-</div>
-<div class="bg-white p-6 rounded-xl shadow-md border border-gray-200" data-is-fake="true">
-<div class="flex items-center space-x-4 mb-2">
-<span class="font-semibold text-gray-800">Bookish Betty</span>
-</div>
-<p class="text-gray-700">Looking for a good historical fiction recommendation. Something set in the roaring twenties would be great!</p>
-<p class="text-xs text-gray-400 mt-2">3 hours ago</p>
-</div>
-</div>
+<aside class="hidden lg:block space-y-6">
+    <div class="widget-card">
+        <h3 class="font-bold text-lg mb-4">🔥 Trending Books</h3>
+        <ul class="space-y-4">
+            <li class="flex items-center gap-4">
+                <img src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1660242220l/61431922._SY475_.jpg" alt="Book" class="w-12 h-16 object-cover rounded">
+                <div>
+                    <p class="font-semibold">Fourth Wing</p>
+                    <p class="text-sm text-gray-500">Rebecca Yarros</p>
+                </div>
+            </li>
+            <li class="flex items-center gap-4">
+                <img src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1675108892l/60318873.jpg" alt="Book" class="w-12 h-16 object-cover rounded">
+                <div>
+                    <p class="font-semibold">Iron Flame</p>
+                    <p class="text-sm text-gray-500">Rebecca Yarros</p>
+                </div>
+            </li>
+             <li class="flex items-center gap-4">
+                <img src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1589255531l/53452934.jpg" alt="Book" class="w-12 h-16 object-cover rounded">
+                <div>
+                    <p class="font-semibold">The Invisible Life of Addie LaRue</p>
+                    <p class="text-sm text-gray-500">V.E. Schwab</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="widget-card">
+        <h3 class="font-bold text-lg mb-4">👥 Who to Follow</h3>
+        <ul class="space-y-4">
+            <li class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="User" class="w-10 h-10 object-cover rounded-full">
+                    <div>
+                        <p class="font-semibold">Sarah J. Reads</p>
+                        <p class="text-sm text-gray-500">@sjm_fangirl</p>
+                    </div>
+                </div>
+                <button class="bg-blue-900 text-white font-semibold px-4 py-1.5 rounded-full text-sm hover:bg-blue-800">Follow</button>
+            </li>
+            <li class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="User" class="w-10 h-10 object-cover rounded-full">
+                    <div>
+                        <p class="font-semibold">Ken Reads Sci-Fi</p>
+                        <p class="text-sm text-gray-500">@ken_scifi</p>
+                    </div>
+                </div>
+                <button class="bg-gray-200 text-gray-800 font-semibold px-4 py-1.5 rounded-full text-sm hover:bg-gray-300">Follow</button>
+            </li>
+        </ul>
+    </div>
+</aside>
 </main>
 
 <footer class="bg-gray-800 text-white py-6 mt-12 w-full">
-<div class="container text-center text-sm">&copy; 2024 LitWire. All rights reserved.</div>
+<div class="max-w-7xl mx-auto text-center text-sm px-4">&copy; 2025 LitWire. All rights reserved.</div>
 </footer>
 
-<div id="loading-overlay" class="loading-overlay hidden">
-<div class="spinner mb-4"></div>
-<div class="text-xl font-medium">Loading...</div>
-</div>
-
-<div id="error-overlay" class="hidden">
-<h2 class="text-2xl font-bold mb-4">Error</h2>
-<pre id="debug-output" class="whitespace-pre-wrap"></pre>
-<button onclick="document.getElementById('error-overlay').classList.add('hidden'); document.getElementById('loading-overlay').classList.add('hidden');" class="px-4 py-2 bg-blue-800 text-white rounded mt-2">Close</button>
-</div>
+<div id="loading-overlay" class="loading-overlay hidden"> ... </div>
+<div id="error-overlay" class="hidden"> ... </div>
 
 <script type="module">
 // Firebase init
@@ -105,47 +241,44 @@ const signOutBtn = document.getElementById('sign-out-btn');
 const newPostForm = document.getElementById('new-post-form');
 const postContentInput = document.getElementById('post-content');
 const feedContainer = document.getElementById('feed-container');
-const loadingOverlay = document.getElementById('loading-overlay');
-const errorOverlay = document.getElementById('error-overlay');
-const debugOutput = document.getElementById('debug-output');
-
 let userId = null;
 let userProfile = null;
 
-function showLoading() { loadingOverlay.classList.remove('hidden'); }
-function hideLoading() { loadingOverlay.classList.add('hidden'); }
-function showError(err) {
-  debugOutput.textContent = JSON.stringify(err, null, 2);
-  errorOverlay.classList.remove('hidden');
-  hideLoading();
+// Function to format time difference
+function timeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + "y";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + "mo";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + "h";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + "m";
+    return Math.floor(seconds) + "s";
 }
 
-showLoading();
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = 'index.html';
     return;
   }
   userId = user.uid;
-
   try {
     const userDoc = await getDoc(doc(db, `users/${userId}`));
-    userProfile = userDoc.exists() ? userDoc.data() : { name: 'User' };
+    userProfile = userDoc.exists() ? userDoc.data() : { name: 'Anonymous User', handle: '@anonymous' };
     setupFeedListener();
-  } catch (err) {
-    showError(err);
-  } finally {
-    hideLoading();
-  }
+  } catch (err) { console.error(err); }
 });
 
 signOutBtn.addEventListener('click', async () => {
   try {
     await signOut(auth);
     window.location.href = 'index.html';
-  } catch (err) {
-    showError(err);
-  }
+  } catch (err) { console.error(err); }
 });
 
 function setupFeedListener() {
@@ -161,17 +294,31 @@ function setupFeedListener() {
     snapshot.forEach(docSnap => {
       const post = docSnap.data();
       const postElement = document.createElement('div');
-      postElement.className = 'bg-white p-6 rounded-xl shadow-md border border-gray-200';
+      postElement.className = 'post-card p-6'; // Use the new post card style
+      
+      const postDate = post.createdAt?.toDate();
+      const displayTime = postDate ? timeAgo(postDate) : '';
+
       postElement.innerHTML = `
-        <div class="flex items-center space-x-4 mb-2">
-          <span class="font-semibold text-gray-800">${post.authorName || 'User'}</span>
+        <div class="post-header">
+            <img src="${post.authorAvatar || 'https://i.pravatar.cc/48'}" alt="User Avatar" class="post-avatar">
+            <div>
+                <p class="font-bold text-gray-800">${post.authorName || 'User'}</p>
+                <p class="text-sm text-gray-500">${post.authorHandle || '@user'} · ${displayTime}</p>
+            </div>
         </div>
-        <p class="text-gray-700">${post.content}</p>
-        <p class="text-xs text-gray-400 mt-2">${post.createdAt?.toDate ? post.createdAt.toDate().toLocaleString() : ''}</p>
+        <div class="mt-4">
+            <p class="text-gray-700 text-base leading-relaxed">${post.content}</p>
+        </div>
+        <div class="post-actions">
+            <div><i class="fa-regular fa-heart mr-2"></i>0 Likes</div>
+            <div><i class="fa-regular fa-comment mr-2"></i>0 Comments</div>
+            <div><i class="fa-solid fa-retweet mr-2"></i>0 Reposts</div>
+        </div>
       `;
-      feedContainer.appendChild(postElement);
+      feedContainer.prepend(postElement); // Prepend to show new posts on top
     });
-  }, (err) => showError(err));
+  }, (err) => console.error(err));
 }
 
 newPostForm.addEventListener('submit', async (e) => {
@@ -179,20 +326,17 @@ newPostForm.addEventListener('submit', async (e) => {
   const content = postContentInput.value.trim();
   if (!content || !userId) return;
 
-  showLoading();
   try {
     await addDoc(collection(db, 'feed'), {
       content,
       authorId: userId,
-      authorName: userProfile?.name || 'User',
+      authorName: userProfile?.name || 'Anonymous User',
+      authorHandle: userProfile?.handle || '@user', // Assuming handle is stored in profile
+      authorAvatar: userProfile?.avatar || 'https://i.pravatar.cc/48', // Assuming avatar is stored
       createdAt: serverTimestamp()
     });
     postContentInput.value = '';
-  } catch (err) {
-    showError(err);
-  } finally {
-    hideLoading();
-  }
+  } catch (err) { console.error(err); }
 });
 </script>
 </body>
