@@ -320,10 +320,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auth state
     onAuthStateChanged(auth, async user => {
-        if(!user){ window.location.href='index.html'; return; }
+        if(!user){ 
+            window.location.href='index.html'; 
+            return; 
+        }
         show(actionButtons);
 
         try {
+            // 1. Fetch main user profile to check userType
+            const mainProfileRef = doc(db, `artifacts/users/${user.uid}/profile`);
+            const mainProfileSnap = await getDoc(mainProfileRef);
+
+            if (mainProfileSnap.exists()) {
+                const profileData = mainProfileSnap.data();
+                const userType = profileData.userType;
+                
+                // **CHECK AND REDIRECT**
+                if (userType === 'influencer') {
+                    window.location.href = 'influencerDash.html';
+                    return; // Stop further execution for influencers
+                }
+                // Continue with author dashboard logic otherwise
+            }
+
+
             const authorDocRef = doc(db, `users/${user.uid}/profiles/author`);
             const authorSnap = await getDoc(authorDocRef);
 
