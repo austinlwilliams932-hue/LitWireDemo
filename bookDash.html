@@ -3,111 +3,181 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LitWire - Campaign Plan</title>
+<title>LitWire - Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Base Styles */
-body { 
-    font-family: 'Inter', sans-serif; 
-    background-color: #f3f4f6; 
-    margin: 0; 
-}
-.container { max-width: 900px; margin: 0 auto; }
-.content-card { background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
-.button { background-color: #2e598b; color: #fff; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; }
-.button:hover { background-color: #234368; }
-.header-top { width:100%; background-color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.05); position:fixed; top:0; z-index:50; }
-.header-top nav { max-width: 1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:1rem; }
-.header-top a { color:#4b5563; font-weight:500; text-decoration:none; transition:color 0.2s; }
-.header-top a:hover { color:#2e598b; }
-.main { margin-top:6rem; padding:2rem; }
-
-/* Visibility Control */
-.content-hidden { display: none !important; }
-.spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-/* Loading Overlay */
-.loading-overlay, #error-overlay { 
-    position: fixed; top:0; left:0; width:100%; height:100%; 
-    display: flex; /* Starts visible until JS hides it */
-    flex-direction:column; justify-content:center; align-items:center; z-index:100; 
-    color:#fff; text-align:center; padding:1rem; 
-}
-.loading-overlay { background-color: rgba(0,0,0,0.7); }
-#error-overlay { background-color: rgba(255,0,0,0.85); font-family: monospace; overflow:auto; }
-
-/* Ensure main content is hidden initially while loading is visible */
-.main { opacity: 0; visibility: hidden; transition: opacity 0.5s; } 
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .content-card { background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+    .button { background-color: #2e598b; color: #fff; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; }
+    .button:hover { background-color: #234368; }
+    .spinner-border { border: 4px solid rgba(0,0,0,0.1); border-top-color: #1e40af; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .hidden { display: none; }
+    .loading-overlay, #error-overlay { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:50; color:#fff; text-align:center; padding:1rem; }
+    .loading-overlay { background-color: rgba(0,0,0,0.7); }
+    #error-overlay { background-color: rgba(255,0,0,0.85); font-family: monospace; overflow:auto; }
+    #error-overlay.hidden, .loading-overlay.hidden { display:none; }
+    .header-top { width:100%; background-color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.05); position:fixed; top:0; z-index:50; }
+    .header-top nav { max-width: 1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:1rem; }
+    .header-top a { color:#4b5563; font-weight:500; text-decoration:none; transition:color 0.2s; }
+    .header-top a:hover { color:#2e598b; }
+    .main { margin-top:6rem; padding:2rem; }
+    #action-buttons { position: fixed; bottom: 2rem; right: 2rem; z-index: 100; display: flex; gap: 1rem; }
+    .dashboard-header { display: flex; align-items: center; background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+    .dashboard-tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 1.5rem; }
+    .dashboard-tabs button { padding: 1rem 1.5rem; font-weight: 500; color: #6b7280; transition: color 0.2s, border-color 0.2s; border-bottom: 2px solid transparent; }
+    .dashboard-tabs button.active { color: #2e598b; border-color: #2e598b; }
+    .dashboard-tab-content { display: none; }
+    .dashboard-tab-content.active { display: block; }
+    .metric-card { background-color: #f9fafb; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e5e7eb; text-align: center; }
+    .influencer-card { background-color: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .influencer-card img { border-radius: 9999px; width: 6rem; height: 6rem; object-fit: cover; margin-bottom: 1rem; }
+    .tag { background-color: #d1fae5; color: #065f46; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .chart-container { background-color: #fff; padding: 2rem; border-radius: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
 </style>
 </head>
-
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
 
 <header class="header-top">
-<nav>
-<div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
-<div class="flex gap-6">
-<a href="index.html">Home</a>
-<a href="profile.html">Profile</a>
-<a href="feed.html">Feed</a>
-<a href="messages.html">Messages</a>
-<a href="matches.html">Matches</a>
-<a href="bookDash.html">Dashboard</a>
-<a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
-</div>
-</nav>
+    <nav>
+        <div class="text-3xl font-bold text-gray-800"><a href="index.html"><span class="text-blue-900">Lit</span><span class="text-gray-900">Wire</span></a></div>
+        <div class="flex gap-6">
+            <a href="index.html">Home</a>
+            <a href="profile.html">Profile</a>
+            <a href="feed.html">Feed</a>
+            <a href="messages.html">Messages</a>
+            <a href="matches.html">Matches</a>
+            <a href="bookDash.html">Dashboard</a>
+            <a href="#" id="sign-out-btn" class="text-red-600 font-medium hover:text-red-800">Sign Out</a>
+        </div>
+    </nav>
 </header>
 
-<main id="main-content" class="main container">
-
-<div id="author-dashboard" class="content-hidden">
-    <div class="content-card">
-        <h1 id="plan-header" class="text-3xl font-bold text-gray-900 mb-2">Campaign Plan for <span id="book-title-plan">Your Book</span></h1>
-        <p id="plan-subheader" class="text-lg text-gray-600 mb-6">Generated by LitWire AI based on your profile.</p>
-        
-        <div id="plan-container" class="w-full">
-            <p class="text-gray-500">Loading plan details...</p>
+<main class="main container">
+    <div class="dashboard-header">
+        <img id="book-cover" src="" alt="Book Cover" class="w-24 h-32 object-cover rounded-lg mr-6 shadow-md" />
+        <div>
+            <div class="flex items-center mb-2">
+                <h1 id="book-title" class="text-3xl font-bold text-gray-900 mr-4">Your Book</h1>
+                <span class="bg-green-100 text-green-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">Live</span>
+            </div>
+            <p id="campaign-dates" class="text-lg text-gray-600 mb-2">Campaign Dates: N/A</p>
+            <p id="book-description" class="text-sm text-gray-500">Loading description...</p>
         </div>
     </div>
-</div>
 
-<div id="influencer-dashboard" class="content-hidden">
-    <div class="content-card">
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Influencer Dashboard</h1>
-        <p class="text-lg text-gray-600">This page is for authors only. Please sign in as an author.</p>
+    <div class="dashboard-tabs">
+        <button id="tab-overview" class="active">Overview</button>
+        <button id="tab-influencers">Influencers</button>
+        <button id="tab-analytics">Analytics</button>
+        <button id="tab-plan">Campaign Plan</button>
     </div>
-</div>
+
+    <div id="tab-content-overview" class="dashboard-tab-content active">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Metrics Summary</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="metric-card">
+                <p id="metric-matches" class="text-4xl font-bold text-blue-900">0</p>
+                <p class="text-gray-600">Matches</p>
+            </div>
+            <div class="metric-card">
+                <p id="metric-contacted" class="text-4xl font-bold text-blue-900">0</p>
+                <p class="text-gray-600">Influencers Contacted</p>
+            </div>
+            <div class="metric-card">
+                <p id="metric-confirmed" class="text-4xl font-bold text-blue-900">0</p>
+                <p class="text-gray-600">Confirmed</p>
+            </div>
+            <div class="metric-card">
+                <p id="metric-posts" class="text-4xl font-bold text-blue-900">0</p>
+                <p class="text-gray-600">Posts Live</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-content-influencers" class="dashboard-tab-content">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Influencer Profiles</h2>
+        <div class="flex flex-wrap gap-4 mb-6">
+            <div class="flex items-center gap-2">
+                <label for="platform-filter" class="text-gray-600">Platform:</label>
+                <select id="platform-filter" class="border rounded-md p-2">
+                    <option>All</option>
+                    <option>TikTok</option>
+                    <option>Instagram</option>
+                    <option>YouTube</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="tier-filter" class="text-gray-600">Engagement Tier:</label>
+                <select id="tier-filter" class="border rounded-md p-2">
+                    <option>All</option>
+                    <option>Micro</option>
+                    <option>Macro</option>
+                    <option>Mega</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="region-filter" class="text-gray-600">Region:</label>
+                <select id="region-filter" class="border rounded-md p-2">
+                    <option>All</option>
+                    <option>North America</option>
+                    <option>Europe</option>
+                    <option>Asia</option>
+                </select>
+            </div>
+        </div>
+        <div id="influencer-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+
+    <div id="tab-content-analytics" class="dashboard-tab-content">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Campaign Analytics</h2>
+        <div class="chart-container mb-6">
+            <h3 class="text-xl font-semibold mb-4">Engagement Growth Over Time</h3>
+            <img src="https://placehold.co/800x400" alt="Engagement Growth Chart" class="w-full h-auto">
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="chart-container">
+                <h3 class="text-xl font-semibold mb-4">Influencer Reach by Platform</h3>
+                <img src="https://placehold.co/400x300" alt="Influencer Reach Chart" class="w-full h-auto">
+            </div>
+            <div class="chart-container">
+                <h3 class="text-xl font-semibold mb-4">Post Performance (Likes vs. Comments)</h3>
+                <img src="https://placehold.co/400x300" alt="Post Performance Chart" class="w-full h-auto">
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-content-plan" class="dashboard-tab-content">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Campaign Plan</h2>
+        <div id="plan-container" class="w-full"></div>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner-border" role="status"></div>
+        <p class="text-xl mt-4">Loading your dashboard...</p>
+    </div>
+
+    <div id="error-overlay" class="hidden">
+        <h2 class="text-2xl font-bold mb-4">Error</h2>
+        <pre id="debug-output" class="whitespace-pre-wrap"></pre>
+        <button onclick="document.getElementById('error-overlay').classList.add('hidden'); document.getElementById('loading').classList.add('hidden');" class="button mt-4">Close</button>
+    </div>
+
+    <div id="action-buttons" class="hidden">
+        <button id="reset-campaign-btn" class="button bg-red-600 hover:bg-red-800">Reset Campaign</button>
+    </div>
 
 </main>
-
-<div id="loading-overlay" class="loading-overlay">
-<div class="spinner-border" role="status"></div>
-<p class="text-xl mt-4">Generating dashboard...</p>
-</div>
-
-<div id="error-overlay" class="loading-overlay content-hidden">
-<h2 class="text-2xl font-bold mb-4">Error</h2>
-<pre id="debug-output" class="whitespace-pre-wrap"></pre>
-<button id="error-close-btn" class="button mt-4">Close</button>
-</div>
-
-<div id="action-buttons" class="content-hidden fixed bottom-8 right-8 flex gap-4">
-<button id="reset-campaign-btn" class="button bg-red-600 hover:bg-red-800">Reset Campaign</button>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-
-// --- Wrap EVERYTHING in DOMContentLoaded for maximum safety and execution order ---
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- Configuration and Initialization (MOVED INSIDE) ---
-    const firebaseConfig = {
+// Firebase config
+const firebaseConfig = {
     apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
     authDomain: "litwire-97956.firebaseapp.com",
     projectId: "litwire-97956",
@@ -115,73 +185,102 @@ document.addEventListener('DOMContentLoaded', () => {
     messagingSenderId: "263009111921",
     appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
     measurementId: "G-ZWVFHF5YQX"
-    };
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    // --- DOM Elements & Global Variables ---
-    const mainContent = document.getElementById('main-content');
-    const loadingEl = document.getElementById('loading-overlay');
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM elements
+    const loadingEl = document.getElementById('loading');
+    const planContainer = document.getElementById('plan-container');
+    const influencerGrid = document.getElementById('influencer-grid');
     const debugOutput = document.getElementById('debug-output');
     const errorOverlay = document.getElementById('error-overlay');
-    const errorCloseBtn = document.getElementById('error-close-btn');
     const resetBtn = document.getElementById('reset-campaign-btn');
     const actionButtons = document.getElementById('action-buttons');
     const signOutBtn = document.getElementById('sign-out-btn');
-    const authorDashboard = document.getElementById('author-dashboard');
-    const influencerDashboard = document.getElementById('influencer-dashboard');
-    const planContainer = document.getElementById('plan-container');
+    const tabs = document.querySelectorAll('.dashboard-tabs button');
+    const tabContents = document.querySelectorAll('.dashboard-tab-content');
 
-    // --- Helper Functions ---
-    function show(el){ el.classList.remove('content-hidden'); }
-    function hide(el){ el.classList.add('content-hidden'); }
+    function show(el){ el.classList.remove('hidden'); }
+    function hide(el){ el.classList.add('hidden'); }
 
-    function showMainContent() {
-        mainContent.style.opacity = '1';
-        mainContent.style.visibility = 'visible';
-    }
+    // Tab switching
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(`tab-content-${tab.id.split('-')[1]}`).classList.add('active');
+        });
+    });
 
-    // --- Event Listeners ---
+    // Sign-out
     signOutBtn.addEventListener('click', async () => {
         await signOut(auth);
         window.location.href = 'index.html';
     });
 
-    errorCloseBtn.addEventListener('click', () => {
-        hide(errorOverlay);
-    });
-
-    resetBtn.addEventListener('click', async () => {
+    // Reset campaign
+    resetBtn.onclick = async () => {
         if (!auth.currentUser) return;
         const userId = auth.currentUser.uid;
         const authorProfileRef = doc(db, `users/${userId}/profiles/author`);
-        const mainProfileRef = doc(db, `users/${userId}`);
+        const mainProfileRef = doc(db, `artifacts/users/${userId}/profile`);
 
         if (!confirm("Are you sure you want to reset your campaign? This will remove all data.")) return;
 
         try {
-            await deleteDoc(authorProfileRef);
-            await setDoc(mainProfileRef, { onboardingComplete: false, userType: 'author' }, { merge: true });
+            try { await deleteDoc(authorProfileRef); } catch(err) { if (err.code !== 'not-found') throw err; }
+            try { await setDoc(mainProfileRef, { onboardingComplete: false }, { merge: true }); } catch(err) { if (err.code !== 'not-found') throw err; }
+
+            renderPlan([]);
+            renderInfluencers([]);
+
             window.location.href = 'index.html';
         } catch (err) {
             console.error(err);
             debugOutput.textContent = err.message || JSON.stringify(err, null, 2);
             show(errorOverlay);
         }
-    });
+    };
 
-    // --- Data Rendering Functions ---
-    function renderPlan(planData, bookTitle) {
-        document.getElementById('book-title-plan').textContent = bookTitle || 'Your Book';
+    // Render book info
+    function renderBookData(bookData){
+        document.getElementById('book-cover').src = bookData.coverPhoto || 'https://placehold.co/96x128';
+        document.getElementById('book-title').textContent = bookData.title || 'Untitled Book';
+        document.getElementById('book-description').textContent = bookData.description || 'No description available.';
+        document.getElementById('campaign-dates').textContent = `Campaign Dates: N/A`;
+    }
+
+    // Render influencers
+    function renderInfluencers(influencerData){
+        influencerGrid.innerHTML = '';
+        influencerData?.forEach(inf => {
+            const card = document.createElement('div');
+            card.className = 'influencer-card';
+            card.innerHTML = `
+                <img src="${inf.photo || 'https://placehold.co/96'}" alt="${inf.name}">
+                <p class="font-semibold text-gray-900">${inf.name}</p>
+                <p class="text-gray-600 text-sm">${inf.platform || 'Unknown Platform'}</p>
+                <span class="tag">${inf.tier || 'Unknown Tier'}</span>
+            `;
+            influencerGrid.appendChild(card);
+        });
+    }
+
+    // Render campaign plan
+    function renderPlan(planData) {
         planContainer.innerHTML = '';
-        
+
         if (!planData || planData.length === 0) {
-            planContainer.innerHTML = `<p class="text-gray-500">No campaign plan available. Ensure your profile has a book title, budget, and target audience specified.</p>`;
+            planContainer.innerHTML = `<p class="text-gray-500">No campaign plan available.</p>`;
             return;
         }
-        
+
         planData.forEach((step, index) => {
             const stepEl = document.createElement('div');
             stepEl.className = 'content-card';
@@ -193,99 +292,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Cloud Function Call (With Logging) ---
+    // Fetch campaign plan from Cloud Function
     async function fetchCampaignPlanFromCF(bookTitle, budget, startDate, targetAudience) {
         const payload = { bookTitle, budget, startDate, targetAudience };
-        
-        // LOG 1: Initialization
-        console.log("CF Status: Initializing request to Cloud Function...", payload);
-
         try {
+            console.log("Sending payload to Cloud Function:", payload);
+
             const response = await fetch('https://marketingsteps-737284668725.us-east4.run.app', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            
-            if (!response.ok) {
-                const errorData = await response.text();
-                // LOG 2: Failure (HTTP Error)
-                console.error(`CF Status: Failed with HTTP ${response.status}.`, errorData);
-                throw new Error(`Cloud Function error: ${response.status} - ${errorData}`);
-            }
-            
+
+            if (!response.ok) throw new Error(`Cloud Function error: ${response.status}`);
+
             const data = await response.json();
-            // LOG 3: Success
-            console.log("CF Status: Finished successfully. Plan steps received:", data.marketingPlan ? data.marketingPlan.length : 0);
-            
+            console.log("Cloud Function returned:", data);
+
             return data.marketingPlan || [];
         } catch (err) {
-            if (!err.message.includes("Cloud Function error")) {
-                // LOG 4: Failure (Network/Parsing Error)
-                console.error("CF Status: Failed due to network or parsing error.", err);
-            }
-
+            console.error('Error fetching campaign plan:', err);
             debugOutput.textContent = `Error fetching campaign plan:\n${err.message || err}`;
             show(errorOverlay);
             return [];
         }
     }
 
-    // --- Main Authentication & Dashboard Load Logic ---
-    
-    // Explicitly show loading spinner here before starting the async auth check
-    show(loadingEl); 
-    
+    // Auth state
     onAuthStateChanged(auth, async user => {
-        if(!user){
-            window.location.href = 'index.html';
-            return;
-        }
+        if(!user){ window.location.href='index.html'; return; }
+        show(actionButtons);
 
         try {
-            const mainProfileRef = doc(db, 'users', user.uid);
-            const mainProfileSnap = await getDoc(mainProfileRef);
-            
-            if (!mainProfileSnap.exists()) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            const userData = mainProfileSnap.data();
-            const userType = userData.userType;
+            const authorDocRef = doc(db, `users/${user.uid}/profiles/author`);
+            const authorSnap = await getDoc(authorDocRef);
 
-            if (userType === 'author') {
-                show(authorDashboard);
-                show(actionButtons);
-                
-                const authorDocRef = doc(db, `users/${user.uid}/profiles/author`);
-                const authorSnap = await getDoc(authorDocRef);
-                let authorData = authorSnap.exists() ? authorSnap.data() : {};
+            if(authorSnap.exists()){
+                const data = authorSnap.data();
 
-                if (!authorSnap.exists()) {
-                    await setDoc(authorDocRef, {});
-                }
+                renderBookData({
+                    title: data.bookTitle,
+                    description: data.bookDescription,
+                    publishedYear: data.startDate,
+                    coverPhoto: data.coverPhoto
+                });
 
                 const cfPlan = await fetchCampaignPlanFromCF(
-                    authorData.bookTitle,
-                    authorData.budget || '0',
-                    authorData.startDate,
-                    authorData.targetAudience || []
+                    data.bookTitle,
+                    data.budget || '0',
+                    data.startDate,
+                    data.targetAudience || []
                 );
-                renderPlan(cfPlan, authorData.bookTitle);
 
-            } else if (userType === 'influencer') {
-                show(influencerDashboard);
-                hide(actionButtons);
+                renderPlan(cfPlan);
+                renderInfluencers(data.influencers || []);
+            } else {
+                renderBookData({});
+                renderPlan([]);
+                renderInfluencers([]);
             }
         } catch(err){
-            console.error("Dashboard load error:", err);
+            console.error(err);
             debugOutput.textContent = err.message || JSON.stringify(err, null, 2);
             show(errorOverlay);
-        } finally {
-            // Hide the loading spinner and reveal the main content gracefully
+        } finally{
             hide(loadingEl);
-            showMainContent();
         }
     });
 });
