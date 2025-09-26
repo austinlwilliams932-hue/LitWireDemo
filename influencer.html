@@ -62,14 +62,10 @@ body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin:0; }
 
 <label class="block font-medium mb-1 mt-4">Genres & Subgenres</label>
 <div class="mb-4">
-<select id="genre" class="input-field">
-<option value="">Select a genre...</option>
-<option value="Fantasy">Fantasy</option>
-<option value="Romance">Romance</option>
-<option value="Science Fiction">Science Fiction</option>
-<option value="Thriller">Thriller</option>
-</select>
-<div id="subgenre-tags" class="flex flex-wrap gap-2 mt-2"></div>
+    <input type="text" id="genre-subgenre-input" class="input-field"
+           placeholder="Type a genre or subgenre (e.g., Epic Fantasy, Dark Romance, Sci-Fi Thriller) and press Enter or Tab to add it...">
+    <div id="subgenre-tags" class="flex flex-wrap gap-2 mt-2"></div>
+    <p class="text-sm text-gray-500 mt-1">Add all relevant genres, subgenres, or specific categories you enjoy. You can add as many as you like!</p>
 </div>
 
 <label class="block font-medium mb-1 mt-4">Tropes</label>
@@ -181,7 +177,8 @@ const db = getFirestore(app);
 const signOutBtn = document.getElementById('sign-out-btn');
 const dashboardLink = document.getElementById('dashboard-link');
 
-const genreDropdown = document.getElementById('genre');
+// NEW: Variable for the free-text genre/subgenre input
+const genreSubgenreInput = document.getElementById('genre-subgenre-input');
 const subgenreTagsDiv = document.getElementById('subgenre-tags');
 const tropesInput = document.getElementById('tropes-input');
 const tropesTagsDiv = document.getElementById('tropes-tags');
@@ -190,12 +187,7 @@ const dealbreakerTagsDiv = document.getElementById('dealbreaker-tags');
 const triggerWarningCheckboxes = document.querySelectorAll('input[name="triggerWarning"]');
 const audienceCheckboxes = document.querySelectorAll('input[name="audience"]');
 
-const subgenres = {
-'Fantasy': ['High Fantasy', 'Urban Fantasy', 'Dark Academia'],
-'Romance': ['Enemies-to-Lovers', 'Cozy', 'Fantasy Romance'],
-'Science Fiction': ['Dystopian', 'Space Opera', 'Cyberpunk'],
-'Thriller': ['Psychological Thriller', 'Legal Thriller', 'Cozy Mystery']
-};
+// REMOVED: The static 'subgenres' object is no longer needed
 
 const spiceLevelLabels = ['Fade-to-black', 'Low', 'Medium', 'High', 'Explicit'];
 const timeCommitmentLabels = ['Very Light', 'Light', 'Medium', 'Heavy', 'Very Heavy'];
@@ -215,12 +207,18 @@ authLoading.classList.add('hidden');
 if (!user) { window.location.href = 'index.html'; return; }
 currentUser = user;
 
-const docRef = doc(db, `artifacts/users/${user.uid}/profile`);
+// Assuming profile is stored under users/{uid}/profiles/influencer or similar structure
+const docRef = doc(db, `users/${user.uid}/profiles/influencer`); 
 const docSnap = await getDoc(docRef);
 if (docSnap.exists()) {
 profileData = docSnap.data();
 prefillForm(profileData);
-if(profileData.onboardingComplete) dashboardLink.classList.remove('hidden');
+// Check if the overall onboarding is complete (set in saveProfile)
+const userDocRef = doc(db, "users", user.uid);
+const userDocSnap = await getDoc(userDocRef);
+if(userDocSnap.exists() && userDocSnap.data().onboardingComplete) {
+    dashboardLink.classList.remove('hidden');
+}
 }
 });
 
@@ -241,12 +239,13 @@ container.appendChild(tag);
 }
 
 function handleInputChange(event, container) {
+// Trigger tag creation on Enter key or when the input loses focus (blur)
 if (event.key === 'Enter' || event.type === 'blur') {
-event.preventDefault();
+event.preventDefault(); // Prevents form submission on Enter
 const value = event.target.value.trim();
 if (value) {
 addTag(container, value);
-event.target.value = '';
+event.target.value = ''; // Clear the input field after adding a tag
 updatePreview();
 }
 }
@@ -269,6 +268,7 @@ if (data.aesthetic) {
 const option = document.querySelector(`.aesthetic-option[data-aesthetic="${data.aesthetic}"]`);
 if(option) option.classList.add('selected');
 }
+// UPDATED: Prefill genres/subgenres from the stored array into tags
 if (data.genres) {
 data.genres.forEach(genre => addTag(subgenreTagsDiv, genre));
 }
@@ -309,6 +309,7 @@ handleText.className = 'text-xl font-bold mb-2';
 handleText.textContent = handle;
 sidebar.appendChild(handleText);
 
+// UPDATED: Gathers all free-text genre/subgenre tags for the preview
 const genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
 if (genres.length) {
 const genresEl = document.createElement('p');
@@ -380,45 +381,49 @@ aestheticEl.textContent = `Aesthetic: ${aesthetic}`;
 sidebar.appendChild(aestheticEl);
 }
 }
-function saveProfile() {
-  if (!currentUser) return;
 
-  // Gather all form data into the profileData object
-  profileData.handle = document.getElementById('handle').value.trim();
-  profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
-  profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
-  profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
-  profileData.aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic || '';
-  profileData.genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-  profileData.tropes = Array.from(tropesTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-  profileData.spiceLevel = document.getElementById('spice-level').value;
-  profileData.triggerWarnings = Array.from(document.querySelectorAll('input[name="triggerWarning"]:checked')).map(cb => cb.value);
-  profileData.audience = Array.from(document.querySelectorAll('input[name="audience"]:checked')).map(cb => cb.value);
-  profileData.dealbreakerTags = Array.from(dealbreakerTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
-  profileData.timeCommitment = document.getElementById('time-commitment').value;
-  profileData.onboardingComplete = true;
+async function saveProfile() {
+  if (!currentUser) return;
 
-  loadingOverlay.classList.remove('hidden');
+  // Gather all form data into the profileData object
+  profileData.handle = document.getElementById('handle').value.trim();
+  profileData.dealbreakers = document.getElementById('dealbreakers').value.trim();
+  profileData.collabStyle = document.querySelector('input[name="collabStyle"]:checked')?.value || 'Creative Freedom';
+  profileData.platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(cb => cb.value);
+  profileData.aesthetic = document.querySelector('.aesthetic-option.selected')?.dataset.aesthetic || '';
+  // THIS LINE IS CRUCIAL: Gathers all free-text genre/subgenre tags from the container
+  profileData.genres = Array.from(subgenreTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+  profileData.tropes = Array.from(tropesTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+  profileData.spiceLevel = document.getElementById('spice-level').value;
+  profileData.triggerWarnings = Array.from(document.querySelectorAll('input[name="triggerWarning"]:checked')).map(cb => cb.value);
+  profileData.audience = Array.from(document.querySelectorAll('input[name="audience"]:checked')).map(cb => cb.value);
+  profileData.dealbreakerTags = Array.from(dealbreakerTagsDiv.querySelectorAll('span')).map(tag => tag.textContent.trim().replace('×', ''));
+  profileData.timeCommitment = document.getElementById('time-commitment').value;
+  profileData.onboardingComplete = true;
 
-  // Save the influencer's profile data to a structured path
-  setDoc(doc(db, `users/${currentUser.uid}/profiles/influencer`), profileData, { merge: true })
-    .then(() => {
-      // Update the root user document to set userType and onboardingComplete
-      return setDoc(doc(db, "users", currentUser.uid), {
-        onboardingComplete: true,
-        userType: 'influencer'
-      }, { merge: true });
-    })
-    .then(() => {
-      // Redirect to the dashboard after both updates are complete
-      window.location.href = 'bookDash.html';
-    })
-    .catch(err => {
-      debugOutput.textContent = JSON.stringify(err, null, 2);
-      errorOverlay.classList.remove('hidden');
-    })
-    .finally(() => loadingOverlay.classList.add('hidden'));
+  loadingOverlay.classList.remove('hidden');
+
+  try {
+    // Save the influencer's profile data
+    await setDoc(doc(db, `users/${currentUser.uid}/profiles/influencer`), profileData, { merge: true });
+
+    // Update the root user document to set userType and onboardingComplete
+    await setDoc(doc(db, "users", currentUser.uid), {
+      onboardingComplete: true,
+      userType: 'influencer'
+    }, { merge: true });
+    
+    // Redirect to the dashboard
+    window.location.href = 'bookDash.html';
+
+  } catch (err) {
+    debugOutput.textContent = JSON.stringify(err, null, 2);
+    errorOverlay.classList.remove('hidden');
+  } finally {
+    loadingOverlay.classList.add('hidden');
+  }
 }
+
 // Event listeners
 document.getElementById('preview-matches-btn').addEventListener('click', saveProfile);
 document.getElementById('save-finish-btn').addEventListener('click', saveProfile);
@@ -434,14 +439,9 @@ updatePreview();
 });
 });
 
-genreDropdown.addEventListener('change', (e) => {
-subgenreTagsDiv.innerHTML = '';
-const selectedGenre = e.target.value;
-if (selectedGenre && subgenres[selectedGenre]) {
-subgenres[selectedGenre].forEach(sub => addTag(subgenreTagsDiv, sub));
-}
-updatePreview();
-});
+// NEW EVENT LISTENERS for the free-text genre/subgenre input:
+genreSubgenreInput.addEventListener('keydown', (e) => handleInputChange(e, subgenreTagsDiv));
+genreSubgenreInput.addEventListener('blur', (e) => handleInputChange(e, subgenreTagsDiv));
 
 tropesInput.addEventListener('keydown', (e) => handleInputChange(e, tropesTagsDiv));
 tropesInput.addEventListener('blur', (e) => handleInputChange(e, tropesTagsDiv));
