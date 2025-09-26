@@ -170,13 +170,13 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11
 
 // Firebase config
 const firebaseConfig = {
-    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
-    authDomain: "litwire-97956.firebaseapp.com",
-    projectId: "litwire-97956",
-    storageBucket: "litwire-97956.appspot.com",
-    messagingSenderId: "263009111921",
-    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
-    measurementId: "G-ZWVFHF5YQX"
+    apiKey: "AIzaSyBxYO1_dzEP2eLAADSG1hsjKBcDjeFCpmk",
+    authDomain: "litwire-97956.firebaseapp.com",
+    projectId: "litwire-97956",
+    storageBucket: "litwire-97956.appspot.com",
+    messagingSenderId: "263009111921",
+    appId: "1:263009111921:web:713622b1cfa59ddb9130d0",
+    measurementId: "G-ZWVFHF5YQX"
 };
 
 // Initialize Firebase
@@ -185,179 +185,185 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM elements
-    const loadingScreen = document.getElementById('loading-screen');
-    const mainDashboard = document.getElementById('main-dashboard');
-    const signOutBtn = document.getElementById('sign-out-btn');
-    const matchesContainer = document.getElementById('matches-container');
-    const campaignsContainer = document.getElementById('campaigns-container');
-    const messagesContainer = document.getElementById('messages-container');
-    const genresTags = document.getElementById('genres-tags');
-    const aestheticTag = document.getElementById('aesthetic-tag');
-    const dealbreakersTags = document.getElementById('dealbreakers-tags');
-    const deadlinesContainer = document.getElementById('deadlines-container');
-    const tipsContainer = document.getElementById('tips-container');
+    // DOM elements
+    const loadingScreen = document.getElementById('loading-screen');
+    const mainDashboard = document.getElementById('main-dashboard');
+    const signOutBtn = document.getElementById('sign-out-btn');
+    const matchesContainer = document.getElementById('matches-container');
+    const campaignsContainer = document.getElementById('campaigns-container');
+    const messagesContainer = document.getElementById('messages-container');
+    const genresTags = document.getElementById('genres-tags');
+    const aestheticTag = document.getElementById('aesthetic-tag');
+    const dealbreakersTags = document.getElementById('dealbreakers-tags');
+    const deadlinesContainer = document.getElementById('deadlines-container');
+    const tipsContainer = document.getElementById('tips-container');
 
-    function show(el) { el.classList.remove('hidden'); }
-    function hide(el) { el.classList.add('hidden'); }
+    function show(el) { el.classList.remove('hidden'); }
+    function hide(el) { el.classList.add('hidden'); }
 
-    // Sign out functionality
-    signOutBtn.addEventListener('click', async () => {
-        await signOut(auth);
-        window.location.href = 'index.html';
-    });
+    // Sign out functionality
+    signOutBtn.addEventListener('click', async () => {
+        await signOut(auth);
+        window.location.href = 'index.html';
+    });
 
-    // Helper functions to render dynamic content
-    function renderMatches(matches) {
-        matchesContainer.innerHTML = ''; // Clear existing content
-        if (matches.length === 0) {
-            matchesContainer.innerHTML = `<p class="text-gray-500">No new matches found at this time.</p>`;
-            return;
-        }
-        matches.forEach(match => {
-            const card = `
-                <div class="match-card">
-                    <img src="${match.bookCover || 'https://placehold.co/80x120'}" alt="Book Cover: ${match.bookTitle}">
-                    <div class="flex-grow">
-                        <h3 class="text-xl font-semibold">${match.bookTitle}</h3>
-                        <p class="text-sm text-gray-500 mb-2">by ${match.authorName}</p>
-                        <div class="flex flex-wrap gap-2 mb-2">
-                            ${match.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                        </div>
-                        <p class="match-reason">✨ **Why this is a match:** ${match.matchReason}</p>
-                    </div>
-                    <div class="flex flex-col items-center justify-center space-y-2">
-                        <button class="button">Accept</button>
-                        <button class="text-sm text-gray-500 hover:text-gray-800 transition-colors">Pass</button>
-                        <button class="text-sm text-gray-500 hover:text-gray-800 transition-colors">Save</button>
-                    </div>
-                </div>
-            `;
-            matchesContainer.innerHTML += card;
-        });
-    }
+    // Helper functions to render dynamic content
+    function renderMatches(matches) {
+        matchesContainer.innerHTML = ''; // Clear existing content
+        if (matches.length === 0) {
+            matchesContainer.innerHTML = `<p class="text-gray-500">No new matches found at this time.</p>`;
+            return;
+        }
+        matches.forEach(match => {
+            const card = `
+                <div class="match-card">
+                    <img src="${match.bookCover || 'https://placehold.co/80x120'}" alt="Book Cover: ${match.bookTitle}">
+                    <div class="flex-grow">
+                        <h3 class="text-xl font-semibold">${match.bookTitle}</h3>
+                        <p class="text-sm text-gray-500 mb-2">by ${match.authorName}</p>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            ${match.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <p class="match-reason">✨ **Why this is a match:** ${match.matchReason}</p>
+                    </div>
+                    <div class="flex flex-col items-center justify-center space-y-2">
+                        <button class="button">Accept</button>
+                        <button class="text-sm text-gray-500 hover:text-gray-800 transition-colors">Pass</button>
+                        <button class="text-sm text-gray-500 hover:text-gray-800 transition-colors">Save</button>
+                    </div>
+                </div>
+            `;
+            matchesContainer.innerHTML += card;
+        });
+    }
 
-    function renderCampaigns(campaigns) {
-        campaignsContainer.innerHTML = '';
-        if (campaigns.length === 0) {
-            campaignsContainer.innerHTML = `<p class="text-gray-500">No active campaigns.</p>`;
-            return;
-        }
-        campaigns.forEach(campaign => {
-            const statusClass = campaign.status === 'New' ? 'status-new' :
-                                campaign.status === 'In Progress' ? 'status-inprogress' :
-                                'status-completed';
-            const statusText = campaign.status;
-            const card = `
-                <div class="timeline-item">
-                    <h3 class="font-semibold text-lg">${campaign.title}</h3>
-                    <p class="text-sm text-gray-600 mb-2">Campaign with ${campaign.authorName}</p>
-                    <p class="text-sm text-gray-800">${campaign.status === 'Completed' ? 'Completed on' : 'Deadline'}: <span class="font-semibold">${campaign.date}</span></p>
-                    <span class="status-tag ${statusClass}">${statusText}</span>
-                </div>
-            `;
-            campaignsContainer.innerHTML += card;
-        });
-    }
+    function renderCampaigns(campaigns) {
+        campaignsContainer.innerHTML = '';
+        if (campaigns.length === 0) {
+            campaignsContainer.innerHTML = `<p class="text-gray-500">No active campaigns.</p>`;
+            return;
+        }
+        campaigns.forEach(campaign => {
+            const statusClass = campaign.status === 'New' ? 'status-new' :
+                                campaign.status === 'In Progress' ? 'status-inprogress' :
+                                'status-completed';
+            const statusText = campaign.status;
+            const card = `
+                <div class="timeline-item">
+                    <h3 class="font-semibold text-lg">${campaign.title}</h3>
+                    <p class="text-sm text-gray-600 mb-2">Campaign with ${campaign.authorName}</p>
+                    <p class="text-sm text-gray-800">${campaign.status === 'Completed' ? 'Completed on' : 'Deadline'}: <span class="font-semibold">${campaign.date}</span></p>
+                    <span class="status-tag ${statusClass}">${statusText}</span>
+                </div>
+            `;
+            campaignsContainer.innerHTML += card;
+        });
+    }
 
-    function renderMessages(messages) {
-        messagesContainer.innerHTML = '';
-        if (messages.length === 0) {
-            messagesContainer.innerHTML = `<p class="text-gray-500">No new messages.</p>`;
-            return;
-        }
-        messages.forEach(message => {
-            const card = `
-                <div class="p-3 bg-gray-50 rounded-lg">
-                    <p class="font-semibold">${message.senderName}</p>
-                    <p class="text-sm text-gray-600 truncate">${message.preview}</p>
-                </div>
-            `;
-            messagesContainer.innerHTML += card;
-        });
-    }
+    function renderMessages(messages) {
+        messagesContainer.innerHTML = '';
+        if (messages.length === 0) {
+            messagesContainer.innerHTML = `<p class="text-gray-500">No new messages.</p>`;
+            return;
+        }
+        messages.forEach(message => {
+            const card = `
+                <div class="p-3 bg-gray-50 rounded-lg">
+                    <p class="font-semibold">${message.senderName}</p>
+                    <p class="text-sm text-gray-600 truncate">${message.preview}</p>
+                </div>
+            `;
+            messagesContainer.innerHTML += card;
+        });
+    }
 
-    function renderProfileHighlights(profile) {
-        // Profile Highlights
-        genresTags.innerHTML = profile.genres.map(genre => `<span class="tag">${genre}</span>`).join('') || '';
-        aestheticTag.innerHTML = `<i class="fas fa-moon text-gray-600"></i><span class="tag">${profile.aesthetic}</span>`;
-        dealbreakersTags.innerHTML = profile.dealbreakers.map(db => `<span class="tag bg-red-100 text-red-700">${db}</span>`).join('') || '';
-    }
+    function renderProfileHighlights(profile) {
+        // Profile Highlights
+        genresTags.innerHTML = (profile.genres || []).map(genre => `<span class="tag">${genre}</span>`).join('') || '';
+        
+        aestheticTag.innerHTML = '';
+        if (profile.aesthetic) {
+            aestheticTag.innerHTML = `<i class="fas fa-moon text-gray-600"></i><span class="tag">${profile.aesthetic}</span>`;
+        } else {
+            aestheticTag.innerHTML = `<span class="text-sm text-gray-500">N/A</span>`;
+        }
+        
+        dealbreakersTags.innerHTML = (profile.dealbreakerTags || []).map(db => `<span class="tag bg-red-100 text-red-700">${db}</span>`).join('') || '';
+    }
 
-    function renderDeadlines(deadlines) {
-        deadlinesContainer.innerHTML = '';
-        if (deadlines.length === 0) {
-            deadlinesContainer.innerHTML = `<p class="text-gray-500">No upcoming deadlines.</p>`;
-            return;
-        }
-        deadlines.forEach(deadline => {
-            const card = `
-                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p class="text-sm font-medium text-yellow-800">${deadline.timeLeft}</p>
-                    <p class="text-md text-gray-700">${deadline.task}</p>
-                </div>
-            `;
-            deadlinesContainer.innerHTML += card;
-        });
-    }
+    function renderDeadlines(deadlines) {
+        deadlinesContainer.innerHTML = '';
+        if (deadlines.length === 0) {
+            deadlinesContainer.innerHTML = `<p class="text-gray-500">No upcoming deadlines.</p>`;
+            return;
+        }
+        deadlines.forEach(deadline => {
+            const card = `
+                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-sm font-medium text-yellow-800">${deadline.timeLeft}</p>
+                    <p class="text-md text-gray-700">${deadline.task}</p>
+                </div>
+            `;
+            deadlinesContainer.innerHTML += card;
+        });
+    }
 
-    // Main data fetching logic
-    onAuthStateChanged(auth, async user => {
-        if (!user) {
-            window.location.href = 'index.html';
-            return;
-        }
+    // Main data fetching logic
+    onAuthStateChanged(auth, async user => {
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
 
-        const mainProfileRef = doc(db, 'users', user.uid);
-        const influencerProfileRef = doc(db, `users/${user.uid}/profiles/influencer`);
+        const mainProfileRef = doc(db, 'users', user.uid);
+        const influencerProfileRef = doc(db, `users/${user.uid}/profiles/influencer`);
 
-        try {
-            const mainProfileSnap = await getDoc(mainProfileRef);
-            if (!mainProfileSnap.exists() || mainProfileSnap.data().accountType !== 'influencer') {
-                // If not an influencer, redirect to the author dashboard
-                window.location.href = 'bookDash.html';
-                return;
-            }
+        try {
+            const mainProfileSnap = await getDoc(mainProfileRef);
+            
+            // CRITICAL FIX: Checking for 'userType' instead of 'accountType'
+            if (!mainProfileSnap.exists() || mainProfileSnap.data().userType !== 'influencer') { 
+                // If not an influencer, redirect to the author dashboard
+                window.location.href = 'bookDash.html';
+                return;
+            }
 
-            const influencerSnap = await getDoc(influencerProfileRef);
-            if (influencerSnap.exists()) {
-                const data = influencerSnap.data();
+            const influencerSnap = await getDoc(influencerProfileRef);
+            if (influencerSnap.exists()) {
+                const data = influencerSnap.data();
 
-                // Populate header and stats
-                document.getElementById('influencer-handle').textContent = data.handle || 'Your Handle';
-                document.getElementById('profile-photo').src = data.profilePhoto || 'https://placehold.co/40x40';
-                document.getElementById('active-campaigns-count').textContent = data.activeCampaigns || 0;
-                document.getElementById('pending-pitches-count').textContent = data.pendingPitches || 0;
-                document.getElementById('followers-reached-count').textContent = data.followersReached || 0;
-                
-                // Render main content sections
-                renderMatches(data.matches || []);
-                renderCampaigns(data.campaigns || []);
-                renderMessages(data.messages || []);
+                // Populate header and stats
+                document.getElementById('influencer-handle').textContent = data.handle || 'Your Handle';
+                document.getElementById('profile-photo').src = data.profilePhoto || 'https://placehold.co/40x40';
+                document.getElementById('active-campaigns-count').textContent = data.activeCampaigns || 0;
+                document.getElementById('pending-pitches-count').textContent = data.pendingPitches || 0;
+                document.getElementById('followers-reached-count').textContent = data.followersReached || 0;
+                
+                // Render main content sections
+                renderMatches(data.matches || []);
+                renderCampaigns(data.campaigns || []);
+                renderMessages(data.messages || []);
 
-                // Render sidebar widgets
-                renderProfileHighlights(data.profileHighlights || { genres: [], aesthetic: 'N/A', dealbreakers: [] });
-                renderDeadlines(data.upcomingDeadlines || []);
-                tipsContainer.innerHTML = `<p class="text-sm text-gray-700">${data.tips || 'No new tips at this time.'}</p>`;
-            } else {
-                // If no influencer profile exists, show empty data
-                console.log("No influencer profile found for this user.");
-                renderMatches([]);
-                renderCampaigns([]);
-                renderMessages([]);
-                renderProfileHighlights({ genres: [], aesthetic: 'N/A', dealbreakers: [] });
-                renderDeadlines([]);
-                tipsContainer.innerHTML = `<p class="text-sm text-gray-700">No new tips at this time.</p>`;
-            }
+                // Render sidebar widgets
+                renderProfileHighlights(data); // Pass the full data object
+                renderDeadlines(data.upcomingDeadlines || []);
+                tipsContainer.innerHTML = `<p class="text-sm text-gray-700">${data.tips || 'No new tips at this time.'}</p>`;
+            } else {
+                // If main profile says 'influencer' but profile document is missing,
+                // redirect them to the generic profile setup page to finish onboarding.
+                console.log("Influencer profile missing. Redirecting to profile setup.");
+                window.location.href = 'profile.html';
+                return;
+            }
 
-        } catch (err) {
-            console.error("Error fetching influencer data:", err);
-            // In a real app, you might show a user-friendly error message here
-        } finally {
-            hide(loadingScreen);
-            show(mainDashboard);
-        }
-    });
+        } catch (err) {
+            console.error("Error fetching influencer data:", err);
+            // In a real app, you might show a user-friendly error message here
+        } finally {
+            hide(loadingScreen);
+            show(mainDashboard);
+        }
+    });
 });
 </script>
 </body>
