@@ -87,13 +87,13 @@
 </div>
 
 <script type="module">
-    // Firebase Imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    // Firebase Imports - Updated to a modern, compatible version (10.12.3)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
     import {
         getFirestore, collection, query, where, getDocs, addDoc, onSnapshot,
         doc, getDoc, serverTimestamp, orderBy, limit, writeBatch, collectionGroup
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
     // =================================================================================
     // 1. CONFIGURATION & INITIALIZATION 
@@ -301,17 +301,15 @@
                 return snapshot.docs[0].id;
             }
 
-            // --- CORRECTED OBJECT CREATION ---
+            // --- FIX APPLIED HERE: Creating the object property names separately ---
             // If no conversation exists, create one.
-            // First, we build the participantInfo object in a more compatible way.
-            const participantInfo = {
-                [user1.uid]: { name: user1.name, photoURL: user1.photoURL || null },
-                [user2.uid]: { name: user2.name, photoURL: user2.photoURL || null },
-            };
+            const participantInfo = {};
+            participantInfo[user1.uid] = { name: user1.name, photoURL: user1.photoURL || null };
+            participantInfo[user2.uid] = { name: user2.name, photoURL: user2.photoURL || null };
 
             const newConversationRef = await addDoc(collection(db, 'conversations'), {
                 participants: sortedParticipants,
-                participantInfo: participantInfo, // Use the object we just created
+                participantInfo: participantInfo, // Using the correctly constructed object
                 lastMessage: { text: "Conversation started", timestamp: serverTimestamp() }
             });
 
@@ -341,7 +339,7 @@
     // =================================================================================
     // 4. EVENT LISTENERS & APP LOGIC
     // =================================================================================
-    functioninitializeAppLogic() {
+    function initializeAppLogic() {
         // Auth state change listener
         onAuthStateChanged(auth, async (user) => {
             UI.renderNavbar(user);
