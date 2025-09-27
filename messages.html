@@ -286,34 +286,32 @@
         },
 
         async findOrCreateConversation(user1, user2) {
-            // Check if a conversation already exists
+            // A conversation's participants are always sorted to ensure there's only one document per pair.
+            const sortedParticipants = [user1.uid, user2.uid].sort();
+
+            // Check if a conversation already exists with these two participants.
             const q = query(
                 collection(db, 'conversations'),
-                where('participants', '==', [user1.uid, user2.uid].sort()) // Sort to ensure query works regardless of order
+                where('participants', '==', sortedParticipants)
             );
             
-            let snapshot = await getDocs(q);
+            const snapshot = await getDocs(q);
             if (!snapshot.empty) {
-                return snapshot.docs[0].id; // Conversation found
-            }
-            
-            // If not found, try the other participant order
-            snapshot = await getDocs(query(
-                collection(db, 'conversations'),
-                where('participants', '==', [user2.uid, user1.uid].sort())
-            ));
-
-            if (!snapshot.empty) {
+                // If a conversation is found, return its ID immediately.
                 return snapshot.docs[0].id;
             }
 
-            // If still no conversation, create one
+            // --- CORRECTED OBJECT CREATION ---
+            // If no conversation exists, create one.
+            // First, we build the participantInfo object in a more compatible way.
+            const participantInfo = {
+                [user1.uid]: { name: user1.name, photoURL: user1.photoURL || null },
+                [user2.uid]: { name: user2.name, photoURL: user2.photoURL || null },
+            };
+
             const newConversationRef = await addDoc(collection(db, 'conversations'), {
-                participants: [user1.uid, user2.uid].sort(),
-                participantInfo: {
-                    [user1.uid]: { name: user1.name, photoURL: user1.photoURL || null },
-                    [user2.uid]: { name: user2.name, photoURL: user2.photoURL || null },
-                },
+                participants: sortedParticipants,
+                participantInfo: participantInfo, // Use the object we just created
                 lastMessage: { text: "Conversation started", timestamp: serverTimestamp() }
             });
 
