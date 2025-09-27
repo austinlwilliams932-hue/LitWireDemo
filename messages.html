@@ -87,7 +87,7 @@
 </div>
 
 <script type="module">
-    // Firebase Imports - Updated to a modern, compatible version (10.12.3)
+    // Firebase Imports - Updated to a modern, compatible version
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
     import {
@@ -301,15 +301,15 @@
                 return snapshot.docs[0].id;
             }
 
-            // --- FIX APPLIED HERE: Creating the object property names separately ---
-            // If no conversation exists, create one.
+            // --- FIX FOR SYNTAX ERROR APPLIED HERE ---
+            // Build the participantInfo object using standard object assignment
             const participantInfo = {};
             participantInfo[user1.uid] = { name: user1.name, photoURL: user1.photoURL || null };
             participantInfo[user2.uid] = { name: user2.name, photoURL: user2.photoURL || null };
 
             const newConversationRef = await addDoc(collection(db, 'conversations'), {
                 participants: sortedParticipants,
-                participantInfo: participantInfo, // Using the correctly constructed object
+                participantInfo: participantInfo, // Use the correctly constructed object
                 lastMessage: { text: "Conversation started", timestamp: serverTimestamp() }
             });
 
@@ -319,6 +319,7 @@
         async searchUsers(searchText) {
             const lowerCaseText = searchText.toLowerCase();
             const usersRef = collection(db, 'users');
+            // NOTE: This query requires a Firestore index on the 'name_lowercase' field.
             const q = query(
                 usersRef,
                 where('name_lowercase', '>=', lowerCaseText),
